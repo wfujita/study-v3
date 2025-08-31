@@ -1,2 +1,4 @@
 .venv/
 data/*.ndjson
+__pycache__/
+*.pyc
