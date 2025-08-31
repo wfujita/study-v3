@@ -1,22 +1,28 @@
 from flask import Flask, request, send_from_directory, jsonify
 from datetime import datetime, timezone
-import os, json
+import os
+import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 STATIC_DATA_DIR = os.path.join(STATIC_DIR, "data")
-RUNTIME_DATA_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(BASE_DIR), "data"))  # 既定: リポジトリ直下 ./data
+RUNTIME_DATA_DIR = os.getenv(
+    "DATA_DIR", os.path.join(os.path.dirname(BASE_DIR), "data")
+)  # 既定: リポジトリ直下 ./data
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+
 
 # ===== 静的ページ =====
 @app.get("/")
 def index():
     return send_from_directory("static", "index.html")
 
+
 @app.get("/admin")
 def admin_page():
     return send_from_directory("static", "admin.html")
+
 
 # 出題ファイル（フロントは /data/questions.json を参照）
 @app.get("/data/questions.json")
@@ -55,19 +61,25 @@ def load_questions_map():
     except Exception:
         return qmap
 
-    for q in (data.get("questions") or []):
+    for q in data.get("questions") or []:
         qid = q.get("id")
         if qid:
             qmap[qid] = {
-                "id": qid, "jp": q.get("jp"), "en": q.get("en"),
-                "unit": q.get("unit"), "type": "reorder"
+                "id": qid,
+                "jp": q.get("jp"),
+                "en": q.get("en"),
+                "unit": q.get("unit"),
+                "type": "reorder",
             }
-    for v in (data.get("vocab") or []):
+    for v in data.get("vocab") or []:
         qid = v.get("id")
         if qid:
             qmap[qid] = {
-                "id": qid, "jp": v.get("jp"), "en": v.get("en"),
-                "unit": v.get("unit"), "type": "vocab"
+                "id": qid,
+                "jp": v.get("jp"),
+                "en": v.get("en"),
+                "unit": v.get("unit"),
+                "type": "vocab",
             }
     return qmap
 
@@ -96,14 +108,20 @@ def admin_users():
     res = iter_results()
     users = {}
     for r in res:
-        u = (r.get("user") or "guest")
-        users.setdefault(u, {"user": u, "sessions": 0, "lastAt": None, "answered": 0, "correct": 0})
+        u = r.get("user") or "guest"
+        users.setdefault(
+            u, {"user": u, "sessions": 0, "lastAt": None, "answered": 0, "correct": 0}
+        )
         users[u]["sessions"] += 1
         last = r.get("endedAt") or r.get("receivedAt") or ""
         users[u]["lastAt"] = max(users[u]["lastAt"] or "", last)
         ans = r.get("answered") or []
-        users[u]["answered"] += (len(ans) if isinstance(ans, list) else (r.get("total") or 0))
-        users[u]["correct"]  += (r.get("correct") or sum(1 for a in ans if a.get("correct")))
+        users[u]["answered"] += (
+            len(ans) if isinstance(ans, list) else (r.get("total") or 0)
+        )
+        users[u]["correct"] += r.get("correct") or sum(
+            1 for a in ans if a.get("correct")
+        )
     out = sorted(users.values(), key=lambda x: (x["lastAt"] or ""), reverse=True)
     return jsonify(out)
 
@@ -125,23 +143,25 @@ def admin_summary():
     for r in res:
         if not match_user(r):
             continue
-        ans = (r.get("answered") or [])
-        sessions.append({
-            "user": r.get("user","guest"),
-            "endedAt": r.get("endedAt"),
-            "total": r.get("total", len(ans)),
-            "correct": r.get("correct", sum(1 for a in ans if a.get("correct"))),
-            "accuracy": r.get("accuracy"),
-            "mode": r.get("mode") or "normal",
-            "qType": r.get("qType"),
-            "setIndex": r.get("setIndex"),
-            "seconds": r.get("seconds", 0)
-        })
+        ans = r.get("answered") or []
+        sessions.append(
+            {
+                "user": r.get("user", "guest"),
+                "endedAt": r.get("endedAt"),
+                "total": r.get("total", len(ans)),
+                "correct": r.get("correct", sum(1 for a in ans if a.get("correct"))),
+                "accuracy": r.get("accuracy"),
+                "mode": r.get("mode") or "normal",
+                "qType": r.get("qType"),
+                "setIndex": r.get("setIndex"),
+                "seconds": r.get("seconds", 0),
+            }
+        )
         for a in ans:
             qid = a.get("id")
-            qm  = qmap.get(qid, {})
+            qm = qmap.get(qid, {})
             item = {
-                "user": r.get("user","guest"),
+                "user": r.get("user", "guest"),
                 "id": qid,
                 "unit": (a.get("unit") or qm.get("unit") or ""),
                 "jp": qm.get("jp"),
@@ -149,12 +169,15 @@ def admin_summary():
                 "type": (a.get("type") or qm.get("type") or ""),
                 "correct": bool(a.get("correct")),
                 "userAnswer": a.get("userAnswer"),
-                "at": a.get("at") or r.get("endedAt") or r.get("receivedAt")
+                "at": a.get("at") or r.get("endedAt") or r.get("receivedAt"),
             }
             if unit and item["unit"] != unit:
                 continue
             if qtext:
-                hay = " ".join(str(x or "") for x in [item["id"], item["jp"], item["en"], item["userAnswer"]]).lower()
+                hay = " ".join(
+                    str(x or "")
+                    for x in [item["id"], item["jp"], item["en"], item["userAnswer"]]
+                ).lower()
                 if qtext not in hay:
                     continue
             answered_all.append(item)
@@ -179,25 +202,39 @@ def admin_summary():
     by_q = {}
     for a in answered_all:
         qid = a.get("id") or "(no-id)"
-        d = by_q.setdefault(qid, {
-            "id": qid, "unit": a.get("unit"), "jp": a.get("jp"), "en": a.get("en"),
-            "answered": 0, "wrong": 0, "lastAt": None
-        })
+        d = by_q.setdefault(
+            qid,
+            {
+                "id": qid,
+                "unit": a.get("unit"),
+                "jp": a.get("jp"),
+                "en": a.get("en"),
+                "answered": 0,
+                "wrong": 0,
+                "lastAt": None,
+            },
+        )
         d["answered"] += 1
         if not a["correct"]:
             d["wrong"] += 1
         d["lastAt"] = max(d["lastAt"] or "", a.get("at") or "")
-    top_missed = sorted(by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True)
+    top_missed = sorted(
+        by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True
+    )
 
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
-    return jsonify({
-        "totals": totals,
-        "byUnit": by_unit_arr,
-        "topMissed": top_missed,
-        "recentAnswers": recent,
-        "sessions": sorted(sessions, key=lambda x: x["endedAt"] or "", reverse=True)[:100]
-    })
+    return jsonify(
+        {
+            "totals": totals,
+            "byUnit": by_unit_arr,
+            "topMissed": top_missed,
+            "recentAnswers": recent,
+            "sessions": sorted(
+                sessions, key=lambda x: x["endedAt"] or "", reverse=True
+            )[:100],
+        }
+    )
 
 
 @app.get("/.well-known/appspecific/com.chrome.devtools.json")
@@ -208,6 +245,5 @@ def devtools_stub():
 if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))  # 既定8000（80はroot権限が必要）
-    debug = (os.getenv("FLASK_ENV", "development") == "development")
+    debug = os.getenv("FLASK_ENV", "development") == "development"
     app.run(host=host, port=port, debug=debug)
-

@@ -1,4 +1,7 @@
-import os, json, importlib
+import os
+import json
+import importlib
+
 
 def test_routes_and_post(tmp_path, monkeypatch):
     # data ディレクトリは存在させておく（CIでも安全）
@@ -7,7 +10,9 @@ def test_routes_and_post(tmp_path, monkeypatch):
     # app.app から Flask インスタンス 'app' を取り出す想定
     mod = importlib.import_module("app.app")
     flask_app = getattr(mod, "app", None)
-    assert flask_app is not None, "app.app は Flask インスタンス 'app' を公開してください"
+    assert (
+        flask_app is not None
+    ), "app.app は Flask インスタンス 'app' を公開してください"
 
     client = flask_app.test_client()
     assert client.get("/").status_code == 200
