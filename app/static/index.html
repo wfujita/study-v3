@@ -95,7 +95,7 @@
         <span class="pill" id="status">Q 1/5</span>
         <span class="pill">正解: <b id="stat-correct">0</b></span>
         <span class="pill">誤答: <b id="stat-wrong">0</b></span>
-        <span class="pill" id="stat-recent">直近3回: --</span>
+        <span class="pill" id="stat-recent">30日正解: --</span>
         <span class="pill right" id="timer">⏱ 00:00</span>
       </div>
       <div id="prompt" class="muted">（日本語プロンプト）</div>
@@ -274,8 +274,8 @@
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
 
       // 2バケット：
-      // A: 未回答 or 連続正解数がしきい値未満
-      // B: 連続正解数がしきい値以上
+      // B: 直近で連続正解がしきい値以上のもの（連続数が少ない順）
+      // A: 上記以外
       const bucketA = [];
       const bucketB = [];
 
@@ -301,23 +301,23 @@
         }
       }
 
-      // 目標比率：A 60% / B 40%（不足は相互補完）
-      const targetA = Math.round(n * 0.6);
+      // 目標比率：A 20% / B 80%（不足は相互補完）
+      const targetA = Math.round(n * 0.2);
       const targetB = n - targetA;
 
       const order = [];
-      const A = shuffle(bucketA); // 既存の shuffle() を利用
+      const A = shuffle(bucketA); // ランダム
       const B = bucketB
         .map(o=>({ ...o, rand: Math.random() }))
         .sort((a,b)=> (a.streak - b.streak) || (a.rand - b.rand))
         .map(o=>o.idx);
 
-      // まずAから
-      while (order.length < targetA && A.length) order.push(A.shift());
-      // 次にBから
-      while (order.length < targetA + targetB && B.length) order.push(B.shift());
-      // どちらか不足なら残りで補完
-      const rest = [...A, ...B];
+      // まずBから
+      while (order.length < targetB && B.length) order.push(B.shift());
+      // 次にAから
+      while (order.length < targetB + targetA && A.length) order.push(A.shift());
+      // どちらか不足なら残りで補完（B優先）
+      const rest = [...B, ...A];
       while (order.length < n && rest.length) order.push(rest.shift());
 
       return order;
@@ -354,7 +354,8 @@
     const qKeyOf = (q)=> q.id? `id:${q.id}` : `${q.type}:${q.en}__${q.jp}`;
     function loadPerf(){ return JSON.parse(localStorage.getItem(PERF_KEY(state.user))||'{}'); }
     function savePerf(p){ localStorage.setItem(PERF_KEY(state.user), JSON.stringify(p)); }
-    function noteAttempt(q, correct, at){
+    function noteAttempt(q, correct, at, mode){
+      if(mode==='review') return; // 復習モードは記録しない
       const p = loadPerf();
       const k = qKeyOf(q);
       const rec = p[k] || { id:q.id||null, type:q.type, jp:q.jp, en:q.en, unit:q.unit||null, attempts:[] };
@@ -367,13 +368,10 @@
       const p = loadPerf();
       const k = qKeyOf(q);
       const rec = p[k];
-      let txt = '直近3回: --';
-      if(rec && Array.isArray(rec.attempts) && rec.attempts.length){
-        const recent = rec.attempts.slice(-3);
-        const ok = recent.filter(a=>a.correct).length;
-        const acc = Math.round((ok/recent.length)*100);
-        txt = `直近3回: ${acc}% (${ok}/${recent.length})`;
-      }
+      const cutoff = Date.now() - 30*24*3600*1000;
+      const arr = (rec && Array.isArray(rec.attempts)) ? rec.attempts.filter(a=> new Date(a.at).getTime() >= cutoff) : [];
+      const ok = arr.filter(a=>a.correct).length;
+      const txt = arr.length? `30日正解: ${ok}/${arr.length}` : '30日正解: --';
       $('#stat-recent').textContent = txt;
     }
     function weakCandidates(windowDays){
@@ -514,7 +512,7 @@
       }
 
       state.answered.push(record);
-      noteAttempt(q, correct, record.at);
+      noteAttempt(q, correct, record.at, state.mode);
       updateRecentStat(q);
       state.graded = true;
     }
