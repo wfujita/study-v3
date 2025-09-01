@@ -1,5 +1,5 @@
 from flask import Flask, request, send_from_directory, jsonify
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 import json
 
@@ -107,13 +107,34 @@ def iter_results():
 def admin_users():
     res = iter_results()
     users = {}
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     for r in res:
+        mode = r.get("mode") or "normal"
+        session_at = r.get("endedAt") or r.get("receivedAt")
+        try:
+            session_dt = (
+                datetime.fromisoformat(session_at.replace("Z", "+00:00"))
+                if session_at
+                else None
+            )
+        except Exception:
+            session_dt = None
+        if mode == "review" or not session_dt or session_dt < cutoff:
+            continue
+
         u = r.get("user") or "guest"
         users.setdefault(
-            u, {"user": u, "sessions": 0, "lastAt": None, "answered": 0, "correct": 0}
+            u,
+            {
+                "user": u,
+                "sessions": 0,
+                "lastAt": None,
+                "answered": 0,
+                "correct": 0,
+            },
         )
         users[u]["sessions"] += 1
-        last = r.get("endedAt") or r.get("receivedAt") or ""
+        last = session_at or ""
         users[u]["lastAt"] = max(users[u]["lastAt"] or "", last)
         ans = r.get("answered") or []
         users[u]["answered"] += (
@@ -138,26 +159,24 @@ def admin_summary():
     def match_user(r):
         return (user in (None, "", "__all__")) or (r.get("user", "guest") == user)
 
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     answered_all = []
     sessions = []
     for r in res:
         if not match_user(r):
             continue
         ans = r.get("answered") or []
-        sessions.append(
-            {
-                "user": r.get("user", "guest"),
-                "endedAt": r.get("endedAt"),
-                "total": r.get("total", len(ans)),
-                "correct": r.get("correct", sum(1 for a in ans if a.get("correct"))),
-                "accuracy": r.get("accuracy"),
-                "mode": r.get("mode") or "normal",
-                "qType": r.get("qType"),
-                "setIndex": r.get("setIndex"),
-                "seconds": r.get("seconds", 0),
-            }
-        )
         for a in ans:
+            mode = a.get("mode") or r.get("mode") or "normal"
+            if mode == "review":
+                continue
+            at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
+            try:
+                at_dt = datetime.fromisoformat(at_str.replace("Z", "+00:00")) if at_str else None
+            except Exception:
+                at_dt = None
+            if not at_dt or at_dt < cutoff:
+                continue
             qid = a.get("id")
             qm = qmap.get(qid, {})
             item = {
@@ -169,7 +188,7 @@ def admin_summary():
                 "type": (a.get("type") or qm.get("type") or ""),
                 "correct": bool(a.get("correct")),
                 "userAnswer": a.get("userAnswer"),
-                "at": a.get("at") or r.get("endedAt") or r.get("receivedAt"),
+                "at": at_str,
             }
             if unit and item["unit"] != unit:
                 continue
@@ -181,6 +200,26 @@ def admin_summary():
                 if qtext not in hay:
                     continue
             answered_all.append(item)
+        # セッション自体も30日＆非復習のみでカウント
+        session_at = r.get("endedAt") or r.get("receivedAt")
+        try:
+            session_dt = datetime.fromisoformat(session_at.replace("Z", "+00:00")) if session_at else None
+        except Exception:
+            session_dt = None
+        if session_dt and session_dt >= cutoff and (r.get("mode") or "normal") != "review":
+            sessions.append(
+                {
+                    "user": r.get("user", "guest"),
+                    "endedAt": r.get("endedAt"),
+                    "total": r.get("total", len(ans)),
+                    "correct": r.get("correct", sum(1 for a in ans if a.get("correct"))),
+                    "accuracy": r.get("accuracy"),
+                    "mode": r.get("mode") or "normal",
+                    "qType": r.get("qType"),
+                    "setIndex": r.get("setIndex"),
+                    "seconds": r.get("seconds", 0),
+                }
+            )
 
     totals = {
         "sessions": len(sessions),
