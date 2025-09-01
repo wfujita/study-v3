@@ -51,6 +51,10 @@
           <span class="muted">単元</span>
           <select id="unit"><option value="">（すべて）</option></select>
         </label>
+        <label class="row" style="gap:6px">
+          <span class="muted">モード</span>
+          <select id="mode"><option value="normal">通常</option><option value="review">復習</option></select>
+        </label>
         <input id="search" placeholder="問題検索（日本語/英語/ID）" style="min-width:220px" />
         <span class="pill right" id="last-updated">更新: --</span>
       </div>
@@ -81,6 +85,13 @@
         <div style="max-height:340px; overflow:auto">
           <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th>結果</th><th>あなたの解答</th><th>正解</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
         </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin:0 0 8px">単語別正誤</h3>
+      <div style="max-height:340px; overflow:auto">
+        <table id="tbl-words"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
   </main>
@@ -162,6 +173,20 @@
         if(!ok){ tr.style.background='rgba(239,68,68,.08)'; }
         recent.appendChild(tr);
       });
+
+      // 単語別正誤
+      const qstat=$('#tbl-words tbody'); qstat.innerHTML='';
+      data.questionStats.forEach(q=>{
+        const acc = q.answered? Math.round(q.correct/q.answered*100):0;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${q.id||''}</td>
+                        <td>${q.jp||''}</td>
+                        <td>${q.en||''}</td>
+                        <td class="center ok">${fmt(q.correct)}</td>
+                        <td class="center ng">${fmt(q.wrong)}</td>
+                        <td class="center">${acc}%</td>`;
+        qstat.appendChild(tr);
+      });
       $('#last-updated').textContent = '更新: ' + new Date().toLocaleTimeString();
     }
 
@@ -169,7 +194,8 @@
       const user = $('#user').value || '__all__';
       const unit = $('#unit').value || '';
       const q = $('#search').value.trim();
-      const data = await getJSON('/api/admin/summary', {user, unit, q});
+      const mode = $('#mode').value || 'normal';
+      const data = await getJSON('/api/admin/summary', {user, unit, q, mode});
 
       // unit セレクタを埋める（保持）
       const unitSel=$('#unit');
@@ -183,7 +209,8 @@
     async function main(){
       await loadUsers();
       await refresh();
-      $('#user').onchange=refresh; $('#unit').onchange=refresh; $('#search').oninput=()=>{ clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
+      $('#user').onchange=refresh; $('#unit').onchange=refresh; $('#mode').onchange=refresh;
+      $('#search').oninput=()=>{ clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
     }
 
     main().catch(e=>{ alert('読み込みに失敗しました: '+e.message); console.error(e); });
