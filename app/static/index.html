@@ -268,14 +268,14 @@
       const deckArr = deck();
       const n = Math.min(state.totalPerSet, deckArr.length);
 
-      const STREAK_THRESHOLD = 2;       // 連続正解回数のしきい値
+      const STREAK_THRESHOLD = 1;       // 連続正解回数のしきい値
 
       // 学習履歴（直近30日を noteAttempt が保存）
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
 
-      // 2バケット：
-      // B: 直近で連続正解がしきい値以上のもの（連続数が少ない順）
-      // A: 上記以外
+      // バケット：
+      // B: 直近で連続正解がしきい値以上のもの
+      // A: 誤答または未実施のもの
       const bucketA = [];
       const bucketB = [];
 
@@ -287,38 +287,32 @@
         const attempts = (rec && Array.isArray(rec.attempts)) ? rec.attempts : [];
         if (attempts.length === 0) { bucketA.push(i); continue; }
 
+        const last = attempts[attempts.length - 1];
+        if (!last.correct) { bucketA.push(i); continue; }
+
         let consecutive = 0;
+        let correctTotal = 0;
+        for (const a of attempts) if (a.correct) correctTotal++;
         for (let k = attempts.length - 1; k >= 0; k--) {
           const a = attempts[k];
-          if (a.correct) { consecutive++; }
-          else { break; }
+          if (a.correct) { consecutive++; } else { break; }
         }
 
         if (consecutive >= STREAK_THRESHOLD) {
-          bucketB.push({ idx:i, streak:consecutive });
-        } else {
-          bucketA.push(i);
+          bucketB.push({ idx: i, correct: correctTotal, rand: Math.random() });
         }
+        // それ以外（最後は正解だが連続数不足）は出題対象外
       }
 
-      // 目標比率：A 20% / B 80%（不足は相互補完）
-      const targetA = Math.round(n * 0.2);
-      const targetB = n - targetA;
-
       const order = [];
-      const A = shuffle(bucketA); // ランダム
-      const B = bucketB
-        .map(o=>({ ...o, rand: Math.random() }))
-        .sort((a,b)=> (a.streak - b.streak) || (a.rand - b.rand))
-        .map(o=>o.idx);
 
-      // まずBから
-      while (order.length < targetB && B.length) order.push(B.shift());
-      // 次にAから
-      while (order.length < targetB + targetA && A.length) order.push(A.shift());
-      // どちらか不足なら残りで補完（B優先）
-      const rest = [...B, ...A];
-      while (order.length < n && rest.length) order.push(rest.shift());
+      if (bucketB.length > 0) {
+        bucketB.sort((a, b) => (a.correct - b.correct) || (a.rand - b.rand));
+        order.push(bucketB[0].idx);
+      }
+
+      const A = shuffle(bucketA); // ランダム
+      while (order.length < n && A.length) order.push(A.shift());
 
       return order;
     }
