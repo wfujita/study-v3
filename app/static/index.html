@@ -95,7 +95,7 @@
         <span class="pill" id="status">Q 1/5</span>
         <span class="pill">正解: <b id="stat-correct">0</b></span>
         <span class="pill">誤答: <b id="stat-wrong">0</b></span>
-        <span class="pill" id="stat-recent">直近3回: --</span>
+        <span class="pill" id="stat-recent">30日正解: --</span>
         <span class="pill right" id="timer">⏱ 00:00</span>
       </div>
       <div id="prompt" class="muted">（日本語プロンプト）</div>
@@ -273,11 +273,13 @@
       // 学習履歴（直近30日を noteAttempt が保存）
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
 
-      // 2バケット：
-      // A: 未回答 or 連続正解数がしきい値未満
-      // B: 連続正解数がしきい値以上
+      // バケット分類：
+      // B: 直近で連続正解がしきい値以上（総正解数が少ない順）
+      // A: 最終解答が誤答 or 未実施
+      // other: 上記以外（最終解答が正解だが連続数不足）
       const bucketA = [];
       const bucketB = [];
+      const bucketOther = [];
 
       for (let i = 0; i < deckArr.length; i++) {
         const q = deckArr[i];
@@ -294,30 +296,34 @@
           else { break; }
         }
 
+        const totalCorrect = attempts.filter(a=>a.correct).length;
+        const last = attempts[attempts.length - 1];
+
         if (consecutive >= STREAK_THRESHOLD) {
-          bucketB.push({ idx:i, streak:consecutive });
-        } else {
+          bucketB.push({ idx:i, correctCnt: totalCorrect });
+        } else if (!last.correct) {
           bucketA.push(i);
+        } else {
+          bucketOther.push(i);
         }
       }
 
-      // 目標比率：A 60% / B 40%（不足は相互補完）
-      const targetA = Math.round(n * 0.6);
-      const targetB = n - targetA;
-
       const order = [];
-      const A = shuffle(bucketA); // 既存の shuffle() を利用
-      const B = bucketB
-        .map(o=>({ ...o, rand: Math.random() }))
-        .sort((a,b)=> (a.streak - b.streak) || (a.rand - b.rand))
-        .map(o=>o.idx);
 
-      // まずAから
-      while (order.length < targetA && A.length) order.push(A.shift());
-      // 次にBから
-      while (order.length < targetA + targetB && B.length) order.push(B.shift());
-      // どちらか不足なら残りで補完
-      const rest = [...A, ...B];
+      // バケットBから1問（総正解数が少ないもの優先、同数はランダム）
+      const sortedB = bucketB
+        .map(o=>({ ...o, rand: Math.random() }))
+        .sort((a,b)=> (a.correctCnt - b.correctCnt) || (a.rand - b.rand));
+      const chosenB = sortedB.shift();
+      if (chosenB) order.push(chosenB.idx);
+      const restB = sortedB.map(o=>o.idx);
+
+      // 残りはバケットA（誤答 or 未実施）からランダム
+      const A = shuffle(bucketA);
+      while (order.length < n && A.length) order.push(A.shift());
+
+      // 不足分はその他の問題で補完（B残り → その他）
+      const rest = [...A, ...restB, ...bucketOther];
       while (order.length < n && rest.length) order.push(rest.shift());
 
       return order;
@@ -354,7 +360,8 @@
     const qKeyOf = (q)=> q.id? `id:${q.id}` : `${q.type}:${q.en}__${q.jp}`;
     function loadPerf(){ return JSON.parse(localStorage.getItem(PERF_KEY(state.user))||'{}'); }
     function savePerf(p){ localStorage.setItem(PERF_KEY(state.user), JSON.stringify(p)); }
-    function noteAttempt(q, correct, at){
+    function noteAttempt(q, correct, at, mode){
+      if(mode==='review') return; // 復習モードは記録しない
       const p = loadPerf();
       const k = qKeyOf(q);
       const rec = p[k] || { id:q.id||null, type:q.type, jp:q.jp, en:q.en, unit:q.unit||null, attempts:[] };
@@ -367,13 +374,10 @@
       const p = loadPerf();
       const k = qKeyOf(q);
       const rec = p[k];
-      let txt = '直近3回: --';
-      if(rec && Array.isArray(rec.attempts) && rec.attempts.length){
-        const recent = rec.attempts.slice(-3);
-        const ok = recent.filter(a=>a.correct).length;
-        const acc = Math.round((ok/recent.length)*100);
-        txt = `直近3回: ${acc}% (${ok}/${recent.length})`;
-      }
+      const cutoff = Date.now() - 30*24*3600*1000;
+      const arr = (rec && Array.isArray(rec.attempts)) ? rec.attempts.filter(a=> new Date(a.at).getTime() >= cutoff) : [];
+      const ok = arr.filter(a=>a.correct).length;
+      const txt = arr.length? `30日正解: ${ok}/${arr.length}` : '30日正解: --';
       $('#stat-recent').textContent = txt;
     }
     function weakCandidates(windowDays){
@@ -514,7 +518,7 @@
       }
 
       state.answered.push(record);
-      noteAttempt(q, correct, record.at);
+      noteAttempt(q, correct, record.at, state.mode);
       updateRecentStat(q);
       state.graded = true;
     }
