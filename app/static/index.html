@@ -169,7 +169,8 @@
       totalPerSet:5, order:[], setIndex:0,
       qIndex:0, correct:0, wrong:0,
       startedAt:null, seconds:0, timerId:null,
-      answered:[],   // サーバ送信用（最小）
+      answered:[],   // サーバ送信用（通常モード）
+      reviewed:[],   // サーバ送信用（復習モード）
       graded:false,  // 一問一採点
       mode:'normal',
       reviewStrategy:'all', // 'all' | 'recent'
@@ -204,7 +205,7 @@
       if(!customDeck || !customDeck.length){ alert('このセットの間違いはありません。'); return; }
 
       // セット初期化
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.graded=false;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
 
       // レビュー用デッキに流し込む（既存ロジック流用）
@@ -268,7 +269,7 @@
       const deckArr = deck();
       const n = Math.min(state.totalPerSet, deckArr.length);
 
-      const STREAK_THRESHOLD = 2;       // 連続正解回数のしきい値
+      const STREAK_THRESHOLD = 1;       // 連続正解回数のしきい値
 
       // 学習履歴（直近30日を noteAttempt が保存）
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
@@ -405,7 +406,7 @@
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
       const d=deck();
       if(!d.length){ alert('この出題タイプの問題がありません。/data/questions.json をご確認ください。'); show('setup'); return; }
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.graded=false;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
       if(state.mode==='review'){
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
@@ -511,7 +512,7 @@
         addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', userAnswer: ans, at: record.at });
       }
 
-      state.answered.push(record);
+      (state.mode==='review'? state.reviewed : state.answered).push(record);
       noteAttempt(q, correct, record.at, state.mode);
       updateRecentStat(q);
       state.graded = true;
@@ -537,8 +538,9 @@
                     : (state.mode==='weak')  ? window.__WEAK_DECK__
                     : deck();
 
-      // answered の qIndex は「state.order 上の位置」なので、srcDeck と order から元問題を復元
-      const missedObjs = state.answered
+      // 解答記録（通常 or 復習）の qIndex は「state.order 上の位置」
+      const records = (state.mode==='review') ? state.reviewed : state.answered;
+      const missedObjs = records
         .filter(r=>!r.correct)
         .map(r=>{
           const idxInSrc = state.order[r.qIndex];
@@ -558,8 +560,10 @@
       }
 
       const wireAnswered = state.answered.map(({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at}));
+      const wireReviewed = state.reviewed.map(({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at}));
       const wireCorrect  = wireAnswered.filter(x=>x.correct);
       const wireMissed   = wireAnswered.filter(x=>!x.correct);
+      const wireReviewMissed = wireReviewed.filter(x=>!x.correct);
 
       const sessionWire = {
         user: state.user,
@@ -574,7 +578,9 @@
         endedAt: nowISO(),
         answered: wireAnswered,
         correctItems: wireCorrect,
-        missed: wireMissed
+        missed: wireMissed,
+        reviewed: wireReviewed,
+        reviewMissed: wireReviewMissed
       };
 
       // ローカル履歴はサマリのみ（軽量）
