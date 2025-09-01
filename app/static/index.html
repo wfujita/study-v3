@@ -268,7 +268,7 @@
       const deckArr = deck();
       const n = Math.min(state.totalPerSet, deckArr.length);
 
-      const STREAK_THRESHOLD = 2;       // 連続正解回数のしきい値
+      const STREAK_THRESHOLD = 1;       // 連続正解回数のしきい値
 
       // 学習履歴（直近30日を noteAttempt が保存）
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
