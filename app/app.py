@@ -172,7 +172,11 @@ def admin_summary():
                 continue
             at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
             try:
-                at_dt = datetime.fromisoformat(at_str.replace("Z", "+00:00")) if at_str else None
+                at_dt = (
+                    datetime.fromisoformat(at_str.replace("Z", "+00:00"))
+                    if at_str
+                    else None
+                )
             except Exception:
                 at_dt = None
             if not at_dt or at_dt < cutoff:
@@ -203,16 +207,26 @@ def admin_summary():
         # セッション自体も30日＆非復習のみでカウント
         session_at = r.get("endedAt") or r.get("receivedAt")
         try:
-            session_dt = datetime.fromisoformat(session_at.replace("Z", "+00:00")) if session_at else None
+            session_dt = (
+                datetime.fromisoformat(session_at.replace("Z", "+00:00"))
+                if session_at
+                else None
+            )
         except Exception:
             session_dt = None
-        if session_dt and session_dt >= cutoff and (r.get("mode") or "normal") != "review":
+        if (
+            session_dt
+            and session_dt >= cutoff
+            and (r.get("mode") or "normal") != "review"
+        ):
             sessions.append(
                 {
                     "user": r.get("user", "guest"),
                     "endedAt": r.get("endedAt"),
                     "total": r.get("total", len(ans)),
-                    "correct": r.get("correct", sum(1 for a in ans if a.get("correct"))),
+                    "correct": r.get(
+                        "correct", sum(1 for a in ans if a.get("correct"))
+                    ),
                     "accuracy": r.get("accuracy"),
                     "mode": r.get("mode") or "normal",
                     "qType": r.get("qType"),
