@@ -4,7 +4,9 @@ from datetime import datetime, timedelta, timezone
 
 def test_recent_endpoint_excludes_review(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
-    import importlib, sys
+    import importlib
+    import sys
+
     mod = importlib.import_module("app.app")
     flask_app = mod.app
     client = flask_app.test_client()
@@ -15,8 +17,16 @@ def test_recent_endpoint_excludes_review(tmp_path, monkeypatch):
             "mode": "normal",
             "endedAt": now.isoformat().replace("+00:00", "Z"),
             "answered": [
-                {"id": "q1", "correct": True, "at": now.isoformat().replace("+00:00", "Z")},
-                {"id": "q1", "correct": False, "at": now.isoformat().replace("+00:00", "Z")},
+                {
+                    "id": "q1",
+                    "correct": True,
+                    "at": now.isoformat().replace("+00:00", "Z"),
+                },
+                {
+                    "id": "q1",
+                    "correct": False,
+                    "at": now.isoformat().replace("+00:00", "Z"),
+                },
             ],
         },
         {
@@ -24,7 +34,12 @@ def test_recent_endpoint_excludes_review(tmp_path, monkeypatch):
             "mode": "review",
             "endedAt": now.isoformat().replace("+00:00", "Z"),
             "reviewed": [
-                {"id": "q1", "correct": True, "mode": "review", "at": now.isoformat().replace("+00:00", "Z")}
+                {
+                    "id": "q1",
+                    "correct": True,
+                    "mode": "review",
+                    "at": now.isoformat().replace("+00:00", "Z"),
+                }
             ],
         },
         {
@@ -32,7 +47,11 @@ def test_recent_endpoint_excludes_review(tmp_path, monkeypatch):
             "mode": "normal",
             "endedAt": (now - timedelta(days=40)).isoformat().replace("+00:00", "Z"),
             "answered": [
-                {"id": "q1", "correct": True, "at": (now - timedelta(days=40)).isoformat().replace("+00:00", "Z")}
+                {
+                    "id": "q1",
+                    "correct": True,
+                    "at": (now - timedelta(days=40)).isoformat().replace("+00:00", "Z"),
+                }
             ],
         },
     ]
