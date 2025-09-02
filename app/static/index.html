@@ -267,44 +267,37 @@
     function deck(){ return state.qType==='reorder'? BANK_REORDER : BANK_VOCAB; }
 
     /********** セット準備 **********/
-    function buildOrderFromBank(){
+    async function buildOrderFromBank(){
       const deckArr = deck();
       const n = Math.min(state.totalPerSet, deckArr.length);
 
-      // 学習履歴（直近30日を noteAttempt が保存）
-      const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
-
       // バケット：
-      // A: 最新の回答が正解である問題
-      // B: 最新の回答が誤り または 未回答の問題
+      // A: サーバ記録で直近の回答が正解の問題
+      // B: それ以外（誤答または未回答）の問題
       const bucketA = [];
       const bucketB = [];
 
-      for (let i = 0; i < deckArr.length; i++) {
-        const q = deckArr[i];
-        const key = q.id ? `id:${q.id}` : `${q.type}:${q.en}__${q.jp}`;
-        const rec = perfRaw[key];
+      // サーバから各問題の統計を取得
+      const stats = await Promise.all(
+        deckArr.map(q=>{
+          if(!state.user || !q.id) return Promise.resolve(null);
+          const url = `/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`;
+          return fetch(url,{cache:'no-store'})
+            .then(r=>r.ok?r.json():null)
+            .catch(()=>null);
+        })
+      );
 
-        const attempts = (rec && Array.isArray(rec.attempts)) ? rec.attempts : [];
-        if (attempts.length === 0) {
-          bucketB.push(i);
-          continue;
-        }
-
-        const last = attempts[attempts.length - 1];
-        if (last.correct) {
-          let streak = 0;
-          let correctCount = 0;
-          for (let k = attempts.length - 1; k >= 0; k--) {
-            const a = attempts[k];
-            if (a.correct) { streak++; } else { break; }
-          }
-          for (const a of attempts) {
-            if (a.correct) correctCount++;
-          }
-          const accuracy = correctCount / attempts.length;
-          bucketA.push({ idx: i, streak, accuracy, rand: Math.random() });
-        } else {
+      for(let i=0;i<deckArr.length;i++){
+        const s = stats[i];
+        if(!s){ bucketB.push(i); continue; }
+        const streak = s.streak||0;
+        const ans = s.answered||0;
+        const ok = s.correct||0;
+        const accuracy = ans? (ok/ans) : 0;
+        if(streak>0){
+          bucketA.push({ idx:i, streak, accuracy, rand:Math.random() });
+        }else{
           bucketB.push(i);
         }
       }
@@ -315,22 +308,21 @@
 
       const order = [];
       bucketA.sort(compareA);
-      if (bucketA.length > 0) {
+      if(bucketA.length>0){
         const picked = bucketA.shift();
-        order.push({ idx: picked.idx, bucket: 'A' });
+        order.push({ idx:picked.idx, bucket:'A' });
       }
 
       const B = shuffle(bucketB); // ランダム
-      while (order.length < n && B.length) {
-        order.push({ idx: B.shift(), bucket: 'B' });
+      while(order.length < n && B.length){
+        order.push({ idx:B.shift(), bucket:'B' });
       }
 
-      // 残りのバケットAを再ソートして追加
-      bucketA.forEach(x => x.rand = Math.random());
+      bucketA.forEach(x=>x.rand=Math.random());
       bucketA.sort(compareA);
-      while (order.length < n && bucketA.length) {
+      while(order.length < n && bucketA.length){
         const next = bucketA.shift();
-        order.push({ idx: next.idx, bucket: 'A' });
+        order.push({ idx:next.idx, bucket:'A' });
       }
 
       return order;
@@ -446,7 +438,7 @@
         if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
         state.order = ord.map(i=>({idx:i, bucket:null}));
       }else{
-        state.order = buildOrderFromBank();
+        state.order = await buildOrderFromBank();
       }
       show('quiz'); startTimer(); renderQuestion();
     }
