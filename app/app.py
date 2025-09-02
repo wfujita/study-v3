@@ -102,6 +102,42 @@ def iter_results():
     return out
 
 
+@app.get("/api/recent")
+def recent_stat():
+    user = request.args.get("user") or ""
+    qid = request.args.get("id") or ""
+    if not user or not qid:
+        return jsonify({"correct": 0, "answered": 0})
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    res = iter_results()
+    answered = 0
+    correct = 0
+    for r in res:
+        if r.get("user") != user:
+            continue
+        ans = r.get("answered") or []
+        for a in ans:
+            if (a.get("mode") or r.get("mode") or "normal") == "review":
+                continue
+            if str(a.get("id") or "") != qid:
+                continue
+            at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
+            try:
+                at_dt = (
+                    datetime.fromisoformat(at_str.replace("Z", "+00:00"))
+                    if at_str
+                    else None
+                )
+            except Exception:
+                at_dt = None
+            if not at_dt or at_dt < cutoff:
+                continue
+            answered += 1
+            if a.get("correct"):
+                correct += 1
+    return jsonify({"correct": correct, "answered": answered})
+
+
 # ====== /admin 用 API ======
 @app.get("/api/admin/users")
 def admin_users():
@@ -152,6 +188,7 @@ def admin_summary():
     user = request.args.get("user")  # "__all__" で全体
     unit = request.args.get("unit") or ""
     qtext = (request.args.get("q") or "").lower()
+    mode = request.args.get("mode") or "normal"
 
     qmap = load_questions_map()
     res = iter_results()
@@ -165,11 +202,17 @@ def admin_summary():
     for r in res:
         if not match_user(r):
             continue
-        ans = r.get("answered") or []
+        if mode == "review":
+            ans = r.get("reviewed") or []
+        else:
+            ans = [
+                a
+                for a in (r.get("answered") or [])
+                if (a.get("mode") or r.get("mode") or "normal") != "review"
+            ]
+        if not isinstance(ans, list):
+            ans = []
         for a in ans:
-            mode = a.get("mode") or r.get("mode") or "normal"
-            if mode == "review":
-                continue
             at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
             try:
                 at_dt = (
@@ -204,7 +247,6 @@ def admin_summary():
                 if qtext not in hay:
                     continue
             answered_all.append(item)
-        # セッション自体も30日＆非復習のみでカウント
         session_at = r.get("endedAt") or r.get("receivedAt")
         try:
             session_dt = (
@@ -214,21 +256,19 @@ def admin_summary():
             )
         except Exception:
             session_dt = None
-        if (
-            session_dt
-            and session_dt >= cutoff
-            and (r.get("mode") or "normal") != "review"
-        ):
+        if session_dt and session_dt >= cutoff and ans:
             sessions.append(
                 {
                     "user": r.get("user", "guest"),
                     "endedAt": r.get("endedAt"),
-                    "total": r.get("total", len(ans)),
-                    "correct": r.get(
-                        "correct", sum(1 for a in ans if a.get("correct"))
+                    "total": len(ans),
+                    "correct": sum(1 for a in ans if a.get("correct")),
+                    "accuracy": (
+                        (sum(1 for a in ans if a.get("correct")) / len(ans) * 100)
+                        if len(ans)
+                        else 0
                     ),
-                    "accuracy": r.get("accuracy"),
-                    "mode": r.get("mode") or "normal",
+                    "mode": mode,
                     "qType": r.get("qType"),
                     "setIndex": r.get("setIndex"),
                     "seconds": r.get("seconds", 0),
@@ -263,12 +303,15 @@ def admin_summary():
                 "jp": a.get("jp"),
                 "en": a.get("en"),
                 "answered": 0,
+                "correct": 0,
                 "wrong": 0,
                 "lastAt": None,
             },
         )
         d["answered"] += 1
-        if not a["correct"]:
+        if a["correct"]:
+            d["correct"] += 1
+        else:
             d["wrong"] += 1
         d["lastAt"] = max(d["lastAt"] or "", a.get("at") or "")
     top_missed = sorted(
@@ -277,12 +320,15 @@ def admin_summary():
 
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
+    question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
+
     return jsonify(
         {
             "totals": totals,
             "byUnit": by_unit_arr,
             "topMissed": top_missed,
             "recentAnswers": recent,
+            "questionStats": question_stats,
             "sessions": sorted(
                 sessions, key=lambda x: x["endedAt"] or "", reverse=True
             )[:100],
