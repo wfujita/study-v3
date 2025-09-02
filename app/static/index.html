@@ -92,11 +92,12 @@
     <!-- クイズ（共通ヘッダ） -->
     <section class="card" id="quiz" style="display:none">
       <div class="row">
-        <span class="pill" id="status">Q 1/5</span>
-        <span class="pill">正解: <b id="stat-correct">0</b></span>
-        <span class="pill">誤答: <b id="stat-wrong">0</b></span>
-        <span class="pill" id="stat-recent">30日正解: --</span>
-        <span class="pill right" id="timer">⏱ 00:00</span>
+          <span class="pill" id="status">Q 1/5</span>
+          <span class="pill">正解: <b id="stat-correct">0</b></span>
+          <span class="pill">誤答: <b id="stat-wrong">0</b></span>
+          <span class="pill" id="stat-streak">連続正解: --</span>
+          <span class="pill" id="stat-accuracy">正解率: --</span>
+          <span class="pill right" id="timer">⏱ 00:00</span>
       </div>
       <div id="prompt" class="muted">（日本語プロンプト）</div>
 
@@ -357,16 +358,30 @@
       rec.attempts = rec.attempts.filter(a=> new Date(a.at).getTime() >= cutoff);
       p[k]=rec; savePerf(p);
     }
-    function updateRecentStat(q){
-      const el = $('#stat-recent');
-      if(!state.user || !q.id){ el.textContent='30日正解: --'; return; }
-      fetch(`/api/recent?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`, {cache:'no-store'})
+    function updateQuestionStat(q){
+      const elStreak = $('#stat-streak');
+      const elAcc = $('#stat-accuracy');
+      if(!state.user || !q.id){
+        elStreak.textContent='連続正解: --';
+        elAcc.textContent='正解率: --';
+        return;
+      }
+      fetch(`/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`, {cache:'no-store'})
         .then(res=>res.ok?res.json():null)
         .then(data=>{
-          const ans=data?data.answered:0; const ok=data?data.correct:0;
-          el.textContent = ans? `30日正解: ${ok}/${ans}` : '30日正解: --';
+          if(!data){
+            elStreak.textContent='連続正解: --';
+            elAcc.textContent='正解率: --';
+            return;
+          }
+          const ans=data.answered||0; const ok=data.correct||0;
+          elStreak.textContent = `連続正解: ${data.streak||0}`;
+          elAcc.textContent = ans? `正解率: ${Math.round((ok/ans)*100)}% (${ok}/${ans})` : '正解率: --';
         })
-        .catch(()=>{ el.textContent='30日正解: --'; });
+        .catch(()=>{
+          elStreak.textContent='連続正解: --';
+          elAcc.textContent='正解率: --';
+        });
     }
     function weakCandidates(windowDays){
       const p = loadPerf();
@@ -428,7 +443,7 @@
 
     function renderQuestion(){
       const q = getCurrentQuestion();
-      updateRecentStat(q);
+      updateQuestionStat(q);
       state.graded = false;
       $('#status').textContent = `Q ${state.qIndex+1}/${state.order.length}${state.mode==='review'?'（復習）':''}`;
       $('#explain').textContent='';
@@ -507,7 +522,7 @@
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
       noteAttempt(q, correct, record.at, state.mode);
-      updateRecentStat(q);
+      updateQuestionStat(q);
       state.graded = true;
     }
 
@@ -640,7 +655,14 @@
     document.getElementById('btn-speak').onclick=()=>{ const q=getCurrentQuestion(); if(!q) return; const u=new SpeechSynthesisUtterance(q.en); u.lang='en-US'; u.rate=1.0; speechSynthesis.cancel(); speechSynthesis.speak(u); };
 
     // 完了画面の遷移
-    document.getElementById('btn-nextset').onclick=async ()=>{ try{ state.setIndex++; await startSet(); }catch(e){ alert('次セットを開始できません: '+(e.message||e)); } };
+      document.getElementById('btn-nextset').onclick=async ()=>{
+        try{
+          state.setIndex=0;
+          await startSet();
+        }catch(e){
+          alert('次セットを開始できません: '+(e.message||e));
+        }
+      };
     document.getElementById('btn-dashboard').onclick=()=>{ 
       try{ 
         const u = encodeURIComponent(state.user||'');
