@@ -102,16 +102,15 @@ def iter_results():
     return out
 
 
-@app.get("/api/recent")
-def recent_stat():
+@app.get("/api/stats")
+def question_stat():
     user = request.args.get("user") or ""
     qid = request.args.get("id") or ""
     if not user or not qid:
-        return jsonify({"correct": 0, "answered": 0})
-    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        return jsonify({"answered": 0, "correct": 0, "streak": 0})
+
     res = iter_results()
-    answered = 0
-    correct = 0
+    attempts = []
     for r in res:
         if r.get("user") != user:
             continue
@@ -121,21 +120,19 @@ def recent_stat():
                 continue
             if str(a.get("id") or "") != qid:
                 continue
-            at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
-            try:
-                at_dt = (
-                    datetime.fromisoformat(at_str.replace("Z", "+00:00"))
-                    if at_str
-                    else None
-                )
-            except Exception:
-                at_dt = None
-            if not at_dt or at_dt < cutoff:
-                continue
-            answered += 1
-            if a.get("correct"):
-                correct += 1
-    return jsonify({"correct": correct, "answered": answered})
+            at = a.get("at") or r.get("endedAt") or r.get("receivedAt") or ""
+            attempts.append({"correct": bool(a.get("correct")), "at": at})
+
+    attempts.sort(key=lambda x: x["at"] or "")
+    total = len(attempts)
+    correct = sum(1 for a in attempts if a["correct"])
+    streak = 0
+    for a in reversed(attempts):
+        if a["correct"]:
+            streak += 1
+        else:
+            break
+    return jsonify({"answered": total, "correct": correct, "streak": streak})
 
 
 # ====== /admin 用 API ======
