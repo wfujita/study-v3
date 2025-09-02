@@ -294,18 +294,27 @@
         const last = attempts[attempts.length - 1];
         if (last.correct) {
           let streak = 0;
+          let correctCount = 0;
           for (let k = attempts.length - 1; k >= 0; k--) {
             const a = attempts[k];
             if (a.correct) { streak++; } else { break; }
           }
-          bucketA.push({ idx: i, streak, rand: Math.random() });
+          for (const a of attempts) {
+            if (a.correct) correctCount++;
+          }
+          const accuracy = correctCount / attempts.length;
+          bucketA.push({ idx: i, streak, accuracy, rand: Math.random() });
         } else {
           bucketB.push(i);
         }
       }
 
+      // 連続正解数の少ない順 → 正解率の低い順 → 乱数
+      const compareA = (a, b) =>
+        (a.streak - b.streak) || (a.accuracy - b.accuracy) || (a.rand - b.rand);
+
       const order = [];
-      bucketA.sort((a, b) => (a.streak - b.streak) || (a.rand - b.rand));
+      bucketA.sort(compareA);
       if (bucketA.length > 0) {
         const picked = bucketA.shift();
         order.push({ idx: picked.idx, bucket: 'A' });
@@ -315,9 +324,13 @@
       while (order.length < n && B.length) {
         order.push({ idx: B.shift(), bucket: 'B' });
       }
-      const restA = shuffle(bucketA.map(x => x.idx));
-      while (order.length < n && restA.length) {
-        order.push({ idx: restA.shift(), bucket: 'A' });
+
+      // 残りのバケットAを再ソートして追加
+      bucketA.forEach(x => x.rand = Math.random());
+      bucketA.sort(compareA);
+      while (order.length < n && bucketA.length) {
+        const next = bucketA.shift();
+        order.push({ idx: next.idx, bucket: 'A' });
       }
 
       return order;
