@@ -269,14 +269,12 @@
       const deckArr = deck();
       const n = Math.min(state.totalPerSet, deckArr.length);
 
-      const STREAK_THRESHOLD = 1;       // 連続正解回数のしきい値
-
       // 学習履歴（直近30日を noteAttempt が保存）
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
 
       // バケット：
-      // B: 直近で連続正解がしきい値以上のもの
-      // A: 誤答または未実施のもの
+      // A: 最新の回答が誤りではないもの（未回答を含む）
+      // B: 上記以外（最新の回答が誤り）
       const bucketA = [];
       const bucketB = [];
 
@@ -286,34 +284,34 @@
         const rec = perfRaw[key];
 
         const attempts = (rec && Array.isArray(rec.attempts)) ? rec.attempts : [];
-        if (attempts.length === 0) { bucketA.push(i); continue; }
+        if (attempts.length === 0) {
+          bucketA.push({ idx: i, streak: 0, rand: Math.random() });
+          continue;
+        }
 
         const last = attempts[attempts.length - 1];
-        if (!last.correct) { bucketA.push(i); continue; }
-
-        let consecutive = 0;
-        let correctTotal = 0;
-        for (const a of attempts) if (a.correct) correctTotal++;
-        for (let k = attempts.length - 1; k >= 0; k--) {
-          const a = attempts[k];
-          if (a.correct) { consecutive++; } else { break; }
+        if (last.correct) {
+          let streak = 0;
+          for (let k = attempts.length - 1; k >= 0; k--) {
+            const a = attempts[k];
+            if (a.correct) { streak++; } else { break; }
+          }
+          bucketA.push({ idx: i, streak, rand: Math.random() });
+        } else {
+          bucketB.push(i);
         }
-
-        if (consecutive >= STREAK_THRESHOLD) {
-          bucketB.push({ idx: i, correct: correctTotal, rand: Math.random() });
-        }
-        // それ以外（最後は正解だが連続数不足）は出題対象外
       }
 
       const order = [];
-
-      if (bucketB.length > 0) {
-        bucketB.sort((a, b) => (a.correct - b.correct) || (a.rand - b.rand));
-        order.push(bucketB[0].idx);
+      bucketA.sort((a, b) => (a.streak - b.streak) || (a.rand - b.rand));
+      if (bucketA.length > 0) {
+        order.push(bucketA.shift().idx);
       }
 
-      const A = shuffle(bucketA); // ランダム
-      while (order.length < n && A.length) order.push(A.shift());
+      const B = shuffle(bucketB); // ランダム
+      while (order.length < n && B.length) order.push(B.shift());
+      const restA = shuffle(bucketA.map(x => x.idx));
+      while (order.length < n && restA.length) order.push(restA.shift());
 
       return order;
     }
