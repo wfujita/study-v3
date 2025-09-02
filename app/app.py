@@ -102,6 +102,42 @@ def iter_results():
     return out
 
 
+@app.get("/api/recent")
+def recent_stat():
+    user = request.args.get("user") or ""
+    qid = request.args.get("id") or ""
+    if not user or not qid:
+        return jsonify({"correct": 0, "answered": 0})
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    res = iter_results()
+    answered = 0
+    correct = 0
+    for r in res:
+        if r.get("user") != user:
+            continue
+        ans = r.get("answered") or []
+        for a in ans:
+            if (a.get("mode") or r.get("mode") or "normal") == "review":
+                continue
+            if str(a.get("id") or "") != qid:
+                continue
+            at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
+            try:
+                at_dt = (
+                    datetime.fromisoformat(at_str.replace("Z", "+00:00"))
+                    if at_str
+                    else None
+                )
+            except Exception:
+                at_dt = None
+            if not at_dt or at_dt < cutoff:
+                continue
+            answered += 1
+            if a.get("correct"):
+                correct += 1
+    return jsonify({"correct": correct, "answered": answered})
+
+
 # ====== /admin 用 API ======
 @app.get("/api/admin/users")
 def admin_users():

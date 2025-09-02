@@ -72,7 +72,7 @@
     <section class="card" id="setup">
       <div class="row">
         <label class="row" style="gap:6px"><span class="muted">学習者名</span><input id="learner" type="text" placeholder="taro" autocomplete="off" autocapitalize="off" list="user-suggestions" /></label><datalist id="user-suggestions"></datalist>
-        <label class="row" style="gap:6px"><span class="muted">1セットの出題数</span><input id="count" type="number" min="3" max="20" value="3" style="width:80px"/></label>
+        <label class="row" style="gap:6px"><span class="muted">1セットの出題数</span><input id="count" type="number" min="3" max="20" value="5" style="width:80px"/></label>
         <label class="row" style="gap:6px"><span class="muted">出題タイプ</span>
           <select id="qtype">
             <option value="reorder">並べ替え（文法）</option>
@@ -360,14 +360,15 @@
       p[k]=rec; savePerf(p);
     }
     function updateRecentStat(q){
-      const p = loadPerf();
-      const k = qKeyOf(q);
-      const rec = p[k];
-      const cutoff = Date.now() - 30*24*3600*1000;
-      const arr = (rec && Array.isArray(rec.attempts)) ? rec.attempts.filter(a=> new Date(a.at).getTime() >= cutoff) : [];
-      const ok = arr.filter(a=>a.correct).length;
-      const txt = arr.length? `30日正解: ${ok}/${arr.length}` : '30日正解: --';
-      $('#stat-recent').textContent = txt;
+      const el = $('#stat-recent');
+      if(!state.user || !q.id){ el.textContent='30日正解: --'; return; }
+      fetch(`/api/recent?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`, {cache:'no-store'})
+        .then(res=>res.ok?res.json():null)
+        .then(data=>{
+          const ans=data?data.answered:0; const ok=data?data.correct:0;
+          el.textContent = ans? `30日正解: ${ok}/${ans}` : '30日正解: --';
+        })
+        .catch(()=>{ el.textContent='30日正解: --'; });
     }
     function weakCandidates(windowDays){
       const p = loadPerf();
