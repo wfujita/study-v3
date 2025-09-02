@@ -274,8 +274,8 @@
       const perfRaw = JSON.parse(localStorage.getItem(`quiz:${state.user}:perf`) || '{}');
 
       // バケット：
-      // A: 最新の回答が誤りではないもの（未回答を含む）
-      // B: 上記以外（最新の回答が誤り）
+      // A: 最新の回答が正解である問題
+      // B: 最新の回答が誤り または 未回答の問題
       const bucketA = [];
       const bucketB = [];
 
@@ -286,7 +286,7 @@
 
         const attempts = (rec && Array.isArray(rec.attempts)) ? rec.attempts : [];
         if (attempts.length === 0) {
-          bucketA.push({ idx: i, streak: 0, rand: Math.random() });
+          bucketB.push(i);
           continue;
         }
 
