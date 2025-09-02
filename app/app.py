@@ -196,6 +196,7 @@ def admin_summary():
     cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     answered_all = []
     sessions = []
+    attempts_by_q = {}
     for r in res:
         if not match_user(r):
             continue
@@ -244,6 +245,9 @@ def admin_summary():
                 if qtext not in hay:
                     continue
             answered_all.append(item)
+            attempts_by_q.setdefault(qid or "(no-id)", []).append(
+                (at_str or "", bool(a.get("correct")))
+            )
         session_at = r.get("endedAt") or r.get("receivedAt")
         try:
             session_dt = (
@@ -289,6 +293,17 @@ def admin_summary():
             d["wrong"] += 1
     by_unit_arr = sorted(by_unit.values(), key=lambda x: (-x["answered"], x["unit"]))
 
+    streaks = {}
+    for qid, arr in attempts_by_q.items():
+        arr.sort(key=lambda x: x[0])
+        streak = 0
+        for _, ok in reversed(arr):
+            if ok:
+                streak += 1
+            else:
+                break
+        streaks[qid] = streak
+
     by_q = {}
     for a in answered_all:
         qid = a.get("id") or "(no-id)"
@@ -303,6 +318,7 @@ def admin_summary():
                 "correct": 0,
                 "wrong": 0,
                 "lastAt": None,
+                "streak": 0,
             },
         )
         d["answered"] += 1
@@ -311,6 +327,7 @@ def admin_summary():
         else:
             d["wrong"] += 1
         d["lastAt"] = max(d["lastAt"] or "", a.get("at") or "")
+        d["streak"] = streaks.get(qid, 0)
     top_missed = sorted(
         by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True
     )

@@ -97,6 +97,7 @@
           <span class="pill">誤答: <b id="stat-wrong">0</b></span>
           <span class="pill" id="stat-streak">連続正解: --</span>
           <span class="pill" id="stat-accuracy">正解率: --</span>
+          <span class="pill" id="stat-bucket">バケット: --</span>
           <span class="pill right" id="timer">⏱ 00:00</span>
       </div>
       <div id="prompt" class="muted">（日本語プロンプト）</div>
@@ -211,7 +212,7 @@
 
       // レビュー用デッキに流し込む（既存ロジック流用）
       window.__REVIEW_DECK__ = customDeck.map(q=>({ ...q }));
-      state.order = [...window.__REVIEW_DECK__.keys()];
+      state.order = [...window.__REVIEW_DECK__.keys()].map(i=>({idx:i, bucket:null}));
       state.mode = 'review';
       // 表示UIを合わせる（並べ替え/単語）
       state.qType = (window.__REVIEW_DECK__[0]?.type) || state.qType;
@@ -306,13 +307,18 @@
       const order = [];
       bucketA.sort((a, b) => (a.streak - b.streak) || (a.rand - b.rand));
       if (bucketA.length > 0) {
-        order.push(bucketA.shift().idx);
+        const picked = bucketA.shift();
+        order.push({ idx: picked.idx, bucket: 'A' });
       }
 
       const B = shuffle(bucketB); // ランダム
-      while (order.length < n && B.length) order.push(B.shift());
+      while (order.length < n && B.length) {
+        order.push({ idx: B.shift(), bucket: 'B' });
+      }
       const restA = shuffle(bucketA.map(x => x.idx));
-      while (order.length < n && restA.length) order.push(restA.shift());
+      while (order.length < n && restA.length) {
+        order.push({ idx: restA.shift(), bucket: 'A' });
+      }
 
       return order;
     }
@@ -358,9 +364,11 @@
       rec.attempts = rec.attempts.filter(a=> new Date(a.at).getTime() >= cutoff);
       p[k]=rec; savePerf(p);
     }
-    function updateQuestionStat(q){
+    function updateQuestionStat(q, bucket){
       const elStreak = $('#stat-streak');
       const elAcc = $('#stat-accuracy');
+      const elBucket = $('#stat-bucket');
+      elBucket.textContent = bucket ? `バケット: ${bucket}` : 'バケット: --';
       if(!state.user || !q.id){
         elStreak.textContent='連続正解: --';
         elAcc.textContent='正解率: --';
@@ -419,11 +427,11 @@
       if(state.mode==='review'){
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
         if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
-        state.order = ord;
+        state.order = ord.map(i=>({idx:i, bucket:null}));
       }else if(state.mode==='weak'){
         const ord = buildOrderWeak(state.weakWindowDays||7);
         if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
-        state.order = ord;
+        state.order = ord.map(i=>({idx:i, bucket:null}));
       }else{
         state.order = buildOrderFromBank();
       }
@@ -432,7 +440,8 @@
 
     /********** 出題＆UI **********/
     function getCurrentQuestion(){
-      const idx = state.order[state.qIndex];
+      const entry = state.order[state.qIndex];
+      const idx = entry.idx;
       if(state.mode==='review') return window.__REVIEW_DECK__[idx];
       if(state.mode==='weak') return window.__WEAK_DECK__[idx];
       return deck()[idx];
@@ -442,8 +451,9 @@
     function stopTimer(){ if(state.timerId){ clearInterval(state.timerId); state.timerId=null; } }
 
     function renderQuestion(){
+      const entry = state.order[state.qIndex];
       const q = getCurrentQuestion();
-      updateQuestionStat(q);
+      updateQuestionStat(q, entry.bucket);
       state.graded = false;
       $('#status').textContent = `Q ${state.qIndex+1}/${state.order.length}${state.mode==='review'?'（復習）':''}`;
       $('#explain').textContent='';
@@ -522,7 +532,7 @@
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
       noteAttempt(q, correct, record.at, state.mode);
-      updateQuestionStat(q);
+      updateQuestionStat(q, state.order[state.qIndex].bucket);
       state.graded = true;
     }
 
@@ -551,7 +561,7 @@
       const missedObjs = records
         .filter(r=>!r.correct)
         .map(r=>{
-          const idxInSrc = state.order[r.qIndex];
+          const idxInSrc = state.order[r.qIndex].idx;
           return srcDeck[idxInSrc];
         })
         .filter(Boolean);
@@ -657,7 +667,8 @@
     // 完了画面の遷移
       document.getElementById('btn-nextset').onclick=async ()=>{
         try{
-          state.setIndex=0;
+          state.setIndex++;
+          if(state.mode==='review'){ state.mode='normal'; }
           await startSet();
         }catch(e){
           alert('次セットを開始できません: '+(e.message||e));
