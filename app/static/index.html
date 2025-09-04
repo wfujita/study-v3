@@ -188,7 +188,7 @@
     const shuffle = arr=>arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
     const NBSP = String.fromCharCode(160);
     const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
-    const normalizeEndPunc = s=> s.replace(/[.,!?]$/,'');
+    const normalizeEndPunc = s=> s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
     const nowISO = ()=> new Date().toISOString();
 
