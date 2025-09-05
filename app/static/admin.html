@@ -235,7 +235,8 @@
       const unit = $('#unit').value || '';
       const q = $('#search').value.trim();
       const mode = $('#mode').value || 'normal';
-      const data = await getJSON('/api/admin/summary', {user, unit, q, mode});
+      const show = $('#show').value || 'all';
+      const data = await getJSON('/api/admin/summary', {user, unit, q, mode, show});
 
       // unit セレクタを埋める（保持）
       const unitSel=$('#unit');
@@ -252,7 +253,7 @@
       await refresh();
       $('#user').onchange=refresh; $('#unit').onchange=refresh; $('#mode').onchange=refresh;
       $('#search').oninput=()=>{ clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
-      $('#show').onchange=updateDisplay;
+      $('#show').onchange=refresh;
     }
 
     main().catch(e=>{ alert('読み込みに失敗しました: '+e.message); console.error(e); });

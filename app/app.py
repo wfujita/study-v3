@@ -186,6 +186,7 @@ def admin_summary():
     unit = request.args.get("unit") or ""
     qtext = (request.args.get("q") or "").lower()
     mode = request.args.get("mode") or "normal"
+    qtype = request.args.get("show") or "all"
 
     qmap = load_questions_map()
     res = iter_results()
@@ -210,6 +211,17 @@ def admin_summary():
             ]
         if not isinstance(ans, list):
             ans = []
+
+        # 表示タイプ（単語/並べ替え）で絞り込み
+        if qtype in ("vocab", "reorder"):
+            filtered = []
+            for a in ans:
+                qm = qmap.get(a.get("id")) or {}
+                atype = a.get("type") or qm.get("type") or ""
+                if atype == qtype:
+                    filtered.append(a)
+            ans = filtered
+
         for a in ans:
             at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
             try:
