@@ -314,6 +314,7 @@ def admin_summary():
                 "unit": a.get("unit"),
                 "jp": a.get("jp"),
                 "en": a.get("en"),
+                "type": a.get("type"),
                 "answered": 0,
                 "correct": 0,
                 "wrong": 0,
