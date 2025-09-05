@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 
 def test_admin_summary_show_filters(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
-    import importlib, sys
+    import importlib
+    import sys
 
     sys.modules.pop("app.app", None)
     mod = importlib.import_module("app.app")
@@ -16,8 +17,16 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
         "mode": "normal",
         "endedAt": now.isoformat().replace("+00:00", "Z"),
         "answered": [
-            {"id": "r001", "correct": False, "at": now.isoformat().replace("+00:00", "Z")},
-            {"id": "v001", "correct": False, "at": now.isoformat().replace("+00:00", "Z")},
+            {
+                "id": "r001",
+                "correct": False,
+                "at": now.isoformat().replace("+00:00", "Z"),
+            },
+            {
+                "id": "v001",
+                "correct": False,
+                "at": now.isoformat().replace("+00:00", "Z"),
+            },
         ],
     }
     with open(tmp_path / "results.ndjson", "w", encoding="utf-8") as f:
