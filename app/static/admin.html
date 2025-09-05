@@ -16,6 +16,7 @@
     .grid{ display:grid; gap:12px }
     .grid.cols-3{ grid-template-columns: repeat(3,1fr) }
     .grid.cols-2{ grid-template-columns: repeat(2,1fr) }
+    .grid.cols-1{ grid-template-columns: 1fr }
     .stat{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:12px }
     .muted{ color:var(--muted) }
     table{ width:100%; border-collapse: collapse; }
@@ -55,6 +56,10 @@
           <span class="muted">モード</span>
           <select id="mode"><option value="normal">通常</option><option value="review">復習</option></select>
         </label>
+        <label class="row" style="gap:6px">
+          <span class="muted">表示</span>
+          <select id="show"><option value="all">両方</option><option value="vocab">単語問題</option><option value="reorder">並べ替え問題</option></select>
+        </label>
         <input id="search" placeholder="問題検索（日本語/英語/ID）" style="min-width:220px" />
         <span class="pill right" id="last-updated">更新: --</span>
       </div>
@@ -88,14 +93,14 @@
       </div>
     </section>
 
-    <section class="grid cols-2">
-      <div class="card">
+    <section class="grid cols-2" id="sec-words">
+      <div class="card" id="sec-vocab">
         <h3 style="margin:0 0 8px">単語問題</h3>
         <div style="max-height:340px; overflow:auto">
           <table id="tbl-words-vocab"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="sec-reorder">
         <h3 style="margin:0 0 8px">並べ替え問題</h3>
         <div style="max-height:340px; overflow:auto">
           <table id="tbl-words-reorder"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
@@ -202,6 +207,29 @@
       $('#last-updated').textContent = '更新: ' + new Date().toLocaleTimeString();
     }
 
+    function updateDisplay(){
+      const show = $('#show').value;
+      const secV = $('#sec-vocab');
+      const secR = $('#sec-reorder');
+      const cont = $('#sec-words');
+      if(show==='vocab'){
+        secV.style.display='';
+        secR.style.display='none';
+        cont.classList.remove('cols-2');
+        cont.classList.add('cols-1');
+      }else if(show==='reorder'){
+        secV.style.display='none';
+        secR.style.display='';
+        cont.classList.remove('cols-2');
+        cont.classList.add('cols-1');
+      }else{
+        secV.style.display='';
+        secR.style.display='';
+        cont.classList.remove('cols-1');
+        cont.classList.add('cols-2');
+      }
+    }
+
     async function refresh(){
       const user = $('#user').value || '__all__';
       const unit = $('#unit').value || '';
@@ -216,6 +244,7 @@
       unitSel.value = unit || current;
 
       renderSummary(data);
+      updateDisplay();
     }
 
     async function main(){
@@ -223,6 +252,7 @@
       await refresh();
       $('#user').onchange=refresh; $('#unit').onchange=refresh; $('#mode').onchange=refresh;
       $('#search').oninput=()=>{ clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
+      $('#show').onchange=updateDisplay;
     }
 
     main().catch(e=>{ alert('読み込みに失敗しました: '+e.message); console.error(e); });
