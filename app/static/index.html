@@ -79,7 +79,6 @@
             <option value="vocab" selected>単語（意味→スペル）</option>
           </select>
         </label>
-        <label class="row" style="gap:6px"><span class="muted">サーバ保存URL</span><input id="endpoint" type="text" value="/api/results" placeholder="/api/results" style="min-width:260px"/></label>
         <button class="primary" id="btn-start">▶ 学習スタート</button>
         <button id="btn-weak" title="過去7日の正答率が低い問題">🎯 弱点対策（過去7日）</button>
       </div>
@@ -144,11 +143,11 @@
   <script>
     /********** 設定 **********/
     const QUESTIONS_URL = "/data/questions.json"; // Flaskで配信
-    const DEFAULT_ENDPOINT = "${location.origin}/api/results";
+    const DEFAULT_ENDPOINT = "/api/results";
 
     // 設定の記憶用キー
     const REMEMBER_USER_KEY = 'quiz:lastUser';
-    const REMEMBER_ENDPOINT_KEY = 'quiz:lastEndpoint';
+    const REMEMBER_QTYPE_KEY = 'quiz:lastQType';
     const USER_SUGGEST_KEY = 'quiz:userList';
 
     /********** 問題ロード **********/
@@ -220,7 +219,7 @@
       show('quiz'); startTimer(); renderQuestion();
     }
 
-    /********** 設定の記憶（ユーザー名・送信先） **********/
+    /********** 設定の記憶（ユーザー名・出題タイプ） **********/
     function populateUserSuggestions(){
       const dl=document.getElementById('user-suggestions'); if(!dl) return;
       const list=JSON.parse(localStorage.getItem(USER_SUGGEST_KEY)||'[]');
@@ -230,15 +229,15 @@
     function loadRememberedSettings(){
       const u=(localStorage.getItem(REMEMBER_USER_KEY)||'').trim();
       if(u){ state.user=u; const inp=document.getElementById('learner'); if(inp) inp.value=u; const pill=document.getElementById('user-pill'); if(pill) pill.textContent=`👤 ${u}`; }
-      const ep=(localStorage.getItem(REMEMBER_ENDPOINT_KEY)||'').trim();
-      const e=document.getElementById('endpoint');
-      if(ep){ state.endpoint=ep; if(e) e.value=ep; }
-      else { state.endpoint=DEFAULT_ENDPOINT; if(e) e.value=DEFAULT_ENDPOINT; }
+      const qt=(localStorage.getItem(REMEMBER_QTYPE_KEY)||'').trim();
+      const qs=document.getElementById('qtype');
+      if(qt){ state.qType=qt; if(qs) qs.value=qt; }
+      state.endpoint=DEFAULT_ENDPOINT;
       populateUserSuggestions();
     }
-    function rememberUserAndEndpoint(){
+    function rememberSettings(){
       if(state.user) localStorage.setItem(REMEMBER_USER_KEY, state.user);
-      if(state.endpoint) localStorage.setItem(REMEMBER_ENDPOINT_KEY, state.endpoint);
+      if(state.qType) localStorage.setItem(REMEMBER_QTYPE_KEY, state.qType);
       const raw=JSON.parse(localStorage.getItem(USER_SUGGEST_KEY)||'[]');
       const list=Array.isArray(raw)? raw.slice(0) : [];
       if(state.user){
@@ -611,8 +610,7 @@
       pushHistory({ user: state.user, setIndex: state.setIndex, mode: state.mode||'normal', qType: state.qType, total, correct: state.correct, wrong: total-state.correct, accuracy, seconds, endedAt: sessionWire.endedAt });
 
       const saveEl = document.getElementById('save-status');
-      const url = (document.getElementById('endpoint').value.trim() || DEFAULT_ENDPOINT);
-      state.endpoint = url;
+      const url = state.endpoint || DEFAULT_ENDPOINT;
       if(url){
         saveEl.textContent = '結果送信: 送信中…';
         console.log('[POST] results =>', url, sessionWire);
@@ -631,9 +629,9 @@
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
-        state.endpoint=document.getElementById('endpoint').value.trim() || DEFAULT_ENDPOINT; document.getElementById('endpoint').value = state.endpoint;
+        state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
-        rememberUserAndEndpoint();
+        rememberSettings();
         await startSet();
       }catch(e){ alert('開始できません: '+(e.message||e)); }
     };
@@ -649,9 +647,9 @@
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
-        state.endpoint=document.getElementById('endpoint').value.trim() || DEFAULT_ENDPOINT; document.getElementById('endpoint').value = state.endpoint;
+        state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
-        rememberUserAndEndpoint();
+        rememberSettings();
         await startSet();
       }catch(e){ alert('弱点対策を開始できません: '+(e.message||e)); }
     };
@@ -660,11 +658,11 @@
     document.getElementById('learner').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
-      rememberUserAndEndpoint();
+      rememberSettings();
     });
-    document.getElementById('endpoint').addEventListener('change', (e)=>{
+    document.getElementById('qtype').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
-      state.endpoint=v; localStorage.setItem(REMEMBER_ENDPOINT_KEY, v);
+      state.qType=v; localStorage.setItem(REMEMBER_QTYPE_KEY, v);
     });
 
     document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); };
