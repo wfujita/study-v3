@@ -492,7 +492,7 @@
     function clearAnswer(){ if(state.qType==='reorder'){ $$('#target .chip').forEach(n=>n.remove()); $$('#bank .chip').forEach(n=>n.classList.remove('used')); updateNextState(); } else { $('#vocab-input').value=''; $('#vocab-input').focus(); } }
 
     function currentAnswer(){ if(state.qType==='reorder'){ return [...$('#target').children].map(x=>x.textContent).join(' ');} return $('#vocab-input').value||''; }
-    function updateNextState(){ if(state.qType==='reorder'){ const q=getCurrentQuestion(); const done = $$('#target .chip').length === q.chunks.length; $('#btn-next').disabled = !done; } }
+    function updateNextState(){ if(state.qType==='reorder'){ $('#btn-next').disabled = state.graded ? false : true; } }
 
     /********** 採点・進行 **********/
     function checkAnswer(){
@@ -501,7 +501,6 @@
 
       let ans, right, correct;
       if(state.qType==='reorder'){
-        if($$('#target .chip').length !== q.chunks.length){ $('#explain').innerHTML='<span class="ng">まだ並べ終えていません。</span>'; return; }
         ans = normalizeEndPunc(normalizeSpaces(currentAnswer()));
         ans = ans? ans.charAt(0).toUpperCase()+ans.slice(1) : ans;
         right = normalizeEndPunc(normalizeSpaces(q.en));
@@ -539,6 +538,7 @@
       noteAttempt(q, correct, record.at, state.mode);
       updateQuestionStat(q, state.order[state.qIndex].bucket);
       state.graded = true;
+      $('#btn-next').disabled = false;
     }
 
     function nextQuestion(){
@@ -697,9 +697,8 @@
       }
       if(e.key==='Enter'){
         e.preventDefault();
-        const done = (state.qType==='reorder')? ($$('#target .chip').length === getCurrentQuestion().chunks.length) : true;
-        if(!state.graded && done){ checkAnswer(); }
-        else if(state.graded){ nextQuestion(); }
+        if(!state.graded){ checkAnswer(); }
+        else { nextQuestion(); }
         if(document.activeElement && document.activeElement.blur){ document.activeElement.blur(); }
       }
     });
