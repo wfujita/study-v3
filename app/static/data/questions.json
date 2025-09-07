@@ -2,14 +2,14 @@
   "meta": { "version": 2, "lang": "ja-en", "note": "並べ替え(questions)＋単語(vocab) を同居" },
 
   "questions": [
-    { "id": "r001", "unit": "present-simple", "jp": "彼は放課後にサッカーをします。", "en": "He plays soccer after school.", "chunks": ["He","plays","soccer","after school","."], "tip": "三単現: He plays（sを忘れずに）" },
-    { "id": "r002", "unit": "present-continuous-q", "jp": "あなたは今宿題をしていますか。", "en": "Are you doing your homework now?", "chunks": ["Are","you","doing","your homework","now","?"], "tip": "進行形の疑問: Are you ～?" },
-    { "id": "r003", "unit": "past-simple", "jp": "私は昨日その博物館に行きました。", "en": "I went to the museum yesterday.", "chunks": ["I","went","to the museum","yesterday","."], "tip": "go の過去形は went" },
-    { "id": "r004", "unit": "comparative", "jp": "この本はあの本よりおもしろい。", "en": "This book is more interesting than that one.", "chunks": ["This book","is","more interesting","than that one","."], "tip": "比較級: more … than ～" },
-    { "id": "r005", "unit": "there-is", "jp": "机の下に猫が一匹います。", "en": "There is a cat under the desk.", "chunks": ["There is","a cat","under the desk","."], "tip": "存在文: There is/are" },
-    { "id": "r006", "unit": "present-3sg", "jp": "彼女は毎朝朝ごはんを食べます。", "en": "She has breakfast every morning.", "chunks": ["She","has","breakfast","every morning","."], "tip": "have → has（3単現）" },
-    { "id": "r007", "unit": "present-continuous", "jp": "私は英語を勉強しているところです。", "en": "I am studying English.", "chunks": ["I","am","studying","English","."], "tip": "be + -ing で進行形" },
-    { "id": "r008", "unit": "past-simple-q", "jp": "あなたは昨日映画を見ましたか。", "en": "Did you watch a movie yesterday?", "chunks": ["Did","you","watch","a movie","yesterday","?"], "tip": "過去の疑問: Did + 主語 + 動詞原形" }
+    { "id": "r001", "unit": "present-simple", "jp": "彼は放課後にサッカーをします。", "en": "He plays soccer after school.", "chunks": ["He","plays","soccer","after school","."], "extras": ["in the park"], "tip": "三単現: He plays（sを忘れずに）" },
+    { "id": "r002", "unit": "present-continuous-q", "jp": "あなたは今宿題をしていますか。", "en": "Are you doing your homework now?", "chunks": ["Are","you","doing","your homework","now","?"], "extras": ["at home"], "tip": "進行形の疑問: Are you ～?" },
+    { "id": "r003", "unit": "past-simple", "jp": "私は昨日その博物館に行きました。", "en": "I went to the museum yesterday.", "chunks": ["I","went","to the museum","yesterday","."], "extras": ["last week"], "tip": "go の過去形は went" },
+    { "id": "r004", "unit": "comparative", "jp": "この本はあの本よりおもしろい。", "en": "This book is more interesting than that one.", "chunks": ["This book","is","more interesting","than that one","."], "extras": ["yesterday"], "tip": "比較級: more … than ～" },
+    { "id": "r005", "unit": "there-is", "jp": "机の下に猫が一匹います。", "en": "There is a cat under the desk.", "chunks": ["There is","a cat","under the desk","."], "extras": ["yesterday"], "tip": "存在文: There is/are" },
+    { "id": "r006", "unit": "present-3sg", "jp": "彼女は毎朝朝ごはんを食べます。", "en": "She has breakfast every morning.", "chunks": ["She","has","breakfast","every morning","."], "extras": ["at school"], "tip": "have → has（3単現）" },
+    { "id": "r007", "unit": "present-continuous", "jp": "私は英語を勉強しているところです。", "en": "I am studying English.", "chunks": ["I","am","studying","English","."], "extras": ["today"], "tip": "be + -ing で進行形" },
+    { "id": "r008", "unit": "past-simple-q", "jp": "あなたは昨日映画を見ましたか。", "en": "Did you watch a movie yesterday?", "chunks": ["Did","you","watch","a movie","yesterday","?"], "extras": ["at school"], "tip": "過去の疑問: Did + 主語 + 動詞原形" }
   ],
 
   "vocab": [

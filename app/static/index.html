@@ -159,7 +159,7 @@
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
-      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||''}));
+      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, extras:q.extras||[], tip:q.tip||''}));
       BANK_VOCAB   = (data.vocab||[]).map(v=>({type:'vocab', id:v.id||null, unit:v.unit||null, jp:v.jp, en:v.en, tip:v.tip||'', pos:v.pos||''}));
     }
 
@@ -467,7 +467,7 @@
         $('#ui-vocab').style.display='none';
         $('#prompt').innerHTML = q.jp ? `${q.jp}<br><span class="muted">ヒント: ${q.tip||''}</span>` : '<span class="muted">語順を並べ替えましょう</span>';
         const target=$('#target'); const bank=$('#bank'); target.innerHTML=''; bank.innerHTML='';
-        const chunks = shuffle(q.chunks.map((c,i)=> i ? c : c.charAt(0).toLowerCase()+c.slice(1)));
+        const chunks = shuffle([...q.chunks, ...(q.extras||[])]);
         chunks.forEach((c,i)=>{
           const chip=document.createElement('button'); chip.className='chip'; chip.setAttribute('data-text',c); chip.textContent=`${i+1}. ${c}`;
           chip.onclick=()=>placeChip(chip); bank.appendChild(chip);
