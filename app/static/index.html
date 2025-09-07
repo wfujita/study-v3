@@ -467,7 +467,7 @@
         $('#ui-vocab').style.display='none';
         $('#prompt').innerHTML = q.jp ? `${q.jp}<br><span class="muted">ヒント: ${q.tip||''}</span>` : '<span class="muted">語順を並べ替えましょう</span>';
         const target=$('#target'); const bank=$('#bank'); target.innerHTML=''; bank.innerHTML='';
-        const chunks = shuffle(q.chunks.map((c,i)=> i ? c : c.charAt(0).toLowerCase()+c.slice(1)));
+        const chunks = shuffle(q.chunks.slice());
         chunks.forEach((c,i)=>{
           const chip=document.createElement('button'); chip.className='chip'; chip.setAttribute('data-text',c); chip.textContent=`${i+1}. ${c}`;
           chip.onclick=()=>placeChip(chip); bank.appendChild(chip);
