@@ -465,7 +465,16 @@
       if(state.qType==='reorder'){
         $('#ui-reorder').style.display='block';
         $('#ui-vocab').style.display='none';
-        $('#prompt').innerHTML = q.jp ? `${q.jp}<br><span class="muted">ヒント: ${q.tip||''}</span>` : '<span class="muted">語順を並べ替えましょう</span>';
+        $('#prompt').innerHTML = q.jp ? `${q.jp}<br><button id="hint-btn" class="muted">ヒントを表示</button><span id="hint-text" class="muted" style="display:none">ヒント: ${q.tip||''}</span>` : '<span class="muted">語順を並べ替えましょう</span>';
+        const btnHint = $('#hint-btn');
+        const hintText = $('#hint-text');
+        if(btnHint){
+          if(q.tip){
+            btnHint.onclick = () => { hintText.style.display='inline'; btnHint.style.display='none'; };
+          } else {
+            btnHint.style.display='none';
+          }
+        }
         const target=$('#target'); const bank=$('#bank'); target.innerHTML=''; bank.innerHTML='';
         const chunks = shuffle(q.chunks.slice());
         chunks.forEach((c,i)=>{
@@ -481,7 +490,11 @@
         $('#ui-reorder').style.display='none';
         $('#ui-vocab').style.display='block';
         $('#prompt').innerHTML = `意味: <b>${q.jp}</b>`;
-        $('#vocab-tip').innerHTML = q.tip? `ヒント: ${q.tip}` : '';
+        $('#vocab-tip').innerHTML = q.tip? `<button id="vocab-hint-btn" class="muted">ヒントを表示</button><span id="vocab-hint-text" class="muted" style="display:none">ヒント: ${q.tip}</span>` : '';
+        const vhBtn = $('#vocab-hint-btn');
+        if(vhBtn){
+          vhBtn.onclick = () => { $('#vocab-hint-text').style.display='inline'; vhBtn.style.display='none'; };
+        }
         const inp = $('#vocab-input'); inp.value=''; inp.focus();
         $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
       }
