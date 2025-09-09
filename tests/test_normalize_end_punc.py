@@ -2,6 +2,7 @@ import json
 import subprocess
 from pathlib import Path
 
+
 def run_node(script: str) -> str:
     res = subprocess.run(
         ["node", "-e", script], capture_output=True, text=True, check=True
