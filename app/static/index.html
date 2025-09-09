@@ -187,7 +187,7 @@
     const shuffle = arr=>arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
     const NBSP = String.fromCharCode(160);
     const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
-    const normalizeEndPunc = s=> s.replace(/\s*[.,!?]$/,'');
+    const normalizeEndPunc = (s, keep=false)=> keep ? s : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
     const nowISO = ()=> new Date().toISOString();
 
@@ -501,9 +501,10 @@
 
       let ans, right, correct;
       if(state.qType==='reorder'){
-        ans = normalizeEndPunc(normalizeSpaces(currentAnswer()));
+        const keepPunc = true; // 並び替えでは文末記号を保持する
+        ans = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
         ans = ans? ans.charAt(0).toUpperCase()+ans.slice(1) : ans;
-        right = normalizeEndPunc(normalizeSpaces(q.en));
+        right = normalizeEndPunc(normalizeSpaces(q.en), keepPunc);
         correct = (ans===right);
       } else { // vocab
         ans = normalizeWord(currentAnswer());
