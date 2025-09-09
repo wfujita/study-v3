@@ -34,9 +34,10 @@ function grade(ans, right, keep) {{
 console.log(JSON.stringify([
   grade('Hello world', 'Hello world.', true),
   grade('Hello world.', 'Hello world.', true),
+  grade('Hello world .', 'Hello world.', true),
   grade('Hello world', 'Hello world.', false)
 ]));
 """
     out = run_node(script)
     result = json.loads(out)
-    assert result == [False, True, True]
+    assert result == [False, True, True, True]
