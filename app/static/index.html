@@ -122,6 +122,7 @@
         <button id="btn-undo">↩ ひとつ戻す</button>
         <button id="btn-clear">🧹 クリア</button>
         <button id="btn-speak">🔊 正解文/単語</button>
+        <button id="btn-hint">💡 ヒント</button>
       </div>
       <div id="explain" class="muted" style="min-height:1.6em"></div>
     </section>
@@ -465,7 +466,9 @@
       if(state.qType==='reorder'){
         $('#ui-reorder').style.display='block';
         $('#ui-vocab').style.display='none';
-        $('#prompt').innerHTML = q.jp ? `${q.jp}<br><span class="muted">ヒント: ${q.tip||''}</span>` : '<span class="muted">語順を並べ替えましょう</span>';
+        const basePrompt = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
+        $('#prompt').innerHTML = basePrompt;
+        $('#btn-hint').disabled = !q.tip;
         const target=$('#target'); const bank=$('#bank'); target.innerHTML=''; bank.innerHTML='';
         const chunks = shuffle(q.chunks.slice());
         chunks.forEach((c,i)=>{
@@ -481,9 +484,21 @@
         $('#ui-reorder').style.display='none';
         $('#ui-vocab').style.display='block';
         $('#prompt').innerHTML = `意味: <b>${q.jp}</b>`;
-        $('#vocab-tip').innerHTML = q.tip? `ヒント: ${q.tip}` : '';
+        $('#vocab-tip').innerHTML = '';
+        $('#btn-hint').disabled = !q.tip;
         const inp = $('#vocab-input'); inp.value=''; inp.focus();
         $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
+      }
+    }
+
+    function showHint(){
+      const q = getCurrentQuestion();
+      if(!q.tip) return;
+      if(state.qType==='reorder'){
+        const base = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
+        $('#prompt').innerHTML = `${base}<br><span class="muted">ヒント: ${q.tip}</span>`;
+      } else {
+        $('#vocab-tip').innerHTML = `ヒント: ${q.tip}`;
       }
     }
 
@@ -666,7 +681,7 @@
       state.qType=v; localStorage.setItem(REMEMBER_QTYPE_KEY, v);
     });
 
-    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); };
+    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); }; document.getElementById('btn-hint').onclick=showHint;
     document.getElementById('btn-speak').onclick=()=>{ const q=getCurrentQuestion(); if(!q) return; const u=new SpeechSynthesisUtterance(q.en); u.lang='en-US'; u.rate=1.0; speechSynthesis.cancel(); speechSynthesis.speak(u); };
 
     // 完了画面の遷移
