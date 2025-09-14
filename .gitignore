@@ -2,3 +2,5 @@
 data/*.ndjson
 __pycache__/
 *.pyc
+nohup.out
+app/static/data/nohup.out
