@@ -160,7 +160,7 @@
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
-      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||''}));
+      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, wrong:q.wrong||[], tip:q.tip||''}));
       BANK_VOCAB   = (data.vocab||[]).map(v=>({type:'vocab', id:v.id||null, unit:v.unit||null, jp:v.jp, en:v.en, tip:v.tip||'', pos:v.pos||''}));
     }
 
@@ -190,6 +190,7 @@
     const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
+    const HARD_STREAK = 3;
     const nowISO = ()=> new Date().toISOString();
 
     async function postJSON(url, data, timeoutMs=6000){
@@ -212,7 +213,7 @@
 
       // レビュー用デッキに流し込む（既存ロジック流用）
       window.__REVIEW_DECK__ = customDeck.map(q=>({ ...q }));
-      state.order = [...window.__REVIEW_DECK__.keys()].map(i=>({idx:i, bucket:null}));
+      state.order = [...window.__REVIEW_DECK__.keys()].map(i=>({idx:i, bucket:null, streak:0}));
       state.mode = 'review';
       // 表示UIを合わせる（並べ替え/単語）
       state.qType = (window.__REVIEW_DECK__[0]?.type) || state.qType;
@@ -290,7 +291,7 @@
 
       for(let i=0;i<deckArr.length;i++){
         const s = stats[i];
-        if(!s){ bucketB.push(i); continue; }
+        if(!s){ bucketB.push({idx:i, streak:0}); continue; }
         const streak = s.streak||0;
         const ans = s.answered||0;
         const ok = s.correct||0;
@@ -298,7 +299,7 @@
         if(streak>0){
           bucketA.push({ idx:i, streak, accuracy, rand:Math.random() });
         }else{
-          bucketB.push(i);
+          bucketB.push({idx:i, streak:0});
         }
       }
 
@@ -310,19 +311,20 @@
       bucketA.sort(compareA);
       if(bucketA.length>0){
         const picked = bucketA.shift();
-        order.push({ idx:picked.idx, bucket:'A' });
+        order.push({ idx:picked.idx, bucket:'A', streak:picked.streak });
       }
 
       const B = shuffle(bucketB); // ランダム
       while(order.length < n && B.length){
-        order.push({ idx:B.shift(), bucket:'B' });
+        const b = B.shift();
+        order.push({ idx:b.idx, bucket:'B', streak:b.streak });
       }
 
       bucketA.forEach(x=>x.rand=Math.random());
       bucketA.sort(compareA);
       while(order.length < n && bucketA.length){
         const next = bucketA.shift();
-        order.push({ idx:next.idx, bucket:'A' });
+        order.push({ idx:next.idx, bucket:'A', streak:next.streak });
       }
 
       return order;
@@ -432,11 +434,11 @@
       if(state.mode==='review'){
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
         if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
-        state.order = ord.map(i=>({idx:i, bucket:null}));
+        state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
       }else if(state.mode==='weak'){
         const ord = buildOrderWeak(state.weakWindowDays||7);
         if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
-        state.order = ord.map(i=>({idx:i, bucket:null}));
+        state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
       }else{
         state.order = await buildOrderFromBank();
       }
@@ -470,7 +472,12 @@
         $('#prompt').innerHTML = basePrompt;
         $('#btn-hint').disabled = !q.tip;
         const target=$('#target'); const bank=$('#bank'); target.innerHTML=''; bank.innerHTML='';
-        const chunks = shuffle(q.chunks.slice());
+        let chunks = q.chunks.slice();
+        if(entry.streak >= HARD_STREAK && q.wrong && q.wrong.length>0){
+          const w = q.wrong[Math.floor(Math.random()*q.wrong.length)];
+          chunks = chunks.concat(w);
+        }
+        chunks = shuffle(chunks);
         chunks.forEach((c,i)=>{
           const chip=document.createElement('button'); chip.className='chip'; chip.setAttribute('data-text',c); chip.textContent=`${i+1}. ${c}`;
           chip.onclick=()=>placeChip(chip); bank.appendChild(chip);
