@@ -28,7 +28,8 @@
     "jp": "私は来週京都を訪れるつもりです。",
     "en": "I am going to visit Kyoto next week.",
     "chunks": ["I","am","going to","visit","Kyoto","next week","."],
-    "tip": "be going to + 動詞原形"
+    "tip": "be going to + 動詞原形",
+    "wrong": ["will", "do", "does"]
   },
   {
     "id": "u3-002",
@@ -36,7 +37,8 @@
     "jp": "彼は明日その本を読むでしょう。",
     "en": "He will read the book tomorrow.",
     "chunks": ["he","will","read","the book","tomorrow","."],
-    "tip": "未来: will + 動詞原形"
+    "tip": "未来: will + 動詞原形",
+    "wrong": ["is", "does", "did"]
   },
   {
     "id": "u3-003",
@@ -44,7 +46,8 @@
     "jp": "あなたは今夜テレビを見るつもりですか。",
     "en": "Are you going to watch TV tonight?",
     "chunks": ["are","you","going to","watch","TV","tonight","?" ],
-    "tip": "疑問文: Are you going to + 動詞原形?"
+    "tip": "疑問文: Are you going to + 動詞原形?",
+    "wrong": ["do", "will", "is"]
   },
   {
     "id": "u3-004",
@@ -52,7 +55,8 @@
     "jp": "私はそのゲームをしないでしょう。",
     "en": "I will not play the game.",
     "chunks": ["I","will not","play","the game","."],
-    "tip": "否定文: will not + 動詞原形"
+    "tip": "否定文: will not + 動詞原形",
+    "wrong": ["do", "am", "does"]
   },
   {
     "id": "u3-005",
@@ -60,7 +64,8 @@
     "jp": "私は明日その映画を見ないつもりです。",
     "en": "I am not going to watch the movie tomorrow.",
     "chunks": ["I","am not","going to","watch","the movie","tomorrow","."],
-    "tip": "否定文: am not going to + 動詞原形"
+    "tip": "否定文: am not going to + 動詞原形",
+    "wrong": ["will", "do", "is"]
   },
   {
     "id": "u3-006",
@@ -68,7 +73,8 @@
     "jp": "彼は来週テニスをするでしょうか。",
     "en": "Will he play tennis next week?",
     "chunks": ["will","he","play","tennis","next week","?" ],
-    "tip": "疑問文: Will + 主語 + 動詞原形?"
+    "tip": "疑問文: Will + 主語 + 動詞原形?",
+    "wrong": ["does", "is", "do"]
   },
   {
     "id": "u3-007",
@@ -76,7 +82,8 @@
     "jp": "あなたはその本を読まないつもりですか。",
     "en": "Aren't you going to read the book?",
     "chunks": ["aren't","you","going to","read","the book","?" ],
-    "tip": "否定疑問文: Aren't you going to ～?"
+    "tip": "否定疑問文: Aren't you going to ～?",
+    "wrong": ["will", "do", "is"]
   },
 
 
@@ -86,7 +93,8 @@
     "jp": "机の上に1冊の本があります。",
     "en": "There is a book on the desk.",
     "chunks": ["there is","a book","on the desk","."],
-    "tip": "存在文: There is + 単数名詞"
+    "tip": "存在文: There is + 単数名詞",
+    "wrong": ["are", "has", "do"]
   },
   {
     "id": "u4-002",
@@ -94,7 +102,8 @@
     "jp": "この教室には20人の生徒がいます。",
     "en": "There are twenty students in this classroom.",
     "chunks": ["there are","twenty students","in this classroom","."],
-    "tip": "存在文: There are + 複数名詞"
+    "tip": "存在文: There are + 複数名詞",
+    "wrong": ["is", "has", "do"]
   },
   {
     "id": "u4-003",
@@ -102,7 +111,8 @@
     "jp": "私は彼に本を与えました。",
     "en": "I gave him a book.",
     "chunks": ["I","gave","him","a book","."],
-    "tip": "SVOO: give + 人 + 物"
+    "tip": "SVOO: give + 人 + 物",
+    "wrong": ["give", "gives", "to"]
   },
   {
     "id": "u4-004",
@@ -110,7 +120,8 @@
     "jp": "彼女は私にその写真を見せました。",
     "en": "She showed me the picture.",
     "chunks": ["she","showed","me","the picture","."],
-    "tip": "SVOO: show + 人 + 物"
+    "tip": "SVOO: show + 人 + 物",
+    "wrong": ["show", "shows", "to"]
   },
   {
     "id": "u4-005",
@@ -118,7 +129,8 @@
     "jp": "私は彼にその話を伝えました。",
     "en": "I told him the story.",
     "chunks": ["I","told","him","the story","."],
-    "tip": "SVOO: tell + 人 + 物"
+    "tip": "SVOO: tell + 人 + 物",
+    "wrong": ["tell", "tells", "to"]
   },
   {
     "id": "u4-006",
@@ -126,14 +138,16 @@
     "jp": "彼は私に自転車を貸しました。",
     "en": "He lent me his bicycle.",
     "chunks": ["he","lent","me","his bicycle","."],
-    "tip": "SVOO: lend + 人 + 物"
+    "tip": "SVOO: lend + 人 + 物",
+    "wrong": ["lend", "lends", "to"]
   },  {
     "id": "u4-007",
     "unit": "there-is-neg",
     "jp": "机の上にペンはありません。",
     "en": "There is not a pen on the desk.",
     "chunks": ["there is not","a pen","on the desk","."],
-    "tip": "存在文の否定: There is not + 単数名詞"
+    "tip": "存在文の否定: There is not + 単数名詞",
+    "wrong": ["are", "has", "do"]
   },
   {
     "id": "u4-008",
@@ -141,7 +155,8 @@
     "jp": "この部屋に椅子はいくつありますか。",
     "en": "How many chairs are there in this room?",
     "chunks": ["how many chairs","are there","in this room","?" ],
-    "tip": "疑問文: How many + 複数名詞 + are there ～?"
+    "tip": "疑問文: How many + 複数名詞 + are there ～?",
+    "wrong": ["is", "has", "do"]
   },
   {
     "id": "u4-009",
@@ -149,7 +164,8 @@
     "jp": "私は彼に手紙を渡しませんでした。",
     "en": "I did not give him a letter.",
     "chunks": ["I","did not","give","him","a letter","."],
-    "tip": "SVOOの否定: did not + 動詞原形"
+    "tip": "SVOOの否定: did not + 動詞原形",
+    "wrong": ["do", "does", "is"]
   },
   {
     "id": "u4-010",
@@ -157,7 +173,8 @@
     "jp": "彼はあなたにその話をしましたか。",
     "en": "Did he tell you the story?",
     "chunks": ["did","he","tell","you","the story","?" ],
-    "tip": "SVOOの疑問文: Did + 主語 + 動詞原形 + 人 + 物?"
+    "tip": "SVOOの疑問文: Did + 主語 + 動詞原形 + 人 + 物?",
+    "wrong": ["does", "is", "do"]
   }
 ]
 ,
