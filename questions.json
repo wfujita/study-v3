@@ -14,7 +14,8 @@
         "he",
         "plays",
         "soccer",
-        "after school",
+        "after",
+        "school",
         "."
       ],
       "tip": "三単現: He plays（sを忘れずに）",
@@ -31,7 +32,8 @@
         "are",
         "you",
         "doing",
-        "your homework",
+        "your",
+        "homework",
         "now",
         "?"
       ],
@@ -48,7 +50,9 @@
       "chunks": [
         "i",
         "went",
-        "to the museum",
+        "to",
+        "the",
+        "museum",
         "yesterday",
         "."
       ],
@@ -63,10 +67,14 @@
       "jp": "この本はあの本よりおもしろい。",
       "en": "This book is more interesting than that one.",
       "chunks": [
-        "this book",
+        "this",
+        "book",
         "is",
-        "more interesting",
-        "than that one",
+        "more",
+        "interesting",
+        "than",
+        "that",
+        "one",
         "."
       ],
       "tip": "比較級: more … than ～",
@@ -80,9 +88,13 @@
       "jp": "机の下に猫が一匹います。",
       "en": "There is a cat under the desk.",
       "chunks": [
-        "there is",
-        "a cat",
-        "under the desk",
+        "there",
+        "is",
+        "a",
+        "cat",
+        "under",
+        "the",
+        "desk",
         "."
       ],
       "tip": "存在文: There is/are",
@@ -99,7 +111,8 @@
         "she",
         "has",
         "breakfast",
-        "every morning",
+        "every",
+        "morning",
         "."
       ],
       "tip": "have → has（3単現）",
@@ -133,7 +146,8 @@
         "did",
         "you",
         "watch",
-        "a movie",
+        "a",
+        "movie",
         "yesterday",
         "?"
       ],
@@ -151,7 +165,8 @@
         "i",
         "eat",
         "breakfast",
-        "every day",
+        "every",
+        "day",
         "."
       ],
       "tip": "一般動詞の現在形: 主語 + 動詞原形",
@@ -184,7 +199,8 @@
       "chunks": [
         "she",
         "is",
-        "a student",
+        "a",
+        "student",
         "."
       ],
       "tip": "be動詞の肯定文: 主語 + be動詞 + 補語",
@@ -201,7 +217,8 @@
         "i",
         "am",
         "not",
-        "a teacher",
+        "a",
+        "teacher",
         "."
       ],
       "tip": "be動詞の否定文: 主語 + be動詞 + not + 補語",
@@ -269,10 +286,12 @@
       "en": "Does your father play tennis on Sunday?",
       "chunks": [
         "does",
-        "your father",
+        "your",
+        "father",
         "play",
         "tennis",
-        "on sunday",
+        "on",
+        "sunday",
         "?"
       ],
       "tip": "三単現の疑問文: Does + 主語 + 動詞原形",
@@ -287,9 +306,12 @@
       "en": "I do not study in the library.",
       "chunks": [
         "i",
-        "do not",
+        "do",
+        "not",
         "study",
-        "in the library",
+        "in",
+        "the",
+        "library",
         "."
       ],
       "tip": "一般動詞の否定文: do not + 動詞原形",
@@ -304,7 +326,8 @@
       "en": "Are these books yours?",
       "chunks": [
         "are",
-        "these books",
+        "these",
+        "books",
         "yours",
         "?"
       ],
@@ -320,9 +343,11 @@
       "en": "Is your sister playing the piano now?",
       "chunks": [
         "is",
-        "your sister",
+        "your",
+        "sister",
         "playing",
-        "the piano",
+        "the",
+        "piano",
         "now",
         "?"
       ],
@@ -337,9 +362,13 @@
       "jp": "机の上に3本のえんぴつがあります。",
       "en": "There are three pencils on the desk.",
       "chunks": [
-        "there are",
-        "three pencils",
-        "on the desk",
+        "there",
+        "are",
+        "three",
+        "pencils",
+        "on",
+        "the",
+        "desk",
         "."
       ],
       "tip": "存在文（複数）: There are + 複数名詞",
