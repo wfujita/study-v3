@@ -190,7 +190,7 @@
     const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
-    const HARD_STREAK = 3;
+    const HARD_STREAK = 2;
     const nowISO = ()=> new Date().toISOString();
 
     async function postJSON(url, data, timeoutMs=6000){
