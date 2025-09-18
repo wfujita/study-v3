@@ -79,6 +79,11 @@
             <option value="vocab" selected>単語（意味→スペル）</option>
           </select>
         </label>
+        <label class="row" style="gap:6px"><span class="muted">ユニット</span>
+          <select id="unit-filter">
+            <option value="">全ユニット</option>
+          </select>
+        </label>
         <button class="primary" id="btn-start">▶ 学習スタート</button>
         <button id="btn-weak" title="過去7日の正答率が低い問題">🎯 弱点対策（過去7日）</button>
       </div>
@@ -149,25 +154,28 @@
     // 設定の記憶用キー
     const REMEMBER_USER_KEY = 'quiz:lastUser';
     const REMEMBER_QTYPE_KEY = 'quiz:lastQType';
+    const REMEMBER_UNIT_KEY = 'quiz:lastUnitFilter';
     const USER_SUGGEST_KEY = 'quiz:userList';
 
     /********** 問題ロード **********/
     let BANK_REORDER = [];
     let BANK_VOCAB = [];
     async function ensureQuestions(){
-      if (BANK_REORDER.length || BANK_VOCAB.length){ return; }
+      if (BANK_REORDER.length || BANK_VOCAB.length){ renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, wrong:q.wrong||[], tip:q.tip||''}));
       BANK_VOCAB   = (data.vocab||[]).map(v=>({type:'vocab', id:v.id||null, unit:v.unit||null, jp:v.jp, en:v.en, tip:v.tip||'', pos:v.pos||''}));
+      renderUnitFilterOptions();
     }
 
     /********** 状態 **********/
     const state = {
       user:'guest', endpoint: DEFAULT_ENDPOINT,
       qType:'reorder',
+      unitFilter:'',
       totalPerSet:5, order:[], setIndex:0,
       qIndex:0, correct:0, wrong:0,
       startedAt:null, seconds:0, timerId:null,
@@ -190,6 +198,7 @@
     const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
+    const normalizeUnit = u=> (u===null || u===undefined ? '' : String(u).trim());
     const HARD_STREAK = 2;
     const nowISO = ()=> new Date().toISOString();
 
@@ -228,18 +237,73 @@
       dl.innerHTML='';
       list.forEach(name=>{ const opt=document.createElement('option'); opt.value=name; dl.appendChild(opt); });
     }
+
+    function readRememberedUnitMap(){
+      try{
+        const raw = localStorage.getItem(REMEMBER_UNIT_KEY);
+        if(!raw) return {};
+        const data = JSON.parse(raw);
+        return (data && typeof data === 'object') ? data : {};
+      }catch(e){
+        return {};
+      }
+    }
+    function writeRememberedUnitMap(map){
+      try{
+        localStorage.setItem(REMEMBER_UNIT_KEY, JSON.stringify(map));
+      }catch(e){
+        // ignore
+      }
+    }
+    function getRememberedUnitFilter(qType){
+      const map = readRememberedUnitMap();
+      const val = map && typeof map === 'object' ? map[qType] : '';
+      return (typeof val === 'string') ? val : '';
+    }
+    function rememberUnitFilter(qType, value){
+      const map = readRememberedUnitMap();
+      const v = (value || '').trim();
+      if(v){ map[qType] = v; }
+      else { delete map[qType]; }
+      writeRememberedUnitMap(map);
+    }
+
+    function renderUnitFilterOptions(){
+      const sel = document.getElementById('unit-filter');
+      if(!sel) return;
+      const deckArr = deckByType(state.qType);
+      const units = Array.from(new Set(deckArr.map(q=>normalizeUnit(q.unit)).filter(u=>u))).sort((a,b)=>a.localeCompare(b, 'ja', { numeric:true, sensitivity:'base' }));
+      sel.innerHTML='';
+      const optAll=document.createElement('option'); optAll.value=''; optAll.textContent='全ユニット'; sel.appendChild(optAll);
+      units.forEach(u=>{ const opt=document.createElement('option'); opt.value=u; opt.textContent=u; sel.appendChild(opt); });
+      if(deckArr.length===0){
+        sel.value='';
+        sel.disabled=true;
+        return;
+      }
+      sel.disabled=false;
+      if(state.unitFilter && !units.includes(state.unitFilter)){
+        state.unitFilter='';
+        rememberUnitFilter(state.qType, '');
+      }
+      sel.value = state.unitFilter || '';
+    }
     function loadRememberedSettings(){
       const u=(localStorage.getItem(REMEMBER_USER_KEY)||'').trim();
       if(u){ state.user=u; const inp=document.getElementById('learner'); if(inp) inp.value=u; const pill=document.getElementById('user-pill'); if(pill) pill.textContent=`👤 ${u}`; }
       const qt=(localStorage.getItem(REMEMBER_QTYPE_KEY)||'').trim();
       const qs=document.getElementById('qtype');
       if(qt){ state.qType=qt; if(qs) qs.value=qt; }
+      state.unitFilter = getRememberedUnitFilter(state.qType);
+      const unitSel = document.getElementById('unit-filter');
+      if(unitSel){ unitSel.value = state.unitFilter || ''; }
       state.endpoint=DEFAULT_ENDPOINT;
       populateUserSuggestions();
     }
     function rememberSettings(){
       if(state.user) localStorage.setItem(REMEMBER_USER_KEY, state.user);
       if(state.qType) localStorage.setItem(REMEMBER_QTYPE_KEY, state.qType);
+      rememberUnitFilter(state.qType, state.unitFilter||'');
       const raw=JSON.parse(localStorage.getItem(USER_SUGGEST_KEY)||'[]');
       const list=Array.isArray(raw)? raw.slice(0) : [];
       if(state.user){
@@ -265,7 +329,14 @@
     function show(id){ ['setup','quiz','finished'].forEach(sec=>{ const el=$(`#${sec}`); if(!el) return; el.style.display = (sec===id)?'block':'none'; }); }
 
     /********** デッキ取得 **********/
-    function deck(){ return state.qType==='reorder'? BANK_REORDER : BANK_VOCAB; }
+    function deckByType(type){ return type==='reorder' ? BANK_REORDER : BANK_VOCAB; }
+    function deck(){
+      const all = deckByType(state.qType);
+      if(state.mode!=='normal') return all;
+      const unit = state.unitFilter || '';
+      if(!unit) return all;
+      return all.filter(q=> normalizeUnit(q.unit) === unit);
+    }
 
     /********** セット準備 **********/
     async function buildOrderFromBank(){
@@ -427,8 +498,14 @@
 
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
-      const d=deck();
-      if(!d.length){ alert('この出題タイプの問題がありません。/data/questions.json をご確認ください。'); show('setup'); return; }
+      const fullDeck = deckByType(state.qType);
+      if(!fullDeck.length){ alert('この出題タイプの問題がありません。/data/questions.json をご確認ください。'); show('setup'); return; }
+      const filteredDeck = deck();
+      if(state.mode==='normal' && !filteredDeck.length){
+        alert('選択したユニットの問題がありません。ユニット条件を見直してください。');
+        show('setup');
+        return;
+      }
       state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
       if(state.mode==='review'){
@@ -654,6 +731,13 @@
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
+        const unitSel=document.getElementById('unit-filter');
+        if(unitSel){
+          const selected=(unitSel.value||'').trim();
+          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+            state.unitFilter=selected;
+          }
+        }
         rememberSettings();
         await startSet();
       }catch(e){ alert('開始できません: '+(e.message||e)); }
@@ -672,6 +756,13 @@
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
+        const unitSel=document.getElementById('unit-filter');
+        if(unitSel){
+          const selected=(unitSel.value||'').trim();
+          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+            state.unitFilter=selected;
+          }
+        }
         rememberSettings();
         await startSet();
       }catch(e){ alert('弱点対策を開始できません: '+(e.message||e)); }
@@ -683,9 +774,25 @@
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
       rememberSettings();
     });
-    document.getElementById('qtype').addEventListener('change', (e)=>{
+    document.getElementById('unit-filter').addEventListener('change', (e)=>{
+      const v=(e.target.value||'').trim();
+      state.unitFilter=v;
+      rememberSettings();
+    });
+    document.getElementById('qtype').addEventListener('change', async (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
-      state.qType=v; localStorage.setItem(REMEMBER_QTYPE_KEY, v);
+      state.qType=v;
+      state.unitFilter = getRememberedUnitFilter(state.qType);
+      try{
+        await ensureQuestions();
+      }catch(err){
+        console.error('ensureQuestions failed', err);
+        alert('問題の読み込みに失敗: '+(err.message||err));
+      }
+      renderUnitFilterOptions();
+      const sel=document.getElementById('unit-filter');
+      if(sel){ state.unitFilter=(sel.value||'').trim(); }
+      rememberSettings();
     });
 
     document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); }; document.getElementById('btn-hint').onclick=showHint;
@@ -728,6 +835,7 @@
 
     // 初期
     loadRememberedSettings();
+    ensureQuestions().catch(err=>{ console.error('ensureQuestions failed at init', err); });
     show('setup');
   </script>
 </body>
