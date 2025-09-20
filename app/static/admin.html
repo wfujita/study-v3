@@ -72,6 +72,13 @@
     </section>
 
     <section class="card">
+      <h3 style="margin:0 0 8px">テスト一覧</h3>
+      <div style="max-height:340px; overflow:auto">
+        <table id="tbl-sessions"><thead><tr><th>開始</th><th>終了</th><th class="center">セット</th><th class="center">正解</th><th class="center">出題</th><th class="center">正答率</th><th class="center">復習</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="card">
       <h3 style="margin:0 0 8px">単元別（Unit）</h3>
       <div style="max-height:260px; overflow:auto">
         <table id="tbl-units"><thead><tr><th>単元</th><th class="center">解答</th><th class="center">正答</th><th class="center">誤答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
@@ -142,6 +149,39 @@
       $('#st-sessions').textContent = fmt(data.totals.sessions);
       $('#st-answered').textContent = fmt(data.totals.answered);
       $('#st-acc').textContent = (data.totals.answered? Math.round(data.totals.correct/data.totals.answered*100):0) + '%';
+
+      const sessBody = $('#tbl-sessions tbody');
+      sessBody.innerHTML='';
+      const sessions = Array.isArray(data.sessions)? data.sessions.slice(): [];
+      const toTs = iso=>{
+        if(!iso) return 0;
+        const ts = new Date(iso).getTime();
+        return Number.isNaN(ts)? 0: ts;
+      };
+      sessions.sort((a,b)=> toTs(b && (b.endedAt||b.receivedAt)) - toTs(a && (a.endedAt||a.receivedAt)) );
+      window.__sessions = sessions;
+      sessions.forEach(s=>{
+        const startIso = s.startedAt || s.endedAt;
+        const endIso = s.endedAt;
+        const startTxt = startIso? new Date(startIso).toLocaleString(): '―';
+        const endTxt = endIso? new Date(endIso).toLocaleString(): '―';
+        const total = Number(s.total ?? 0) || 0;
+        const correct = Number(s.correct ?? 0) || 0;
+        const acc = total? Math.round((correct/total)*100):0;
+        let reviewCell = '<span class="muted">―</span>';
+        if((s.mode||'normal') !== 'review'){
+          reviewCell = s.reviewDone? '<span class="badge ok">済</span>' : '<span class="badge muted">未</span>';
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${startTxt}</td>`+
+                       `<td>${endTxt}</td>`+
+                       `<td class="center">${s.setIndex ?? '―'}</td>`+
+                       `<td class="center ok">${fmt(correct)}</td>`+
+                       `<td class="center">${fmt(total)}</td>`+
+                       `<td class="center">${acc}%</td>`+
+                       `<td class="center">${reviewCell}</td>`;
+        sessBody.appendChild(tr);
+      });
 
       // 単元テーブル
       const tb=$('#tbl-units tbody'); tb.innerHTML='';

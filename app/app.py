@@ -194,33 +194,64 @@ def admin_summary():
     def match_user(r):
         return (user in (None, "", "__all__")) or (r.get("user", "guest") == user)
 
+    def parse_iso(dt_str):
+        if not dt_str:
+            return None
+        try:
+            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+        except Exception:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     answered_all = []
     sessions = []
     attempts_by_q = {}
+
+    review_sessions = {}
+    for r in res:
+        mode_r = r.get("mode") or "normal"
+        if mode_r != "review":
+            continue
+        ended_str = r.get("endedAt") or r.get("receivedAt")
+        ended_dt = parse_iso(ended_str)
+        if not ended_dt:
+            continue
+        key = (r.get("user", "guest"), r.get("setIndex"))
+        if key[1] is None:
+            continue
+        review_sessions.setdefault(key, []).append(ended_dt)
+
+    for arr in review_sessions.values():
+        arr.sort()
     for r in res:
         if not match_user(r):
             continue
         if mode == "review":
-            ans = r.get("reviewed") or []
+            ans_all = r.get("reviewed") or []
         else:
-            ans = [
+            ans_all = [
                 a
                 for a in (r.get("answered") or [])
                 if (a.get("mode") or r.get("mode") or "normal") != "review"
             ]
-        if not isinstance(ans, list):
-            ans = []
+        if not isinstance(ans_all, list):
+            ans_all = []
+        ans = ans_all
 
         # 表示タイプ（単語/並べ替え）で絞り込み
         if qtype in ("vocab", "reorder"):
             filtered = []
-            for a in ans:
+            for a in ans_all:
                 qm = qmap.get(a.get("id")) or {}
                 atype = a.get("type") or qm.get("type") or ""
                 if atype == qtype:
                     filtered.append(a)
             ans = filtered
+        else:
+            ans = ans_all
 
         for a in ans:
             at_str = a.get("at") or r.get("endedAt") or r.get("receivedAt")
@@ -261,15 +292,38 @@ def admin_summary():
                 (at_str or "", bool(a.get("correct")))
             )
         session_at = r.get("endedAt") or r.get("receivedAt")
-        try:
-            session_dt = (
-                datetime.fromisoformat(session_at.replace("Z", "+00:00"))
-                if session_at
-                else None
-            )
-        except Exception:
-            session_dt = None
+        session_dt = parse_iso(session_at)
+        started_dt = None
+        started_iso = None
+        if session_dt is not None:
+            seconds_val = r.get("seconds")
+            if seconds_val is not None:
+                try:
+                    started_dt = session_dt - timedelta(seconds=float(seconds_val))
+                except Exception:
+                    started_dt = None
+            if started_dt is None:
+                earliest = None
+                for a in ans_all:
+                    at_dt = parse_iso(a.get("at"))
+                    if at_dt and (earliest is None or at_dt < earliest):
+                        earliest = at_dt
+                started_dt = earliest
+            if started_dt:
+                started_iso = (
+                    started_dt.astimezone(timezone.utc)
+                    .isoformat()
+                    .replace("+00:00", "Z")
+                )
+
         if session_dt and session_dt >= cutoff and ans:
+            review_done = False
+            if (r.get("mode") or "normal") != "review":
+                key = (r.get("user", "guest"), r.get("setIndex"))
+                for rev_dt in review_sessions.get(key, []):
+                    if rev_dt >= session_dt:
+                        review_done = True
+                        break
             sessions.append(
                 {
                     "user": r.get("user", "guest"),
@@ -285,6 +339,8 @@ def admin_summary():
                     "qType": r.get("qType"),
                     "setIndex": r.get("setIndex"),
                     "seconds": r.get("seconds", 0),
+                    "startedAt": started_iso,
+                    "reviewDone": review_done,
                 }
             )
 
