@@ -433,6 +433,87 @@
       "wrong": [
         "did"
       ]
+    },
+    {
+      "id": "r024",
+      "unit": "future-going-to",
+      "jp": "私は明日友達に会う予定です。",
+      "en": "I am going to meet my friend tomorrow.",
+      "chunks": [
+        "i",
+        "am",
+        "going",
+        "to",
+        "meet",
+        "my",
+        "friend",
+        "tomorrow",
+        "."
+      ],
+      "tip": "be going to の肯定文: 主語 + be動詞 + going to + 動詞原形（I には am）",
+      "wrong": [
+        "will"
+      ]
+    },
+    {
+      "id": "r025",
+      "unit": "future-going-to",
+      "jp": "彼は今夜宿題をする予定ですか。",
+      "en": "Is he going to do his homework tonight?",
+      "chunks": [
+        "is",
+        "he",
+        "going",
+        "to",
+        "do",
+        "his",
+        "homework",
+        "tonight",
+        "?"
+      ],
+      "tip": "be going to の疑問文: Be動詞を前に出す（he には is）",
+      "wrong": [
+        "does"
+      ]
+    },
+    {
+      "id": "r026",
+      "unit": "future-will",
+      "jp": "彼らは来週テストを受けるでしょう。",
+      "en": "They will take a test next week.",
+      "chunks": [
+        "they",
+        "will",
+        "take",
+        "a",
+        "test",
+        "next",
+        "week",
+        "."
+      ],
+      "tip": "will + 動詞原形で未来の予想を表す（助動詞の後は原形）",
+      "wrong": [
+        "are"
+      ]
+    },
+    {
+      "id": "r027",
+      "unit": "future-will",
+      "jp": "あなたはその会議に明日出席しますか。",
+      "en": "Will you attend the meeting tomorrow?",
+      "chunks": [
+        "will",
+        "you",
+        "attend",
+        "the",
+        "meeting",
+        "tomorrow",
+        "?"
+      ],
+      "tip": "will の疑問文: Will + 主語 + 動詞原形（助動詞の後は原形）",
+      "wrong": [
+        "are"
+      ]
     }
   ],
   "vocab": [
