@@ -375,6 +375,64 @@
       "wrong": [
         "does"
       ]
+    },
+    {
+      "id": "r021",
+      "unit": "be-verb-past",
+      "jp": "彼女は昨日学校に遅れました。",
+      "en": "She was late for school yesterday.",
+      "chunks": [
+        "she",
+        "was",
+        "late",
+        "for",
+        "school",
+        "yesterday",
+        "."
+      ],
+      "tip": "be動詞の過去形（肯定文）: 主語 + was/were + 補語",
+      "wrong": [
+        "is"
+      ]
+    },
+    {
+      "id": "r022",
+      "unit": "be-verb-past-neg",
+      "jp": "彼らは昨夜家にいませんでした。",
+      "en": "They were not at home last night.",
+      "chunks": [
+        "they",
+        "were",
+        "not",
+        "at",
+        "home",
+        "last",
+        "night",
+        "."
+      ],
+      "tip": "be動詞の過去形（否定文）: 主語 + was/were + not + 場所・状態",
+      "wrong": [
+        "was"
+      ]
+    },
+    {
+      "id": "r023",
+      "unit": "be-verb-past-q",
+      "jp": "あなたは試合のあとで疲れていましたか。",
+      "en": "Were you tired after the game?",
+      "chunks": [
+        "were",
+        "you",
+        "tired",
+        "after",
+        "the",
+        "game",
+        "?"
+      ],
+      "tip": "be動詞の過去形（疑問文）: Was/Were + 主語 + 補語?",
+      "wrong": [
+        "did"
+      ]
     }
   ],
   "vocab": [
