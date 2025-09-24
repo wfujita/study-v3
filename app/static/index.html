@@ -166,7 +166,7 @@
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
-      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, wrong:q.wrong||[], tip:q.tip||''}));
+      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, wrong:q.wrong||[], tip:q.tip||'', explain:q.explain||''}));
       BANK_VOCAB   = (data.vocab||[]).map(v=>({type:'vocab', id:v.id||null, unit:v.unit||null, jp:v.jp, en:v.en, tip:v.tip||'', pos:v.pos||''}));
       renderUnitFilterOptions();
     }
@@ -593,6 +593,14 @@
     function currentAnswer(){ if(state.qType==='reorder'){ return [...$('#target').children].map(x=>x.textContent).join(' ');} return $('#vocab-input').value||''; }
     function updateNextState(){ if(state.qType==='reorder'){ $('#btn-next').disabled = state.graded ? false : true; } }
 
+    function buildFeedbackDetail(q, includeTip=false){
+      const lines = [];
+      if(q.explain) lines.push(q.explain);
+      if(includeTip && q.tip) lines.push(q.tip);
+      if(lines.length===0) return '';
+      return '<br>' + lines.map(text=>`<span class="muted">${text}</span>`).join('<br>');
+    }
+
     /********** 採点・進行 **********/
     function checkAnswer(){
       if(state.graded) return; // 二重加算防止
@@ -623,15 +631,17 @@
 
       if(correct){
         state.correct++; $('#stat-correct').textContent = state.correct;
-        $('#explain').innerHTML = `✅ 正解！ <span class="muted">${ans}</span>`;
+        const detail = buildFeedbackDetail(q, false);
+        $('#explain').innerHTML = `✅ 正解！ <span class="muted">${ans}</span>${detail}`;
         removeFromWrongIfMatched({id:q.id, jp:q.jp, en:q.en});
       } else {
         state.wrong++; $('#stat-wrong').textContent = state.wrong;
+        const detail = buildFeedbackDetail(q, true);
         $('#explain').innerHTML = state.qType==='reorder'
-          ? `❌ 不正解。 正解: <b>${q.en}</b><br><span class=muted>${q.tip||''}</span>`
-          : `❌ 不正解。 正解: <b>${q.en}</b>${q.tip? `<br><span class=muted>${q.tip}</span>`:''}`;
+          ? `❌ 不正解。 正解: <b>${q.en}</b>${detail}`
+          : `❌ 不正解。 正解: <b>${q.en}</b>${detail}`;
         // 復習用には詳細保持
-        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', userAnswer: ans, at: record.at });
+        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', userAnswer: ans, at: record.at });
       }
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
