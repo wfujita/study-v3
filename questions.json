@@ -523,7 +523,8 @@
       "jp": "会う",
       "en": "meet",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "meet は「人と会う」動詞。meet＋人で「～に会う」。"
     },
     {
       "id": "v002",
@@ -531,7 +532,8 @@
       "jp": "忘れる",
       "en": "forget",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "forget は「忘れる」。forget to 動詞（～するのを忘れる）。"
     },
     {
       "id": "v003",
@@ -539,7 +541,8 @@
       "jp": "怖い",
       "en": "scary",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "scary は「怖い」という形容詞。It is scary ... の形で使う。"
     },
     {
       "id": "v004",
@@ -547,7 +550,8 @@
       "jp": "他の",
       "en": "other",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "other は「他の」。another との違いに注意。"
     },
     {
       "id": "v005",
@@ -555,7 +559,8 @@
       "jp": "探す（探している最中）",
       "en": "look for",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "look for ～ で「～を探しているところ」。進行形と相性がよい表現。"
     },
     {
       "id": "v006",
@@ -563,7 +568,8 @@
       "jp": "感じる",
       "en": "feel",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "feel は「感じる」。feel＋形容詞で気分を表す。"
     },
     {
       "id": "v007",
@@ -571,7 +577,8 @@
       "jp": "尋ねる",
       "en": "ask",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "ask は「尋ねる」。ask 人 about 物／ask 人 to 動詞。"
     },
     {
       "id": "v008",
@@ -579,7 +586,8 @@
       "jp": "わくわくする",
       "en": "excited",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "excited は「わくわくしている」。be excited about ～ と使う。"
     },
     {
       "id": "v009",
@@ -587,7 +595,8 @@
       "jp": "大切な",
       "en": "important",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "important は「重要な」。It is important to 動詞 で「～することが重要」。"
     },
     {
       "id": "v010",
@@ -595,7 +604,8 @@
       "jp": "周りに",
       "en": "around",
       "pos": "preposition",
-      "tip": ""
+      "tip": "",
+      "explain": "around は「～の周りに」。look around で「見回す」。"
     },
     {
       "id": "v011",
@@ -603,7 +613,8 @@
       "jp": "同じ",
       "en": "same",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "same は「同じ」。the same as ～ で「～と同じ」。"
     },
     {
       "id": "v012",
@@ -611,7 +622,8 @@
       "jp": "決して～ない",
       "en": "never",
       "pos": "adverb",
-      "tip": ""
+      "tip": "",
+      "explain": "never は「決して～ない」。一般動詞の前に置いて否定を表す。"
     },
     {
       "id": "v013",
@@ -619,7 +631,8 @@
       "jp": "もちろん",
       "en": "sure",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "sure は「確信して」。be sure to 動詞 で「必ず～する」。"
     },
     {
       "id": "v014",
@@ -627,7 +640,8 @@
       "jp": "両方",
       "en": "both",
       "pos": "pronoun",
-      "tip": ""
+      "tip": "",
+      "explain": "both は「両方の」。both A and B で「A も B も」。"
     },
     {
       "id": "v015",
@@ -635,7 +649,8 @@
       "jp": "離れて",
       "en": "away",
       "pos": "adverb",
-      "tip": ""
+      "tip": "",
+      "explain": "away は「離れて」。go away で「立ち去る」。"
     },
     {
       "id": "v016",
@@ -643,7 +658,8 @@
       "jp": "出発する",
       "en": "leave",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "leave は「去る・出発する」。leave for 場所 で「～へ出発する」。"
     },
     {
       "id": "v017",
@@ -651,7 +667,8 @@
       "jp": "思い出す",
       "en": "remember",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "remember は「思い出す」。remember to 動詞／remember ～ing の違いに注意。"
     },
     {
       "id": "v018",
@@ -659,7 +676,8 @@
       "jp": "問題",
       "en": "problem",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "problem は「問題」。have a problem with ～ で「～に問題がある」。"
     },
     {
       "id": "v019",
@@ -667,7 +685,8 @@
       "jp": "十分に",
       "en": "enough",
       "pos": "adverb",
-      "tip": ""
+      "tip": "",
+      "explain": "enough は「十分に」。副詞として形容詞の後に置く。"
     },
     {
       "id": "v020",
@@ -675,7 +694,8 @@
       "jp": "驚く",
       "en": "surprised",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "surprised は「驚いた」。be surprised at／by ～ と使う。"
     },
     {
       "id": "v021",
@@ -683,7 +703,8 @@
       "jp": "有名な",
       "en": "famous",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "famous は「有名な」。be famous for ～ で「～で有名」。"
     },
     {
       "id": "v022",
@@ -691,7 +712,8 @@
       "jp": "～なしで",
       "en": "without",
       "pos": "preposition",
-      "tip": ""
+      "tip": "",
+      "explain": "without は「～なしで」。without ～ing で「～せずに」。"
     },
     {
       "id": "v023",
@@ -699,7 +721,8 @@
       "jp": "文化",
       "en": "culture",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "culture は「文化」。Japanese culture などと使う。"
     },
     {
       "id": "v024",
@@ -707,7 +730,8 @@
       "jp": "自然",
       "en": "nature",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "nature は「自然」。in nature で「自然界で」。"
     },
     {
       "id": "v025",
@@ -715,7 +739,8 @@
       "jp": "お互いに",
       "en": "each other",
       "pos": "pronoun",
-      "tip": ""
+      "tip": "",
+      "explain": "each other は「お互いに」。動詞の後ろに置いて使う。"
     },
     {
       "id": "v026",
@@ -723,7 +748,8 @@
       "jp": "服",
       "en": "clothes",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "clothes は「服」。常に複数扱いで a clothes とは言わない。"
     },
     {
       "id": "v027",
@@ -731,7 +757,8 @@
       "jp": "理由",
       "en": "reason",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "reason は「理由」。the reason why ～ の形で使う。"
     },
     {
       "id": "v028",
@@ -739,7 +766,8 @@
       "jp": "野菜",
       "en": "vegetable",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "vegetable は「野菜」。可算名詞で複数は vegetables。"
     },
     {
       "id": "v029",
@@ -747,7 +775,8 @@
       "jp": "変な",
       "en": "strange",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "strange は「変な」。It sounds strange. のように使う。"
     },
     {
       "id": "v030",
@@ -755,7 +784,8 @@
       "jp": "天気",
       "en": "weather",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "weather は「天気」。不可算名詞で a weather とは言わない。"
     },
     {
       "id": "v031",
@@ -763,7 +793,8 @@
       "jp": "ちがい",
       "en": "difference",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "difference は「違い」。make a difference で「違いを生む」。"
     },
     {
       "id": "v032",
@@ -771,7 +802,8 @@
       "jp": "生まれる",
       "en": "born",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "born は「生まれた」。be born in 場所／年 で使う。"
     },
     {
       "id": "v033",
@@ -779,7 +811,8 @@
       "jp": "経験する",
       "en": "experience",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "experience は「経験する」。名詞でも「経験」という意味がある。"
     },
     {
       "id": "v034",
@@ -787,7 +820,8 @@
       "jp": "明日",
       "en": "tomorrow",
       "pos": "adverb",
-      "tip": ""
+      "tip": "",
+      "explain": "tomorrow は未来を表す副詞。文末に置くことが多い。"
     },
     {
       "id": "v035",
@@ -795,7 +829,8 @@
       "jp": "上達する",
       "en": "improve",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "improve は「上達する」。自動詞としても他動詞としても使える。"
     },
     {
       "id": "v036",
@@ -803,7 +838,8 @@
       "jp": "誇りに思う",
       "en": "proud",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "proud は「誇りに思う」。be proud of ～ で「～を誇りに思う」。"
     },
     {
       "id": "v037",
@@ -811,7 +847,8 @@
       "jp": "～時間",
       "en": "hours",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "hours は「～時間」。two hours など複数形で使う。"
     },
     {
       "id": "v038",
@@ -819,7 +856,8 @@
       "jp": "危険な",
       "en": "dangerous",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "dangerous は「危険な」。It is dangerous to 動詞。"
     },
     {
       "id": "v039",
@@ -827,7 +865,8 @@
       "jp": "共有する",
       "en": "share",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "share は「共有する」。share ～ with 人 で「人と～を分け合う」。"
     },
     {
       "id": "v040",
@@ -835,7 +874,8 @@
       "jp": "千",
       "en": "thousand",
       "pos": "numeral",
-      "tip": ""
+      "tip": "",
+      "explain": "thousand は「千」。数を言うときは数詞＋thousand（two thousand など）。"
     },
     {
       "id": "v041",
@@ -843,7 +883,8 @@
       "jp": "見つける（結果が出た）",
       "en": "find",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "find は「見つける」。find out で「調べてわかる」。"
     },
     {
       "id": "v042",
@@ -851,7 +892,8 @@
       "jp": "方法、道",
       "en": "way",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "way は「方法／道」。the way to 動詞 で「～する方法」。"
     },
     {
       "id": "v043",
@@ -859,7 +901,8 @@
       "jp": "国",
       "en": "country",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "country は「国」。可算名詞で a country／two countries と数える。"
     },
     {
       "id": "v044",
@@ -867,7 +910,8 @@
       "jp": "場所",
       "en": "place",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "place は「場所」。a place to 動詞 で「～する場所」。"
     },
     {
       "id": "v045",
@@ -875,7 +919,8 @@
       "jp": "大きい",
       "en": "large",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "large は「大きい」。big よりも少し形式的な語。"
     },
     {
       "id": "v046",
@@ -883,7 +928,8 @@
       "jp": "保つ",
       "en": "keep",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "keep は「保つ」。keep ～ing で「～し続ける」。"
     },
     {
       "id": "v047",
@@ -891,7 +937,8 @@
       "jp": "希望",
       "en": "hope",
       "pos": "noun",
-      "tip": ""
+      "tip": "",
+      "explain": "hope は「希望」。名詞としても動詞としても使える。"
     },
     {
       "id": "v048",
@@ -899,7 +946,8 @@
       "jp": "疲れる",
       "en": "tired",
       "pos": "adjective",
-      "tip": ""
+      "tip": "",
+      "explain": "tired は「疲れた」。be tired from／after ～ で「～で疲れている」。"
     },
     {
       "id": "v049",
@@ -907,7 +955,8 @@
       "jp": "到着する",
       "en": "arrive",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "arrive は「到着する」。arrive in／at 場所 と前置詞に注意。"
     },
     {
       "id": "v050",
@@ -915,7 +964,8 @@
       "jp": "心配する",
       "en": "worry",
       "pos": "verb",
-      "tip": ""
+      "tip": "",
+      "explain": "worry は「心配する」。worry about ～ で「～を心配する」。"
     }
   ]
 }
