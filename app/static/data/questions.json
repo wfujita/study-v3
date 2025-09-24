@@ -1,236 +1,929 @@
 {
-  "meta": { "version": 2, "lang": "ja-en", "note": "並べ替え(questions)＋単語(vocab) を同居" },
-
-"questions": [
-  { "id": "r001", "unit": "present-simple", "jp": "彼は放課後にサッカーをします。", "en": "He plays soccer after school.", "chunks": ["he","plays","soccer","after","school","."], "tip": "三単現: He plays（sを忘れずに）", "wrong": ["is","does","do"] },
-  { "id": "r002", "unit": "present-continuous-q", "jp": "あなたは今宿題をしていますか。", "en": "Are you doing your homework now?", "chunks": ["are","you","doing","your","homework","now","?"], "tip": "進行形の疑問: Are you ～?", "wrong": ["has","do","did"] },
-  { "id": "r003", "unit": "past-simple", "jp": "私は昨日その博物館に行きました。", "en": "I went to the museum yesterday.", "chunks": ["I","went","to","the","museum","yesterday","."], "tip": "go の過去形は went", "wrong": ["am","is","are"] },
-  { "id": "r004", "unit": "comparative", "jp": "この本はあの本よりおもしろい。", "en": "This book is more interesting than that one.", "chunks": ["this","book","is","more","interesting","than","that","one","."], "tip": "比較級: more … than ～", "wrong": ["do","did","does"] },
-  { "id": "r005", "unit": "there-is", "jp": "机の下に猫が一匹います。", "en": "There is a cat under the desk.", "chunks": ["there","is","a","cat","under","the","desk","."], "tip": "存在文: There is/are", "wrong": ["does","is","do"] },
-  { "id": "r006", "unit": "present-3sg", "jp": "彼女は毎朝朝ごはんを食べます。", "en": "She has breakfast every morning.", "chunks": ["she","has","breakfast","every","morning","."], "tip": "have → has（3単現）", "wrong": ["are","am","is"] },
-  { "id": "r007", "unit": "present-continuous", "jp": "私は英語を勉強しているところです。", "en": "I am studying English.", "chunks": ["I","am","studying","English","."], "tip": "be + -ing で進行形", "wrong": ["does","do","did"] },
-  { "id": "r008", "unit": "past-simple-q", "jp": "あなたは昨日映画を見ましたか。", "en": "Did you watch a movie yesterday?", "chunks": ["did","you","watch","a","movie","yesterday","?"], "tip": "過去の疑問: Did + 主語 + 動詞原形", "wrong": ["is","are","am"] },
-  { "id": "r009", "unit": "present-simple", "jp": "私は毎日朝ごはんを食べます。", "en": "I eat breakfast every day.", "chunks": ["I","eat","breakfast","every","day","."], "tip": "一般動詞の現在形: 主語 + 動詞原形", "wrong": ["is","do","does"] },
-  { "id": "r010", "unit": "present-simple-q", "jp": "あなたはサッカーが好きですか。", "en": "Do you like soccer?", "chunks": ["do","you","like","soccer","?"], "tip": "一般動詞の疑問文: Do + 主語 + 動詞原形", "wrong": ["am","is","are"] },
-  { "id": "r011", "unit": "be-verb", "jp": "彼女は生徒です。", "en": "She is a student.", "chunks": ["she","is","a","student","."], "tip": "be動詞の肯定文: 主語 + be動詞 + 補語", "wrong": ["do","does","did"] },
-  { "id": "r012", "unit": "be-verb-neg", "jp": "私は先生ではありません。", "en": "I am not a teacher.", "chunks": ["I","am","not","a","teacher","."], "tip": "be動詞の否定文: 主語 + be動詞 + not + 補語", "wrong": ["does","do","is"] },
-  { "id": "r013", "unit": "be-verb-q", "jp": "彼はアメリカ出身ですか。", "en": "Is he from America?", "chunks": ["is","he","from","America","?"], "tip": "be動詞の疑問文: Be動詞 + 主語 + 補語", "wrong": ["do","does","did"] },
-  { "id": "r014", "unit": "present-cont-q", "jp": "彼らはいまサッカーをしていますか。", "en": "Are they playing soccer now?", "chunks": ["are","they","playing","soccer","now","?"], "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing", "wrong": ["has","have","is"] },
-  { "id": "r015", "unit": "present-cont-neg", "jp": "彼はテレビを見ていません。", "en": "He is not watching TV.", "chunks": ["he","is","not","watching","TV","."], "tip": "現在進行形の否定文: 主語 + be動詞 + not + 動詞ing", "wrong": ["do","did","does"] },
-  { "id": "r016", "unit": "present-simple-q", "jp": "あなたのお父さんは日曜日にテニスをしますか。", "en": "Does your father play tennis on Sunday?", "chunks": ["does","your","father","play","tennis","on","Sunday","?"], "tip": "三単現の疑問文: Does + 主語 + 動詞原形", "wrong": ["am","is","are"] },
-  { "id": "r017", "unit": "present-simple-neg", "jp": "私は図書館で勉強しません。", "en": "I do not study in the library.", "chunks": ["I","do","not","study","in","the","library","."], "tip": "一般動詞の否定文: do not + 動詞原形", "wrong": ["is","are","am"] },
-  { "id": "r018", "unit": "be-verb-q", "jp": "これらの本はあなたのですか。", "en": "Are these books yours?", "chunks": ["are","these","books","yours","?"], "tip": "be動詞の疑問文（複数）: Are + 複数主語", "wrong": ["does","do","did"] },
-  { "id": "r019", "unit": "present-cont-q", "jp": "あなたのお姉さんはいまピアノを弾いていますか。", "en": "Is your sister playing the piano now?", "chunks": ["is","your","sister","playing","the","piano","now","?"], "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing", "wrong": ["do","does","did"] },
-  { "id": "r020", "unit": "there-are", "jp": "机の上に3本のえんぴつがあります。", "en": "There are three pencils on the desk.", "chunks": ["there","are","three","pencils","on","the","desk","."], "tip": "存在文（複数）: There are + 複数名詞", "wrong": ["does","is","do"] },
-  {
-    "id": "u3-001",
-    "unit": "be-going-to",
-    "jp": "私は来週京都を訪れるつもりです。",
-    "en": "I am going to visit Kyoto next week.",
-    "chunks": ["I","am","going to","visit","Kyoto","next week","."],
-    "tip": "be going to + 動詞原形",
-    "wrong": ["will", "do", "does"]
+  "meta": {
+    "version": 2,
+    "lang": "ja-en",
+    "note": "並べ替え(questions)＋単語(vocab) を同居"
   },
-  {
-    "id": "u3-002",
-    "unit": "will",
-    "jp": "彼は明日その本を読むでしょう。",
-    "en": "He will read the book tomorrow.",
-    "chunks": ["he","will","read","the book","tomorrow","."],
-    "tip": "未来: will + 動詞原形",
-    "wrong": ["is", "does", "did"]
-  },
-  {
-    "id": "u3-003",
-    "unit": "be-going-to-q",
-    "jp": "あなたは今夜テレビを見るつもりですか。",
-    "en": "Are you going to watch TV tonight?",
-    "chunks": ["are","you","going to","watch","TV","tonight","?" ],
-    "tip": "疑問文: Are you going to + 動詞原形?",
-    "wrong": ["do", "will", "is"]
-  },
-  {
-    "id": "u3-004",
-    "unit": "will-neg",
-    "jp": "私はそのゲームをしないでしょう。",
-    "en": "I will not play the game.",
-    "chunks": ["I","will not","play","the game","."],
-    "tip": "否定文: will not + 動詞原形",
-    "wrong": ["do", "am", "does"]
-  },
-  {
-    "id": "u3-005",
-    "unit": "be-going-to-neg",
-    "jp": "私は明日その映画を見ないつもりです。",
-    "en": "I am not going to watch the movie tomorrow.",
-    "chunks": ["I","am not","going to","watch","the movie","tomorrow","."],
-    "tip": "否定文: am not going to + 動詞原形",
-    "wrong": ["will", "do", "is"]
-  },
-  {
-    "id": "u3-006",
-    "unit": "will-q",
-    "jp": "彼は来週テニスをするでしょうか。",
-    "en": "Will he play tennis next week?",
-    "chunks": ["will","he","play","tennis","next week","?" ],
-    "tip": "疑問文: Will + 主語 + 動詞原形?",
-    "wrong": ["does", "is", "do"]
-  },
-  {
-    "id": "u3-007",
-    "unit": "be-going-to-neg-q",
-    "jp": "あなたはその本を読まないつもりですか。",
-    "en": "Aren't you going to read the book?",
-    "chunks": ["aren't","you","going to","read","the book","?" ],
-    "tip": "否定疑問文: Aren't you going to ～?",
-    "wrong": ["will", "do", "is"]
-  },
-
-
-  {
-    "id": "u4-001",
-    "unit": "there-is",
-    "jp": "机の上に1冊の本があります。",
-    "en": "There is a book on the desk.",
-    "chunks": ["there is","a book","on the desk","."],
-    "tip": "存在文: There is + 単数名詞",
-    "wrong": ["are", "has", "do"]
-  },
-  {
-    "id": "u4-002",
-    "unit": "there-are",
-    "jp": "この教室には20人の生徒がいます。",
-    "en": "There are twenty students in this classroom.",
-    "chunks": ["there are","twenty students","in this classroom","."],
-    "tip": "存在文: There are + 複数名詞",
-    "wrong": ["is", "has", "do"]
-  },
-  {
-    "id": "u4-003",
-    "unit": "svoo",
-    "jp": "私は彼に本を与えました。",
-    "en": "I gave him a book.",
-    "chunks": ["I","gave","him","a book","."],
-    "tip": "SVOO: give + 人 + 物",
-    "wrong": ["give", "gives", "to"]
-  },
-  {
-    "id": "u4-004",
-    "unit": "svoo",
-    "jp": "彼女は私にその写真を見せました。",
-    "en": "She showed me the picture.",
-    "chunks": ["she","showed","me","the picture","."],
-    "tip": "SVOO: show + 人 + 物",
-    "wrong": ["show", "shows", "to"]
-  },
-  {
-    "id": "u4-005",
-    "unit": "svoo",
-    "jp": "私は彼にその話を伝えました。",
-    "en": "I told him the story.",
-    "chunks": ["I","told","him","the story","."],
-    "tip": "SVOO: tell + 人 + 物",
-    "wrong": ["tell", "tells", "to"]
-  },
-  {
-    "id": "u4-006",
-    "unit": "svoo",
-    "jp": "彼は私に自転車を貸しました。",
-    "en": "He lent me his bicycle.",
-    "chunks": ["he","lent","me","his bicycle","."],
-    "tip": "SVOO: lend + 人 + 物",
-    "explain": "「lend」の過去形は「lent」です。過去の出来事なので動詞も過去形にします。",
-    "wrong": ["lend", "lends", "to"]
-  },  {
-    "id": "u4-007",
-    "unit": "there-is-neg",
-    "jp": "机の上にペンはありません。",
-    "en": "There is not a pen on the desk.",
-    "chunks": ["there is not","a pen","on the desk","."],
-    "tip": "存在文の否定: There is not + 単数名詞",
-    "wrong": ["are", "has", "do"]
-  },
-  {
-    "id": "u4-008",
-    "unit": "there-are-q",
-    "jp": "この部屋に椅子はいくつありますか。",
-    "en": "How many chairs are there in this room?",
-    "chunks": ["how many chairs","are there","in this room","?" ],
-    "tip": "疑問文: How many + 複数名詞 + are there ～?",
-    "wrong": ["is", "has", "do"]
-  },
-  {
-    "id": "u4-009",
-    "unit": "svoo-neg",
-    "jp": "私は彼に手紙を渡しませんでした。",
-    "en": "I did not give him a letter.",
-    "chunks": ["I","did not","give","him","a letter","."],
-    "tip": "SVOOの否定: did not + 動詞原形",
-    "wrong": ["do", "does", "is"]
-  },
-  {
-    "id": "u4-010",
-    "unit": "svoo-q",
-    "jp": "彼はあなたにその話をしましたか。",
-    "en": "Did he tell you the story?",
-    "chunks": ["did","he","tell","you","the story","?" ],
-    "tip": "SVOOの疑問文: Did + 主語 + 動詞原形 + 人 + 物?",
-    "wrong": ["does", "is", "do"]
-  }
-]
-,
-
+  "questions": [
+    {
+      "id": "r001",
+      "unit": "present-simple",
+      "jp": "彼は放課後にサッカーをします。",
+      "en": "He plays soccer after school.",
+      "chunks": ["he", "plays", "soccer", "after", "school", "."],
+      "tip": "三単現: He plays（sを忘れずに）",
+      "explain": "主語が He などの三人称単数なので、一般動詞 play に s をつけて plays とします。",
+      "wrong": [
+        "is",
+        "does",
+        "do"
+      ]
+    },
+    {
+      "id": "r002",
+      "unit": "present-continuous-q",
+      "jp": "あなたは今宿題をしていますか。",
+      "en": "Are you doing your homework now?",
+      "chunks": ["are", "you", "doing", "your", "homework", "now", "?"],
+      "tip": "進行形の疑問: Are you ～?",
+      "explain": "現在進行形の疑問文なので be 動詞 Are を前に出し、動詞は doing のように -ing 形にします。",
+      "wrong": [
+        "has",
+        "do",
+        "did"
+      ]
+    },
+    {
+      "id": "r003",
+      "unit": "past-simple",
+      "jp": "私は昨日その博物館に行きました。",
+      "en": "I went to the museum yesterday.",
+      "chunks": ["I", "went", "to", "the", "museum", "yesterday", "."],
+      "tip": "go の過去形は went",
+      "explain": "過去の出来事なので go ではなく過去形の went を使い、yesterday と時を示す語も合わせます。",
+      "wrong": [
+        "am",
+        "is",
+        "are"
+      ]
+    },
+    {
+      "id": "r004",
+      "unit": "comparative",
+      "jp": "この本はあの本よりおもしろい。",
+      "en": "This book is more interesting than that one.",
+      "chunks": ["this", "book", "is", "more", "interesting", "than", "that", "one", "."],
+      "tip": "比較級: more … than ～",
+      "explain": "比較級では more + 形容詞 + than ～ の語順を取り、than の後ろに比較対象を置きます。",
+      "wrong": [
+        "do",
+        "did",
+        "does"
+      ]
+    },
+    {
+      "id": "r005",
+      "unit": "there-is",
+      "jp": "机の下に猫が一匹います。",
+      "en": "There is a cat under the desk.",
+      "chunks": ["there", "is", "a", "cat", "under", "the", "desk", "."],
+      "tip": "存在文: There is/are",
+      "explain": "存在を表す文では there is/are で始め、単数名詞 a cat に合わせて is を使います。",
+      "wrong": [
+        "does",
+        "is",
+        "do"
+      ]
+    },
+    {
+      "id": "r006",
+      "unit": "present-3sg",
+      "jp": "彼女は毎朝朝ごはんを食べます。",
+      "en": "She has breakfast every morning.",
+      "chunks": ["she", "has", "breakfast", "every", "morning", "."],
+      "tip": "have → has（3単現）",
+      "explain": "主語が She の三人称単数なので、動詞 have は has に変化させて現在形を作ります。",
+      "wrong": [
+        "are",
+        "am",
+        "is"
+      ]
+    },
+    {
+      "id": "r007",
+      "unit": "present-continuous",
+      "jp": "私は英語を勉強しているところです。",
+      "en": "I am studying English.",
+      "chunks": ["I", "am", "studying", "English", "."],
+      "tip": "be + -ing で進行形",
+      "explain": "現在進行形は be 動詞 + 動詞の -ing 形で表し、主語 I に合わせて am studying とします。",
+      "wrong": [
+        "does",
+        "do",
+        "did"
+      ]
+    },
+    {
+      "id": "r008",
+      "unit": "past-simple-q",
+      "jp": "あなたは昨日映画を見ましたか。",
+      "en": "Did you watch a movie yesterday?",
+      "chunks": ["did", "you", "watch", "a", "movie", "yesterday", "?"],
+      "tip": "過去の疑問: Did + 主語 + 動詞原形",
+      "explain": "過去の疑問文は Did + 主語 + 動詞原形 の形になるので、watch は原形のまま使います。",
+      "wrong": [
+        "is",
+        "are",
+        "am"
+      ]
+    },
+    {
+      "id": "r009",
+      "unit": "present-simple",
+      "jp": "私は毎日朝ごはんを食べます。",
+      "en": "I eat breakfast every day.",
+      "chunks": ["I", "eat", "breakfast", "every", "day", "."],
+      "tip": "一般動詞の現在形: 主語 + 動詞原形",
+      "explain": "主語が I のときは動詞を原形で用い、頻度を表す every day を文末に置きます。",
+      "wrong": [
+        "is",
+        "do",
+        "does"
+      ]
+    },
+    {
+      "id": "r010",
+      "unit": "present-simple-q",
+      "jp": "あなたはサッカーが好きですか。",
+      "en": "Do you like soccer?",
+      "chunks": ["do", "you", "like", "soccer", "?"],
+      "tip": "一般動詞の疑問文: Do + 主語 + 動詞原形",
+      "explain": "一般動詞の疑問文では Do/Does を前に置き、動詞 like は原形のままにします。",
+      "wrong": [
+        "am",
+        "is",
+        "are"
+      ]
+    },
+    {
+      "id": "r011",
+      "unit": "be-verb",
+      "jp": "彼女は生徒です。",
+      "en": "She is a student.",
+      "chunks": ["she", "is", "a", "student", "."],
+      "tip": "be動詞の肯定文: 主語 + be動詞 + 補語",
+      "explain": "be 動詞の文では主語 She に合わせて is を用い、補語の名詞 a student を続けます。",
+      "wrong": [
+        "do",
+        "does",
+        "did"
+      ]
+    },
+    {
+      "id": "r012",
+      "unit": "be-verb-neg",
+      "jp": "私は先生ではありません。",
+      "en": "I am not a teacher.",
+      "chunks": ["I", "am", "not", "a", "teacher", "."],
+      "tip": "be動詞の否定文: 主語 + be動詞 + not + 補語",
+      "explain": "否定文は be 動詞の後ろに not を入れ、主語 I に合わせて am not を使います。",
+      "wrong": [
+        "does",
+        "do",
+        "is"
+      ]
+    },
+    {
+      "id": "r013",
+      "unit": "be-verb-q",
+      "jp": "彼はアメリカ出身ですか。",
+      "en": "Is he from America?",
+      "chunks": ["is", "he", "from", "America", "?"],
+      "tip": "be動詞の疑問文: Be動詞 + 主語 + 補語",
+      "explain": "be 動詞の疑問文は Is/Are を文頭に出し、Is he ～? の語順にします。",
+      "wrong": [
+        "do",
+        "does",
+        "did"
+      ]
+    },
+    {
+      "id": "r014",
+      "unit": "present-cont-q",
+      "jp": "彼らはいまサッカーをしていますか。",
+      "en": "Are they playing soccer now?",
+      "chunks": ["are", "they", "playing", "soccer", "now", "?"],
+      "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing",
+      "explain": "複数主語 they なので be 動詞は Are を使い、play は進行形の playing にします。",
+      "wrong": [
+        "has",
+        "have",
+        "is"
+      ]
+    },
+    {
+      "id": "r015",
+      "unit": "present-cont-neg",
+      "jp": "彼はテレビを見ていません。",
+      "en": "He is not watching TV.",
+      "chunks": ["he", "is", "not", "watching", "TV", "."],
+      "tip": "現在進行形の否定文: 主語 + be動詞 + not + 動詞ing",
+      "explain": "現在進行形の否定は be 動詞のあとに not を入れ、watch の -ing 形 watching を続けます。",
+      "wrong": [
+        "do",
+        "did",
+        "does"
+      ]
+    },
+    {
+      "id": "r016",
+      "unit": "present-simple-q",
+      "jp": "あなたのお父さんは日曜日にテニスをしますか。",
+      "en": "Does your father play tennis on Sunday?",
+      "chunks": ["does", "your", "father", "play", "tennis", "on", "Sunday", "?"],
+      "tip": "三単現の疑問文: Does + 主語 + 動詞原形",
+      "explain": "主語が your father のような三人称単数なので疑問文では Does を使い、動詞 play は原形に戻します。",
+      "wrong": [
+        "am",
+        "is",
+        "are"
+      ]
+    },
+    {
+      "id": "r017",
+      "unit": "present-simple-neg",
+      "jp": "私は図書館で勉強しません。",
+      "en": "I do not study in the library.",
+      "chunks": ["I", "do", "not", "study", "in", "the", "library", "."],
+      "tip": "一般動詞の否定文: do not + 動詞原形",
+      "explain": "一般動詞の否定文では do not / does not + 動詞原形 の形を取り、主語 I には do not を使います。",
+      "wrong": [
+        "is",
+        "are",
+        "am"
+      ]
+    },
+    {
+      "id": "r018",
+      "unit": "be-verb-q",
+      "jp": "これらの本はあなたのですか。",
+      "en": "Are these books yours?",
+      "chunks": ["are", "these", "books", "yours", "?"],
+      "tip": "be動詞の疑問文（複数）: Are + 複数主語",
+      "explain": "複数名詞 these books に合わせて be 動詞は Are を使い、Are these books yours? の語順にします。",
+      "wrong": [
+        "does",
+        "do",
+        "did"
+      ]
+    },
+    {
+      "id": "r019",
+      "unit": "present-cont-q",
+      "jp": "あなたのお姉さんはいまピアノを弾いていますか。",
+      "en": "Is your sister playing the piano now?",
+      "chunks": ["is", "your", "sister", "playing", "the", "piano", "now", "?"],
+      "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing",
+      "explain": "主語が your sister（単数）なので be 動詞は Is、動詞は進行形の playing を用います。",
+      "wrong": [
+        "do",
+        "does",
+        "did"
+      ]
+    },
+    {
+      "id": "r020",
+      "unit": "there-are",
+      "jp": "机の上に3本のえんぴつがあります。",
+      "en": "There are three pencils on the desk.",
+      "chunks": ["there", "are", "three", "pencils", "on", "the", "desk", "."],
+      "tip": "存在文（複数）: There are + 複数名詞",
+      "explain": "複数名詞 three pencils に合わせて there are で始め、場所を表す前置詞句 on the desk を続けます。",
+      "wrong": [
+        "does",
+        "is",
+        "do"
+      ]
+    },
+    {
+      "id": "u3-001",
+      "unit": "be-going-to",
+      "jp": "私は来週京都を訪れるつもりです。",
+      "en": "I am going to visit Kyoto next week.",
+      "chunks": ["I", "am", "going to", "visit", "Kyoto", "next week", "."],
+      "tip": "be going to + 動詞原形",
+      "explain": "be going to の形で「～するつもり」を表し、動詞 visit は原形のまま使います。",
+      "wrong": [
+        "will",
+        "do",
+        "does"
+      ]
+    },
+    {
+      "id": "u3-002",
+      "unit": "will",
+      "jp": "彼は明日その本を読むでしょう。",
+      "en": "He will read the book tomorrow.",
+      "chunks": ["he", "will", "read", "the book", "tomorrow", "."],
+      "tip": "未来: will + 動詞原形",
+      "explain": "未来の出来事には will + 動詞原形 を使い、read は原形のままにします。",
+      "wrong": [
+        "is",
+        "does",
+        "did"
+      ]
+    },
+    {
+      "id": "u3-003",
+      "unit": "be-going-to-q",
+      "jp": "あなたは今夜テレビを見るつもりですか。",
+      "en": "Are you going to watch TV tonight?",
+      "chunks": ["are", "you", "going to", "watch", "TV", "tonight", "?"],
+      "tip": "疑問文: Are you going to + 動詞原形?",
+      "explain": "be going to の疑問文は Are/Is を前に出し、watch は原形で続けます。",
+      "wrong": [
+        "do",
+        "will",
+        "is"
+      ]
+    },
+    {
+      "id": "u3-004",
+      "unit": "will-neg",
+      "jp": "私はそのゲームをしないでしょう。",
+      "en": "I will not play the game.",
+      "chunks": ["I", "will not", "play", "the game", "."],
+      "tip": "否定文: will not + 動詞原形",
+      "explain": "will の否定は will not / won't + 動詞原形 の形で、play を原形のまま用います。",
+      "wrong": [
+        "do",
+        "am",
+        "does"
+      ]
+    },
+    {
+      "id": "u3-005",
+      "unit": "be-going-to-neg",
+      "jp": "私は明日その映画を見ないつもりです。",
+      "en": "I am not going to watch the movie tomorrow.",
+      "chunks": ["I", "am not", "going to", "watch", "the movie", "tomorrow", "."],
+      "tip": "否定文: am not going to + 動詞原形",
+      "explain": "be going to の否定は be 動詞のあとに not を入れ、watch は原形で続けます。",
+      "wrong": [
+        "will",
+        "do",
+        "is"
+      ]
+    },
+    {
+      "id": "u3-006",
+      "unit": "will-q",
+      "jp": "彼は来週テニスをするでしょうか。",
+      "en": "Will he play tennis next week?",
+      "chunks": ["will", "he", "play", "tennis", "next week", "?"],
+      "tip": "疑問文: Will + 主語 + 動詞原形?",
+      "explain": "will の疑問文は Will を文頭に置き、play は原形のままにします。",
+      "wrong": [
+        "does",
+        "is",
+        "do"
+      ]
+    },
+    {
+      "id": "u3-007",
+      "unit": "be-going-to-neg-q",
+      "jp": "あなたはその本を読まないつもりですか。",
+      "en": "Aren't you going to read the book?",
+      "chunks": ["aren't", "you", "going to", "read", "the book", "?"],
+      "tip": "否定疑問文: Aren't you going to ～?",
+      "explain": "be going to の否定疑問では Aren't you ～? の形をとり、read は原形で用います。",
+      "wrong": [
+        "will",
+        "do",
+        "is"
+      ]
+    },
+    {
+      "id": "u4-001",
+      "unit": "there-is",
+      "jp": "机の上に1冊の本があります。",
+      "en": "There is a book on the desk.",
+      "chunks": ["there is", "a book", "on the desk", "."],
+      "tip": "存在文: There is + 単数名詞",
+      "explain": "単数名詞 a book を紹介する存在文なので there is を使い、場所 on the desk を後ろに置きます。",
+      "wrong": [
+        "are",
+        "has",
+        "do"
+      ]
+    },
+    {
+      "id": "u4-002",
+      "unit": "there-are",
+      "jp": "この教室には20人の生徒がいます。",
+      "en": "There are twenty students in this classroom.",
+      "chunks": ["there are", "twenty students", "in this classroom", "."],
+      "tip": "存在文: There are + 複数名詞",
+      "explain": "複数名詞 twenty students に合わせて there are を使い、場所 in this classroom を続けます。",
+      "wrong": [
+        "is",
+        "has",
+        "do"
+      ]
+    },
+    {
+      "id": "u4-003",
+      "unit": "svoo",
+      "jp": "私は彼に本を与えました。",
+      "en": "I gave him a book.",
+      "chunks": ["I", "gave", "him", "a book", "."],
+      "tip": "SVOO: give + 人 + 物",
+      "explain": "SVOO では give + 人 + 物 の語順を取り、過去形 gave で表します。",
+      "wrong": [
+        "give",
+        "gives",
+        "to"
+      ]
+    },
+    {
+      "id": "u4-004",
+      "unit": "svoo",
+      "jp": "彼女は私にその写真を見せました。",
+      "en": "She showed me the picture.",
+      "chunks": ["she", "showed", "me", "the picture", "."],
+      "tip": "SVOO: show + 人 + 物",
+      "explain": "show の過去形 showed を使い、人 me を先に置いてから物 the picture を続けます。",
+      "wrong": [
+        "show",
+        "shows",
+        "to"
+      ]
+    },
+    {
+      "id": "u4-005",
+      "unit": "svoo",
+      "jp": "私は彼にその話を伝えました。",
+      "en": "I told him the story.",
+      "chunks": ["I", "told", "him", "the story", "."],
+      "tip": "SVOO: tell + 人 + 物",
+      "explain": "tell の過去形 told を使い、目的語は人 him → 物 the story の順で並べます。",
+      "wrong": [
+        "tell",
+        "tells",
+        "to"
+      ]
+    },
+    {
+      "id": "u4-006",
+      "unit": "svoo",
+      "jp": "彼は私に自転車を貸しました。",
+      "en": "He lent me his bicycle.",
+      "chunks": ["he", "lent", "me", "his bicycle", "."],
+      "tip": "SVOO: lend + 人 + 物",
+      "explain": "「lend」の過去形は「lent」です。過去の出来事なので動詞も過去形にします。",
+      "wrong": [
+        "lend",
+        "lends",
+        "to"
+      ]
+    },
+    {
+      "id": "u4-007",
+      "unit": "there-is-neg",
+      "jp": "机の上にペンはありません。",
+      "en": "There is not a pen on the desk.",
+      "chunks": ["there is not", "a pen", "on the desk", "."],
+      "tip": "存在文の否定: There is not + 単数名詞",
+      "wrong": [
+        "are",
+        "has",
+        "do"
+      ],
+      "explain": "否定の存在文では there is not + 名詞 で「～がない」を表します。"
+    },
+    {
+      "id": "u4-008",
+      "unit": "there-are-q",
+      "jp": "この部屋に椅子はいくつありますか。",
+      "en": "How many chairs are there in this room?",
+      "chunks": ["how many chairs", "are there", "in this room", "?"],
+      "tip": "疑問文: How many + 複数名詞 + are there ～?",
+      "wrong": [
+        "is",
+        "has",
+        "do"
+      ],
+      "explain": "個数を尋ねる疑問文は How many + 名詞 + are there...? の語順を取ります。"
+    },
+    {
+      "id": "u4-009",
+      "unit": "svoo-neg",
+      "jp": "私は彼に手紙を渡しませんでした。",
+      "en": "I did not give him a letter.",
+      "chunks": ["I", "did not", "give", "him", "a letter", "."],
+      "tip": "SVOOの否定: did not + 動詞原形",
+      "wrong": [
+        "do",
+        "does",
+        "is"
+      ],
+      "explain": "過去の否定文では did not + 動詞原形 を用い、give を原形のまま残します。"
+    },
+    {
+      "id": "u4-010",
+      "unit": "svoo-q",
+      "jp": "彼はあなたにその話をしましたか。",
+      "en": "Did he tell you the story?",
+      "chunks": ["did", "he", "tell", "you", "the story", "?"],
+      "tip": "SVOOの疑問文: Did + 主語 + 動詞原形 + 人 + 物?",
+      "wrong": [
+        "does",
+        "is",
+        "do"
+      ],
+      "explain": "過去の疑問文は Did + 主語 + 動詞原形 の形になるので、tell を原形で使います。"
+    }
+  ],
   "vocab": [
-{ "id": "v001", "unit": "動詞-基本", "jp": "会う", "en": "meet", "pos": "verb", "tip":  "" },
-{ "id": "v002", "unit": "動詞-基本", "jp": "忘れる", "en": "forget", "pos": "verb", "tip":  "" },
-{ "id": "v003", "unit": "形容詞-基本", "jp": "怖い", "en": "scary", "pos": "adjective", "tip":  "" },
-{ "id": "v004", "unit": "形容詞-基本", "jp": "他の", "en": "other", "pos": "adjective", "tip":  "" },
-{ "id": "v005", "unit": "動詞-基本", "jp": "探す（探している最中）", "en": "look for", "pos": "verb", "tip":  "" },
-{ "id": "v006", "unit": "動詞-基本", "jp": "感じる", "en": "feel", "pos": "verb", "tip":  "" },
-{ "id": "v007", "unit": "動詞-基本", "jp": "尋ねる", "en": "ask", "pos": "verb", "tip":  "" },
-{ "id": "v008", "unit": "形容詞-基本", "jp": "わくわくする", "en": "excited", "pos": "adjective", "tip":  "" },
-{ "id": "v009", "unit": "形容詞-基本", "jp": "大切な", "en": "important", "pos": "adjective", "tip":  "" },
-{ "id": "v010", "unit": "前置詞-基本", "jp": "周りに", "en": "around", "pos": "preposition", "tip":  "" },
-{ "id": "v011", "unit": "形容詞-基本", "jp": "同じ", "en": "same", "pos": "adjective", "tip":  "" },
-{ "id": "v012", "unit": "副詞-基本", "jp": "決して～ない", "en": "never", "pos": "adverb", "tip":  "" },
-{ "id": "v013", "unit": "形容詞-基本", "jp": "もちろん", "en": "sure", "pos": "adjective", "tip":  "" },
-{ "id": "v014", "unit": "代名詞-基本", "jp": "両方", "en": "both", "pos": "pronoun", "tip":  "" },
-{ "id": "v015", "unit": "副詞-基本", "jp": "離れて", "en": "away", "pos": "adverb", "tip":  "" },
-{ "id": "v016", "unit": "動詞-基本", "jp": "出発する", "en": "leave", "pos": "verb", "tip":  "" },
-{ "id": "v017", "unit": "動詞-基本", "jp": "思い出す", "en": "remember", "pos": "verb", "tip":  "" },
-{ "id": "v018", "unit": "名詞-基本", "jp": "問題", "en": "problem", "pos": "noun", "tip":  "" },
-{ "id": "v019", "unit": "副詞-基本", "jp": "十分に", "en": "enough", "pos": "adverb", "tip":  "" },
-{ "id": "v020", "unit": "形容詞-基本", "jp": "驚く", "en": "surprised", "pos": "adjective", "tip":  "" },
-{ "id": "v021", "unit": "形容詞-基本", "jp": "有名な", "en": "famous", "pos": "adjective", "tip":  "" },
-{ "id": "v022", "unit": "前置詞-基本", "jp": "～なしで", "en": "without", "pos": "preposition", "tip":  "" },
-{ "id": "v023", "unit": "名詞-基本", "jp": "文化", "en": "culture", "pos": "noun", "tip":  "" },
-{ "id": "v024", "unit": "名詞-基本", "jp": "自然", "en": "nature", "pos": "noun", "tip":  "" },
-{ "id": "v025", "unit": "代名詞-基本", "jp": "お互いに", "en": "each other", "pos": "pronoun", "tip":  "" },
-{ "id": "v026", "unit": "名詞-基本", "jp": "服", "en": "clothes", "pos": "noun", "tip":  "" },
-{ "id": "v027", "unit": "名詞-基本", "jp": "理由", "en": "reason", "pos": "noun", "tip":  "" },
-{ "id": "v028", "unit": "名詞-基本", "jp": "野菜", "en": "vegetable", "pos": "noun", "tip":  "" },
-{ "id": "v029", "unit": "形容詞-基本", "jp": "変な", "en": "strange", "pos": "adjective", "tip":  "" },
-{ "id": "v030", "unit": "名詞-基本", "jp": "天気", "en": "weather", "pos": "noun", "tip":  "" },
-{ "id": "v031", "unit": "名詞-基本", "jp": "ちがい", "en": "difference", "pos": "noun", "tip":  "" },
-{ "id": "v032", "unit": "形容詞-基本", "jp": "生まれる", "en": "born", "pos": "adjective", "tip":  "" },
-{ "id": "v033", "unit": "動詞-基本", "jp": "経験する", "en": "experience", "pos": "verb", "tip":  "" },
-{ "id": "v034", "unit": "副詞-基本", "jp": "明日", "en": "tomorrow", "pos": "adverb", "tip":  "" },
-{ "id": "v035", "unit": "動詞-基本", "jp": "上達する", "en": "improve", "pos": "verb", "tip":  "" },
-{ "id": "v036", "unit": "形容詞-基本", "jp": "誇りに思う", "en": "proud", "pos": "adjective", "tip":  "" },
-{ "id": "v037", "unit": "名詞-基本", "jp": "～時間", "en": "hours", "pos": "noun", "tip":  "" },
-{ "id": "v038", "unit": "形容詞-基本", "jp": "危険な", "en": "dangerous", "pos": "adjective", "tip":  "" },
-{ "id": "v039", "unit": "動詞-基本", "jp": "共有する", "en": "share", "pos": "verb", "tip":  "" },
-{ "id": "v040", "unit": "数詞-基本", "jp": "千", "en": "thousand", "pos": "numeral", "tip":  "" },
-{ "id": "v041", "unit": "動詞-基本", "jp": "見つける（結果が出た）", "en": "find", "pos": "verb", "tip":  "" },
-{ "id": "v042", "unit": "名詞-基本", "jp": "方法、道", "en": "way", "pos": "noun", "tip":  "" },
-{ "id": "v043", "unit": "名詞-基本", "jp": "国", "en": "country", "pos": "noun", "tip":  "" },
-{ "id": "v044", "unit": "名詞-基本", "jp": "場所", "en": "place", "pos": "noun", "tip":  "" },
-{ "id": "v045", "unit": "形容詞-基本", "jp": "大きい", "en": "large", "pos": "adjective", "tip":  "" },
-{ "id": "v046", "unit": "動詞-基本", "jp": "保つ", "en": "keep", "pos": "verb", "tip":  "" },
-{ "id": "v047", "unit": "名詞-基本", "jp": "希望", "en": "hope", "pos": "noun", "tip":  "" },
-{ "id": "v048", "unit": "形容詞-基本", "jp": "疲れる", "en": "tired", "pos": "adjective", "tip":  "" },
-{ "id": "v049", "unit": "動詞-基本", "jp": "到着する", "en": "arrive", "pos": "verb", "tip":  "" },
-{ "id": "v050", "unit": "動詞-基本", "jp": "心配する", "en": "worry", "pos": "verb", "tip":  "" }
-
+    {
+      "id": "v001",
+      "unit": "動詞-基本",
+      "jp": "会う",
+      "en": "meet",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v002",
+      "unit": "動詞-基本",
+      "jp": "忘れる",
+      "en": "forget",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v003",
+      "unit": "形容詞-基本",
+      "jp": "怖い",
+      "en": "scary",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v004",
+      "unit": "形容詞-基本",
+      "jp": "他の",
+      "en": "other",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v005",
+      "unit": "動詞-基本",
+      "jp": "探す（探している最中）",
+      "en": "look for",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v006",
+      "unit": "動詞-基本",
+      "jp": "感じる",
+      "en": "feel",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v007",
+      "unit": "動詞-基本",
+      "jp": "尋ねる",
+      "en": "ask",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v008",
+      "unit": "形容詞-基本",
+      "jp": "わくわくする",
+      "en": "excited",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v009",
+      "unit": "形容詞-基本",
+      "jp": "大切な",
+      "en": "important",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v010",
+      "unit": "前置詞-基本",
+      "jp": "周りに",
+      "en": "around",
+      "pos": "preposition",
+      "tip": ""
+    },
+    {
+      "id": "v011",
+      "unit": "形容詞-基本",
+      "jp": "同じ",
+      "en": "same",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v012",
+      "unit": "副詞-基本",
+      "jp": "決して～ない",
+      "en": "never",
+      "pos": "adverb",
+      "tip": ""
+    },
+    {
+      "id": "v013",
+      "unit": "形容詞-基本",
+      "jp": "もちろん",
+      "en": "sure",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v014",
+      "unit": "代名詞-基本",
+      "jp": "両方",
+      "en": "both",
+      "pos": "pronoun",
+      "tip": ""
+    },
+    {
+      "id": "v015",
+      "unit": "副詞-基本",
+      "jp": "離れて",
+      "en": "away",
+      "pos": "adverb",
+      "tip": ""
+    },
+    {
+      "id": "v016",
+      "unit": "動詞-基本",
+      "jp": "出発する",
+      "en": "leave",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v017",
+      "unit": "動詞-基本",
+      "jp": "思い出す",
+      "en": "remember",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v018",
+      "unit": "名詞-基本",
+      "jp": "問題",
+      "en": "problem",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v019",
+      "unit": "副詞-基本",
+      "jp": "十分に",
+      "en": "enough",
+      "pos": "adverb",
+      "tip": ""
+    },
+    {
+      "id": "v020",
+      "unit": "形容詞-基本",
+      "jp": "驚く",
+      "en": "surprised",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v021",
+      "unit": "形容詞-基本",
+      "jp": "有名な",
+      "en": "famous",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v022",
+      "unit": "前置詞-基本",
+      "jp": "～なしで",
+      "en": "without",
+      "pos": "preposition",
+      "tip": ""
+    },
+    {
+      "id": "v023",
+      "unit": "名詞-基本",
+      "jp": "文化",
+      "en": "culture",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v024",
+      "unit": "名詞-基本",
+      "jp": "自然",
+      "en": "nature",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v025",
+      "unit": "代名詞-基本",
+      "jp": "お互いに",
+      "en": "each other",
+      "pos": "pronoun",
+      "tip": ""
+    },
+    {
+      "id": "v026",
+      "unit": "名詞-基本",
+      "jp": "服",
+      "en": "clothes",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v027",
+      "unit": "名詞-基本",
+      "jp": "理由",
+      "en": "reason",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v028",
+      "unit": "名詞-基本",
+      "jp": "野菜",
+      "en": "vegetable",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v029",
+      "unit": "形容詞-基本",
+      "jp": "変な",
+      "en": "strange",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v030",
+      "unit": "名詞-基本",
+      "jp": "天気",
+      "en": "weather",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v031",
+      "unit": "名詞-基本",
+      "jp": "ちがい",
+      "en": "difference",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v032",
+      "unit": "形容詞-基本",
+      "jp": "生まれる",
+      "en": "born",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v033",
+      "unit": "動詞-基本",
+      "jp": "経験する",
+      "en": "experience",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v034",
+      "unit": "副詞-基本",
+      "jp": "明日",
+      "en": "tomorrow",
+      "pos": "adverb",
+      "tip": ""
+    },
+    {
+      "id": "v035",
+      "unit": "動詞-基本",
+      "jp": "上達する",
+      "en": "improve",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v036",
+      "unit": "形容詞-基本",
+      "jp": "誇りに思う",
+      "en": "proud",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v037",
+      "unit": "名詞-基本",
+      "jp": "～時間",
+      "en": "hours",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v038",
+      "unit": "形容詞-基本",
+      "jp": "危険な",
+      "en": "dangerous",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v039",
+      "unit": "動詞-基本",
+      "jp": "共有する",
+      "en": "share",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v040",
+      "unit": "数詞-基本",
+      "jp": "千",
+      "en": "thousand",
+      "pos": "numeral",
+      "tip": ""
+    },
+    {
+      "id": "v041",
+      "unit": "動詞-基本",
+      "jp": "見つける（結果が出た）",
+      "en": "find",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v042",
+      "unit": "名詞-基本",
+      "jp": "方法、道",
+      "en": "way",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v043",
+      "unit": "名詞-基本",
+      "jp": "国",
+      "en": "country",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v044",
+      "unit": "名詞-基本",
+      "jp": "場所",
+      "en": "place",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v045",
+      "unit": "形容詞-基本",
+      "jp": "大きい",
+      "en": "large",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v046",
+      "unit": "動詞-基本",
+      "jp": "保つ",
+      "en": "keep",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v047",
+      "unit": "名詞-基本",
+      "jp": "希望",
+      "en": "hope",
+      "pos": "noun",
+      "tip": ""
+    },
+    {
+      "id": "v048",
+      "unit": "形容詞-基本",
+      "jp": "疲れる",
+      "en": "tired",
+      "pos": "adjective",
+      "tip": ""
+    },
+    {
+      "id": "v049",
+      "unit": "動詞-基本",
+      "jp": "到着する",
+      "en": "arrive",
+      "pos": "verb",
+      "tip": ""
+    },
+    {
+      "id": "v050",
+      "unit": "動詞-基本",
+      "jp": "心配する",
+      "en": "worry",
+      "pos": "verb",
+      "tip": ""
+    }
   ]
 }
