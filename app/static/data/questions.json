@@ -139,6 +139,7 @@
     "en": "He lent me his bicycle.",
     "chunks": ["he","lent","me","his bicycle","."],
     "tip": "SVOO: lend + 人 + 物",
+    "explain": "「lend」の過去形は「lent」です。過去の出来事なので動詞も過去形にします。",
     "wrong": ["lend", "lends", "to"]
   },  {
     "id": "u4-007",
