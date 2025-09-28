@@ -670,7 +670,9 @@
         const normalizedAns = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
         ans = normalizedAns? normalizedAns.charAt(0).toUpperCase()+normalizedAns.slice(1) : normalizedAns;
         const normalizedAnswers = answerList.map(a=>normalizeEndPunc(normalizeSpaces(a), keepPunc));
-        correct = normalizedAnswers.includes(normalizedAns);
+        const normalizedAnsLower = typeof normalizedAns === 'string' ? normalizedAns.toLowerCase() : normalizedAns;
+        const normalizedAnswersLower = normalizedAnswers.map(a=>typeof a === 'string' ? a.toLowerCase() : a);
+        correct = normalizedAnswersLower.includes(normalizedAnsLower);
       } else { // vocab
         ans = normalizeWord(currentAnswer());
         const normalizedAnswers = answerList.map(a=>normalizeWord(a));
