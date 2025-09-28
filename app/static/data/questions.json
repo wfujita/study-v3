@@ -416,6 +416,7 @@
       "unit": "svoo",
       "jp": "私は彼に本を与えました。",
       "en": "I gave him a book.",
+      "accept": ["I gave a book to him."],
       "chunks": ["I", "gave", "him", "a book", "."],
       "tip": "SVOO: give + 人 + 物",
       "explain": "SVOO では give + 人 + 物 の語順を取り、過去形 gave で表します。",
