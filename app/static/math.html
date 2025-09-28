@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数学演習モード</title>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#0f172a;color:#e5e7eb;}
+    main{max-width:720px;margin:0 auto;padding:24px;}
+    h1{margin-top:0;}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;margin-bottom:16px;}
+    button{background:#2563eb;border:1px solid #2563eb;border-radius:10px;color:#fff;padding:10px 18px;font-size:16px;cursor:pointer;}
+    button:disabled{opacity:.5;cursor:not-allowed;}
+    input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
+    .field-stack{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+    .field-row{display:flex;flex-direction:column;gap:6px;}
+    .field-label{font-size:14px;color:#94a3b8;}
+    #feedback{margin-top:12px;min-height:2.2em;}
+    .muted{color:#94a3b8;}
+    .ok{color:#22c55e;}
+    .ng{color:#ef4444;}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>数学演習モード</h1>
+      <p class="muted">入力欄に解答を入力して「答え合わせ」を押してください。複数の値は空白・カンマ・読点などで区切れます。</p>
+    </div>
+    <div class="card" id="quiz" style="display:none">
+      <div id="question" style="font-size:18px;font-weight:600"></div>
+      <div id="answer-inputs" class="field-stack"></div>
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <button id="btn-check">答え合わせ</button>
+        <button id="btn-next" disabled>次の問題 ▶</button>
+      </div>
+      <div id="feedback" class="muted"></div>
+    </div>
+    <div class="card" id="loading">読み込み中…</div>
+    <div class="card" id="error" style="display:none;color:#ef4444"></div>
+  </main>
+  <script>
+    const QUESTIONS_URL = "/data/math_questions.json";
+    const state = { questions: [], index: 0, graded: false, inputs: [], fieldSpecs: [] };
+
+    function $(sel){ return document.querySelector(sel); }
+
+    function normalize(value){
+      if(typeof value !== 'string') return '';
+      return value
+        .trim()
+        .replace(/\s*([=:=≒≈<>≤≥+\-*/])\s*/g, '$1')
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+    }
+
+    function splitUserInput(value){
+      if(typeof value !== 'string') return [];
+      const compacted = value
+        .replace(/\s*([=:=≒≈<>≤≥+\-*/])\s*/g, '$1')
+        .trim();
+      if(!compacted) return [];
+      return compacted
+        .split(/[\s,、，;；]+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+    }
+
+    function asFieldSpec(raw, index){
+      if(raw && typeof raw === 'object'){
+        const key = raw.key || raw.name || `field${index}`;
+        return {
+          key,
+          label: raw.label || raw.name || `入力${index + 1}`,
+          placeholder: raw.placeholder || '',
+          autocomplete: raw.autocomplete || 'off',
+          autocapitalize: raw.autocapitalize || 'off'
+        };
+      }
+      if(typeof raw === 'string'){
+        return {
+          key: `field${index}`,
+          label: raw,
+          placeholder: '',
+          autocomplete: 'off',
+          autocapitalize: 'off'
+        };
+      }
+      return {
+        key: `field${index}`,
+        label: `入力${index + 1}`,
+        placeholder: '',
+        autocomplete: 'off',
+        autocapitalize: 'off'
+      };
+    }
+
+    function getFieldSpecs(question){
+      if(!question || !Array.isArray(question.fields)) return [];
+      return question.fields.map((raw, idx) => asFieldSpec(raw, idx));
+    }
+
+    function compareScalar(expected, actual){
+      if(expected == null && actual == null) return true;
+      if(expected == null || actual == null) return false;
+      return normalize(String(expected)) === normalize(String(actual));
+    }
+
+    function matchesAnswer(candidate, userValues, fieldSpecs){
+      if(Array.isArray(candidate)){
+        if(fieldSpecs.length <= 1){
+          const targetParts = candidate.map(part => normalize(String(part))).filter(Boolean);
+          if(!targetParts.length) return false;
+          const raw = userValues[0] || '';
+          const userParts = splitUserInput(raw).map(normalize).filter(Boolean);
+          if(userParts.length !== targetParts.length) return false;
+          const pool = new Map();
+          userParts.forEach(part => pool.set(part, (pool.get(part) || 0) + 1));
+          return targetParts.every(part => {
+            const remain = pool.get(part) || 0;
+            if(remain <= 0) return false;
+            pool.set(part, remain - 1);
+            return true;
+          });
+        }
+        if(candidate.length !== fieldSpecs.length) return false;
+        return candidate.every((part, idx) => compareScalar(part, userValues[idx] || ''));
+      }
+      if(candidate && typeof candidate === 'object'){
+        const userMap = new Map();
+        fieldSpecs.forEach((field, idx) => {
+          userMap.set(field.key, userValues[idx] || '');
+        });
+        return fieldSpecs.every(field => {
+          if(!Object.prototype.hasOwnProperty.call(candidate, field.key)) return false;
+          const expected = candidate[field.key];
+          const actual = userMap.get(field.key);
+          if(Array.isArray(expected)){
+            return expected.some(option => compareScalar(option, actual));
+          }
+          return compareScalar(expected, actual);
+        });
+      }
+      return compareScalar(candidate, userValues[0] || '');
+    }
+
+    function getAnswerList(question){
+      const answers = Array.isArray(question.answers) ? question.answers.slice() : [];
+      if(!answers.length && typeof question.answer === 'string'){
+        answers.push(question.answer);
+      }
+      return answers;
+    }
+
+    function clearInputEventHandlers(){
+      state.inputs.forEach(input => {
+        input.removeEventListener('keydown', onInputKeyDown);
+      });
+    }
+
+    function buildInputs(question){
+      clearInputEventHandlers();
+      const container = $('#answer-inputs');
+      container.innerHTML = '';
+      const specs = getFieldSpecs(question);
+      const inputs = [];
+      if(specs.length){
+        specs.forEach((spec, idx) => {
+          const wrapper = document.createElement('label');
+          wrapper.className = 'field-row';
+          const label = document.createElement('span');
+          label.className = 'field-label';
+          label.textContent = spec.label;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = spec.placeholder || '';
+          input.autocomplete = spec.autocomplete || 'off';
+          input.autocapitalize = spec.autocapitalize || 'off';
+          input.dataset.index = String(idx);
+          wrapper.appendChild(label);
+          wrapper.appendChild(input);
+          container.appendChild(wrapper);
+          inputs.push(input);
+        });
+      } else {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = '解答を入力';
+        input.autocomplete = 'off';
+        input.autocapitalize = 'off';
+        input.dataset.index = '0';
+        container.appendChild(input);
+        inputs.push(input);
+      }
+      inputs.forEach(input => input.addEventListener('keydown', onInputKeyDown));
+      state.inputs = inputs;
+      state.fieldSpecs = specs;
+    }
+
+    function getUserValues(){
+      if(!state.inputs.length) return [''];
+      return state.inputs.map(input => input.value || '');
+    }
+
+    function onInputKeyDown(ev){
+      if(ev.key === 'Enter'){
+        ev.preventDefault();
+        if(state.graded){
+          nextQuestion();
+        } else {
+          checkAnswer();
+        }
+      }
+    }
+
+    function renderQuestion(){
+      if(!state.questions.length){
+        $('#quiz').style.display = 'none';
+        $('#loading').textContent = '問題が見つかりませんでした。';
+        return;
+      }
+      const q = state.questions[state.index];
+      $('#question').textContent = q.prompt || q.question || '';
+      buildInputs(q);
+      state.inputs.forEach(input => { input.value = ''; });
+      $('#feedback').textContent = '';
+      $('#feedback').className = 'muted';
+      state.graded = false;
+      $('#btn-next').disabled = true;
+      $('#quiz').style.display = '';
+      $('#loading').style.display = 'none';
+      if(state.inputs[0]){
+        state.inputs[0].focus();
+      }
+    }
+
+    function checkAnswer(){
+      if(state.graded) return;
+      const q = state.questions[state.index];
+      const userValues = getUserValues();
+      const fieldSpecs = state.fieldSpecs;
+      const answers = getAnswerList(q);
+      if(!answers.length){
+        $('#feedback').className = 'muted';
+        $('#feedback').textContent = '正解が登録されていません。';
+        state.graded = true;
+        $('#btn-next').disabled = false;
+        return;
+      }
+      const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
+      state.graded = true;
+      $('#btn-next').disabled = false;
+      if(isCorrect){
+        $('#feedback').className = 'ok';
+        $('#feedback').innerHTML = `✅ 正解です！`;
+      } else {
+        $('#feedback').className = 'ng';
+        const formatted = answers
+          .map(ans => {
+            if(Array.isArray(ans)){
+              if(fieldSpecs.length > 1){
+                return ans.join(' / ');
+              }
+              return ans.join(' ');
+            }
+            if(ans && typeof ans === 'object'){
+              return fieldSpecs.map(field => ans[field.key]).filter(Boolean).join(' / ');
+            }
+            return ans;
+          })
+          .join('<br><span class="muted">または</span> ');
+        $('#feedback').innerHTML = `❌ 不正解。 正解例: ${formatted}`;
+      }
+    }
+
+    function nextQuestion(){
+      if(!state.graded) checkAnswer();
+      state.index = (state.index + 1) % state.questions.length;
+      renderQuestion();
+    }
+
+    $('#btn-check').addEventListener('click', checkAnswer);
+    $('#btn-next').addEventListener('click', nextQuestion);
+    fetch(QUESTIONS_URL, { cache: 'no-store' })
+      .then(res => {
+        if(!res.ok) throw new Error(`fetch ${QUESTIONS_URL} ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        state.questions = Array.isArray(data.questions) ? data.questions : [];
+        $('#loading').style.display = 'none';
+        if(!state.questions.length){
+          $('#loading').style.display = '';
+          $('#loading').textContent = '問題が見つかりませんでした。';
+          return;
+        }
+        renderQuestion();
+      })
+      .catch(err => {
+        $('#loading').style.display = 'none';
+        const box = $('#error');
+        box.style.display = '';
+        box.textContent = `問題の読み込みに失敗しました: ${err.message}`;
+      });
+  </script>
+</body>
+</html>

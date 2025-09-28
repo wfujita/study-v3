@@ -17,6 +17,7 @@ def test_routes_and_post(tmp_path, monkeypatch):
     client = flask_app.test_client()
     assert client.get("/").status_code == 200
     assert client.get("/admin").status_code == 200
+    assert client.get("/math.html").status_code == 200
 
     payload = {"_smoke": True}
     r = client.post("/api/results", json=payload)
@@ -27,3 +28,17 @@ def test_routes_and_post(tmp_path, monkeypatch):
     with open(path, "rb") as f:
         last = f.readlines()[-1]
     json.loads(last)  # NDJSON でパースできること
+
+    math_res = client.get("/data/math_questions.json")
+    assert math_res.status_code == 200
+    math_payload = json.loads(math_res.data)
+    assert isinstance(math_payload.get("questions"), list)
+    assert any(
+        any(isinstance(ans, list) for ans in (q.get("answers") or []))
+        for q in math_payload["questions"]
+    ), "配列形式の answers を持つ問題が含まれていること"
+    assert any(
+        isinstance(q.get("fields"), list)
+        and any(isinstance(ans, dict) for ans in (q.get("answers") or []))
+        for q in math_payload["questions"]
+    ), "fields とオブジェクト形式 answers を組み合わせた問題が含まれていること"
