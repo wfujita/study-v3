@@ -160,14 +160,64 @@
     /********** 問題ロード **********/
     let BANK_REORDER = [];
     let BANK_VOCAB = [];
+
+    const toAnswerList = (value)=>{
+      if(Array.isArray(value)){
+        return value
+          .map(v=>typeof v==='string'? v.trim(): '')
+          .filter(v=>v);
+      }
+      if(typeof value==='string'){
+        const trimmed = value.trim();
+        return trimmed? [trimmed] : [];
+      }
+      return [];
+    };
+
+    const collectAnswerSet = (item)=>{
+      const primary = toAnswerList(item.en);
+      const extras = [];
+      [item.accept, item.accepts, item.answers, item.alternates, item.variants]
+        .forEach(src=>{ toAnswerList(src).forEach(ans=>extras.push(ans)); });
+      const merged = [...primary, ...extras];
+      if(!merged.length && typeof item.en==='string'){
+        const fallback = item.en.trim();
+        if(fallback) merged.push(fallback);
+      }
+      const unique = [];
+      merged.forEach(ans=>{ if(!unique.includes(ans)) unique.push(ans); });
+      return unique;
+    };
+
+    const buildQuestion = (item, type)=>{
+      const answers = collectAnswerSet(item);
+      const primary = answers[0] || (typeof item.en==='string'? item.en.trim(): '');
+      const base = {
+        type,
+        id: item.id||null,
+        unit: item.unit||null,
+        jp: item.jp,
+        en: primary,
+        answers,
+        tip: item.tip||'',
+        explain: item.explain||''
+      };
+      if(type==='reorder'){
+        base.chunks = item.chunks;
+        base.wrong = item.wrong||[];
+      } else if(type==='vocab'){
+        base.pos = item.pos||'';
+      }
+      return base;
+    };
     async function ensureQuestions(){
       if (BANK_REORDER.length || BANK_VOCAB.length){ renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
-      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>({type:'reorder', id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, wrong:q.wrong||[], tip:q.tip||'', explain:q.explain||''}));
-      BANK_VOCAB   = (data.vocab||[]).map(v=>({type:'vocab', id:v.id||null, unit:v.unit||null, jp:v.jp, en:v.en, tip:v.tip||'', pos:v.pos||''}));
+      BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
+      BANK_VOCAB   = (data.vocab||[]).map(v=>buildQuestion(v, 'vocab'));
       renderUnitFilterOptions();
     }
 
@@ -601,22 +651,30 @@
       return '<br>' + lines.map(text=>`<span class="muted">${text}</span>`).join('<br>');
     }
 
+    function formatCorrectAnswers(list){
+      const answers = (Array.isArray(list)? list : [list]).filter(Boolean);
+      if(!answers.length) return '<span class="muted">（正解未設定）</span>';
+      if(answers.length===1) return `<b>${answers[0]}</b>`;
+      return answers.map(ans=>`<b>${ans}</b>`).join('<br><span class="muted">または</span> ');
+    }
+
     /********** 採点・進行 **********/
     function checkAnswer(){
       if(state.graded) return; // 二重加算防止
       const q = getCurrentQuestion();
 
-      let ans, right, correct;
+      const answerList = (Array.isArray(q.answers) && q.answers.length) ? q.answers : [q.en];
+      let ans, correct;
       if(state.qType==='reorder'){
         const keepPunc = true; // 並び替えでは文末記号を保持する
-        ans = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
-        ans = ans? ans.charAt(0).toUpperCase()+ans.slice(1) : ans;
-        right = normalizeEndPunc(normalizeSpaces(q.en), keepPunc);
-        correct = (ans===right);
+        const normalizedAns = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
+        ans = normalizedAns? normalizedAns.charAt(0).toUpperCase()+normalizedAns.slice(1) : normalizedAns;
+        const normalizedAnswers = answerList.map(a=>normalizeEndPunc(normalizeSpaces(a), keepPunc));
+        correct = normalizedAnswers.includes(normalizedAns);
       } else { // vocab
         ans = normalizeWord(currentAnswer());
-        right = normalizeWord(q.en);
-        correct = (ans===right);
+        const normalizedAnswers = answerList.map(a=>normalizeWord(a));
+        correct = normalizedAnswers.includes(ans);
       }
 
       const record = {
@@ -637,9 +695,10 @@
       } else {
         state.wrong++; $('#stat-wrong').textContent = state.wrong;
         const detail = buildFeedbackDetail(q, true);
+        const answersMarkup = formatCorrectAnswers(answerList);
         $('#explain').innerHTML = state.qType==='reorder'
-          ? `❌ 不正解。 正解: <b>${q.en}</b>${detail}`
-          : `❌ 不正解。 正解: <b>${q.en}</b>${detail}`;
+          ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
+          : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
         // 復習用には詳細保持
         addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', userAnswer: ans, at: record.at });
       }
@@ -806,7 +865,16 @@
     });
 
     document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); }; document.getElementById('btn-hint').onclick=showHint;
-    document.getElementById('btn-speak').onclick=()=>{ const q=getCurrentQuestion(); if(!q) return; const u=new SpeechSynthesisUtterance(q.en); u.lang='en-US'; u.rate=1.0; speechSynthesis.cancel(); speechSynthesis.speak(u); };
+    document.getElementById('btn-speak').onclick=()=>{
+      const q=getCurrentQuestion();
+      if(!q) return;
+      const text = (Array.isArray(q.answers) && q.answers.length) ? q.answers[0] : q.en;
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='en-US';
+      u.rate=1.0;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    };
 
     // 完了画面の遷移
       document.getElementById('btn-nextset').onclick=async ()=>{
