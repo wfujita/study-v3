@@ -13,9 +13,10 @@
     button:disabled{opacity:.5;cursor:not-allowed;}
     input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
     .field-stack{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
-    .field-row{display:flex;flex-direction:row;align-items:center;gap:12px;}
+    .field-row{display:flex;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap;}
     .field-label{font-size:14px;color:#94a3b8;}
     .field-row input{width:8ch;flex:0 0 auto;padding:8px 10px;}
+    .field-unit{font-size:14px;color:#94a3b8;}
     #feedback{margin-top:12px;min-height:2.2em;}
     .muted{color:#94a3b8;}
     .ok{color:#22c55e;}
@@ -63,7 +64,8 @@
           label: raw.label || raw.name || `入力${index + 1}`,
           placeholder: raw.placeholder || '',
           autocomplete: raw.autocomplete || 'off',
-          autocapitalize: raw.autocapitalize || 'off'
+          autocapitalize: raw.autocapitalize || 'off',
+          unit: raw.unit || ''
         };
       }
       if(typeof raw === 'string'){
@@ -72,7 +74,8 @@
           label: raw,
           placeholder: '',
           autocomplete: 'off',
-          autocapitalize: 'off'
+          autocapitalize: 'off',
+          unit: ''
         };
       }
       return {
@@ -80,7 +83,8 @@
         label: `入力${index + 1}`,
         placeholder: '',
         autocomplete: 'off',
-        autocapitalize: 'off'
+        autocapitalize: 'off',
+        unit: ''
       };
     }
 
@@ -105,7 +109,8 @@
             label: `入力${idx + 1}`,
             placeholder: '',
             autocomplete: 'off',
-            autocapitalize: 'off'
+            autocapitalize: 'off',
+            unit: ''
           }));
         }
       }
@@ -130,7 +135,8 @@
             label: key,
             placeholder: '',
             autocomplete: 'off',
-            autocapitalize: 'off'
+            autocapitalize: 'off',
+            unit: ''
           }));
         }
       }
@@ -210,6 +216,12 @@
           input.dataset.index = String(idx);
           wrapper.appendChild(label);
           wrapper.appendChild(input);
+          if(spec.unit){
+            const unit = document.createElement('span');
+            unit.className = 'field-unit';
+            unit.textContent = spec.unit;
+            wrapper.appendChild(unit);
+          }
           container.appendChild(wrapper);
           inputs.push(input);
         });
