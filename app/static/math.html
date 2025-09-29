@@ -47,9 +47,10 @@
 
     function $(sel){ return document.querySelector(sel); }
 
+    const normalizeDigits = value => (value == null ? '' : String(value).replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)));
     function normalize(value){
-      if(typeof value !== 'string') return '';
-      return value
+      if(value == null) return '';
+      return normalizeDigits(value)
         .trim()
         .replace(/\s*([=:=≒≈<>≤≥+\-*/])\s*/g, '$1')
         .replace(/\s+/g, ' ')

@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -55,3 +56,40 @@ console.log(JSON.stringify([
     out = run_node(script)
     result = json.loads(out)
     assert result == [True, True, True, True]
+
+
+def extract_function(source: str, name: str) -> str:
+    pattern = rf"function {name}\([^)]*\)\s*\{{[\s\S]*?\}}"
+    match = re.search(pattern, source)
+    if not match:
+        raise AssertionError(f"Function {name} not found")
+    return match.group(0)
+
+
+def test_math_mode_full_width_digits_are_normalized():
+    math_html = Path("app/static/math.html").read_text(encoding="utf-8")
+    normalize_digits_line = None
+    for line in math_html.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("const normalizeDigits"):
+            normalize_digits_line = stripped
+            break
+    assert normalize_digits_line is not None
+
+    normalize_fn = extract_function(math_html, "normalize")
+    compare_scalar_fn = extract_function(math_html, "compareScalar")
+
+    script = f"""
+{normalize_digits_line}
+{normalize_fn}
+{compare_scalar_fn}
+console.log(JSON.stringify([
+  compareScalar('123', '１２３'),
+  compareScalar('１２３', '123'),
+  normalize('１２３')
+]));
+"""
+
+    out = run_node(script)
+    result = json.loads(out)
+    assert result == [True, True, "123"]
