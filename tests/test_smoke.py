@@ -33,12 +33,13 @@ def test_routes_and_post(tmp_path, monkeypatch):
     assert math_res.status_code == 200
     math_payload = json.loads(math_res.data)
     assert isinstance(math_payload.get("questions"), list)
-    assert any(
-        any(isinstance(ans, list) for ans in (q.get("answers") or []))
-        for q in math_payload["questions"]
-    ), "配列形式の answers を持つ問題が含まれていること"
-    assert any(
-        isinstance(q.get("fields"), list)
-        and any(isinstance(ans, dict) for ans in (q.get("answers") or []))
-        for q in math_payload["questions"]
-    ), "fields とオブジェクト形式 answers を組み合わせた問題が含まれていること"
+    field_questions = [
+        q for q in math_payload["questions"] if isinstance(q.get("fields"), list)
+    ]
+    assert field_questions, "fields を持つ問題が少なくとも1問あること"
+    for q in field_questions:
+        answers = q.get("answers") or []
+        assert answers, "fields を持つ問題は少なくとも1つの answers を持つこと"
+        assert all(
+            isinstance(ans, dict) for ans in answers
+        ), "fields を持つ問題の answers はオブジェクト形式に統一されていること"
