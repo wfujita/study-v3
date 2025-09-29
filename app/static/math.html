@@ -26,7 +26,7 @@
   <main>
     <div class="card">
       <h1>数学演習モード</h1>
-      <p class="muted">入力欄に解答を入力して「答え合わせ」を押してください。複数の値は空白・カンマ・読点などで区切れます。</p>
+      <p class="muted">入力欄に解答を入力して「答え合わせ」を押してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
     </div>
     <div class="card" id="quiz" style="display:none">
       <div id="question" style="font-size:18px;font-weight:600"></div>
@@ -53,18 +53,6 @@
         .replace(/\s*([=:=≒≈<>≤≥+\-*/])\s*/g, '$1')
         .replace(/\s+/g, ' ')
         .toLowerCase();
-    }
-
-    function splitUserInput(value){
-      if(typeof value !== 'string') return [];
-      const compacted = value
-        .replace(/\s*([=:=≒≈<>≤≥+\-*/])\s*/g, '$1')
-        .trim();
-      if(!compacted) return [];
-      return compacted
-        .split(/[\s,、，;；]+/)
-        .map(part => part.trim())
-        .filter(Boolean);
     }
 
     function asFieldSpec(raw, index){
@@ -96,9 +84,66 @@
       };
     }
 
+    function inferFieldSpecs(question){
+      if(!question) return [];
+      const answers = getAnswerList(question);
+      if(!answers.length) return [];
+
+      const arrayCandidates = answers.filter(ans => Array.isArray(ans) && ans.length > 1);
+      if(arrayCandidates.length){
+        const targetLength = arrayCandidates[0].length;
+        const consistentLength = arrayCandidates.every(ans => ans.length === targetLength);
+        const hasOtherStructures = answers.some(ans => {
+          if(ans == null) return false;
+          if(Array.isArray(ans)) return false;
+          if(typeof ans === 'string') return ans.trim() !== '';
+          return true;
+        });
+        if(consistentLength && targetLength > 0 && !hasOtherStructures){
+          return Array.from({ length: targetLength }, (_, idx) => ({
+            key: `part${idx}`,
+            label: `入力${idx + 1}`,
+            placeholder: '',
+            autocomplete: 'off',
+            autocapitalize: 'off'
+          }));
+        }
+      }
+
+      const objectCandidates = answers.filter(ans => ans && typeof ans === 'object' && !Array.isArray(ans));
+      if(objectCandidates.length){
+        const keySets = objectCandidates.map(obj => Object.keys(obj).sort());
+        const referenceKeys = keySets[0] || [];
+        const hasMultipleKeys = referenceKeys.length > 1;
+        const consistentKeys = hasMultipleKeys && keySets.every(keys => {
+          if(keys.length !== referenceKeys.length) return false;
+          return keys.every((key, idx) => key === referenceKeys[idx]);
+        });
+        const hasMixedStructures = answers.some(ans => {
+          if(ans == null) return false;
+          if(typeof ans === 'object' && !Array.isArray(ans)) return false;
+          return true;
+        });
+        if(consistentKeys && !hasMixedStructures){
+          return referenceKeys.map(key => ({
+            key,
+            label: key,
+            placeholder: '',
+            autocomplete: 'off',
+            autocapitalize: 'off'
+          }));
+        }
+      }
+
+      return [];
+    }
+
     function getFieldSpecs(question){
-      if(!question || !Array.isArray(question.fields)) return [];
-      return question.fields.map((raw, idx) => asFieldSpec(raw, idx));
+      if(!question) return [];
+      if(Array.isArray(question.fields) && question.fields.length){
+        return question.fields.map((raw, idx) => asFieldSpec(raw, idx));
+      }
+      return inferFieldSpecs(question);
     }
 
     function compareScalar(expected, actual){
@@ -109,21 +154,6 @@
 
     function matchesAnswer(candidate, userValues, fieldSpecs){
       if(Array.isArray(candidate)){
-        if(fieldSpecs.length <= 1){
-          const targetParts = candidate.map(part => normalize(String(part))).filter(Boolean);
-          if(!targetParts.length) return false;
-          const raw = userValues[0] || '';
-          const userParts = splitUserInput(raw).map(normalize).filter(Boolean);
-          if(userParts.length !== targetParts.length) return false;
-          const pool = new Map();
-          userParts.forEach(part => pool.set(part, (pool.get(part) || 0) + 1));
-          return targetParts.every(part => {
-            const remain = pool.get(part) || 0;
-            if(remain <= 0) return false;
-            pool.set(part, remain - 1);
-            return true;
-          });
-        }
         if(candidate.length !== fieldSpecs.length) return false;
         return candidate.every((part, idx) => compareScalar(part, userValues[idx] || ''));
       }
