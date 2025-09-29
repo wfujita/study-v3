@@ -17,12 +17,15 @@ def test_reorder_punctuation_judgement():
         s = line.strip()
         if s.startswith("const NBSP"):  # NBSP constant
             lines["NBSP"] = s
+        elif s.startswith("const normalizeDigits"):
+            lines["normalizeDigits"] = s
         elif s.startswith("const normalizeSpaces"):
             lines["normalizeSpaces"] = s
         elif s.startswith("const normalizeEndPunc"):
             lines["normalizeEndPunc"] = s
     script = f"""
 {lines['NBSP']}
+{lines['normalizeDigits']}
 {lines['normalizeSpaces']}
 {lines['normalizeEndPunc']}
 function grade(ans, right, keep) {{

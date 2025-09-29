@@ -245,7 +245,8 @@
     const fmtTime = s=>{ const m=String(Math.floor(s/60)).padStart(2,'0'); const r=String(s%60).padStart(2,'0'); return `${m}:${r}` };
     const shuffle = arr=>arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
     const NBSP = String.fromCharCode(160);
-    const normalizeSpaces = s=> s.replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
+    const normalizeDigits = s=> (s==null ? '' : String(s).replace(/[０-９]/g, ch=> String.fromCharCode(ch.charCodeAt(0)-0xFEE0)));
+    const normalizeSpaces = s=> normalizeDigits(s).replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
     const normalizeUnit = u=> (u===null || u===undefined ? '' : String(u).trim());
