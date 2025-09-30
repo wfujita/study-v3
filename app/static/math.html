@@ -278,6 +278,20 @@
       }
     }
 
+    function sanitizeExplain(raw){
+      if(!raw) return '';
+      let text = String(raw).trim();
+      text = text.replace(/(?:答え|正解)[:：]?.*$/u, '').trim();
+      return text;
+    }
+
+    function buildExplain(q){
+      if(!q || !q.explain) return '';
+      const hint = sanitizeExplain(q.explain);
+      if(!hint) return '';
+      return `<div class="muted" style="margin-top:8px">解説: ${hint}</div>`;
+    }
+
     function checkAnswer(){
       if(state.graded) return;
       const q = state.questions[state.index];
@@ -294,26 +308,14 @@
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
       $('#btn-next').disabled = false;
+      const explain = buildExplain(q);
       if(isCorrect){
         $('#feedback').className = 'ok';
-        $('#feedback').innerHTML = `✅ 正解です！`;
+        $('#feedback').innerHTML = `✅ 正解です！${explain}`;
       } else {
         $('#feedback').className = 'ng';
-        const formatted = answers
-          .map(ans => {
-            if(Array.isArray(ans)){
-              if(fieldSpecs.length > 1){
-                return ans.join(' / ');
-              }
-              return ans.join(' ');
-            }
-            if(ans && typeof ans === 'object'){
-              return fieldSpecs.map(field => ans[field.key]).filter(Boolean).join(' / ');
-            }
-            return ans;
-          })
-          .join('<br><span class="muted">または</span> ');
-        $('#feedback').innerHTML = `❌ 不正解。 正解例: ${formatted}`;
+        const retryMessage = '❌ 不正解。もう一度チャレンジしてみましょう。';
+        $('#feedback').innerHTML = explain ? `${retryMessage}${explain}` : retryMessage;
       }
     }
 
