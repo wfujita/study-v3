@@ -308,7 +308,7 @@
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
       $('#btn-next').disabled = false;
-      const explain = buildExplain(q);
+      const explain = q && q.explain ? `<div class="muted" style="margin-top:8px">解説: ${q.explain}</div>` : '';
       if(isCorrect){
         $('#feedback').className = 'ok';
         $('#feedback').innerHTML = `✅ 正解です！${explain}`;
