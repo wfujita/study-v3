@@ -294,9 +294,10 @@
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
       $('#btn-next').disabled = false;
+      const explain = q && q.explain ? `<div class="muted" style="margin-top:8px">解説: ${q.explain}</div>` : '';
       if(isCorrect){
         $('#feedback').className = 'ok';
-        $('#feedback').innerHTML = `✅ 正解です！`;
+        $('#feedback').innerHTML = `✅ 正解です！${explain}`;
       } else {
         $('#feedback').className = 'ng';
         const formatted = answers
@@ -313,7 +314,7 @@
             return ans;
           })
           .join('<br><span class="muted">または</span> ');
-        $('#feedback').innerHTML = `❌ 不正解。 正解例: ${formatted}`;
+        $('#feedback').innerHTML = `❌ 不正解。 正解例: ${formatted}${explain}`;
       }
     }
 
