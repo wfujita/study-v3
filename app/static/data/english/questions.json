@@ -286,6 +286,20 @@
       ]
     },
     {
+      "id": "r021",
+      "unit": "can-ability",
+      "jp": "私は上手にサッカーをすることができます。",
+      "en": "I can play soccer well.",
+      "chunks": ["I", "can", "play", "soccer", "well", "."],
+      "tip": "can + 動詞原形で「〜できる」を表す",
+      "explain": "能力を表すときは can + 動詞原形 を使い、play の後ろに副詞 well を置いて「上手に」を表現します。",
+      "wrong": [
+        "does",
+        "is",
+        "are"
+      ]
+    },
+    {
       "id": "u3-001",
       "unit": "be-going-to",
       "jp": "私は来週京都を訪れるつもりです。",
