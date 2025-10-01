@@ -130,6 +130,113 @@ def iter_results(subject: str = DEFAULT_SUBJECT):
     return out
 
 
+def _accuracy_pct(correct: int, answered: int) -> float:
+    if not answered:
+        return 0.0
+    try:
+        return float(correct) / float(answered) * 100.0
+    except Exception:
+        return 0.0
+
+
+def _is_math_record(record: dict) -> bool:
+    if not isinstance(record, dict):
+        return False
+    mode = record.get("mode") or ""
+    if mode.lower() != "math-drill":
+        return False
+    answered = record.get("answered")
+    return isinstance(answered, list) and bool(answered)
+
+
+@app.get("/api/math/accuracy")
+def math_accuracy():
+    """数学演習モードの正答率を返す。"""
+
+    subject = normalize_subject(request.args.get("subject") or "math")
+    user_filter = (request.args.get("user") or "").strip()
+
+    results = iter_results(subject)
+
+    totals_answered = 0
+    totals_correct = 0
+    by_user = {}
+    by_question = {}
+
+    for record in results:
+        if not _is_math_record(record):
+            continue
+        user = record.get("user") or "guest"
+        if user_filter and user != user_filter:
+            continue
+        answered_list = record.get("answered") or []
+        for ans in answered_list:
+            if not isinstance(ans, dict):
+                continue
+            totals_answered += 1
+            is_correct = bool(ans.get("correct"))
+            if is_correct:
+                totals_correct += 1
+
+            user_summary = by_user.setdefault(
+                user, {"user": user, "answered": 0, "correct": 0}
+            )
+            user_summary["answered"] += 1
+            if is_correct:
+                user_summary["correct"] += 1
+
+            qid_raw = ans.get("id")
+            prompt = ans.get("prompt") or ""
+            qid = str(qid_raw) if qid_raw not in (None, "") else None
+            question_key = (qid or "", prompt)
+            question_summary = by_question.setdefault(
+                question_key,
+                {
+                    "id": qid,
+                    "prompt": prompt,
+                    "answered": 0,
+                    "correct": 0,
+                },
+            )
+            question_summary["answered"] += 1
+            if is_correct:
+                question_summary["correct"] += 1
+
+    totals = {
+        "answered": totals_answered,
+        "correct": totals_correct,
+        "accuracy": _accuracy_pct(totals_correct, totals_answered),
+    }
+
+    by_user_arr = []
+    for summary in by_user.values():
+        summary["accuracy"] = _accuracy_pct(
+            summary.get("correct", 0), summary.get("answered", 0)
+        )
+        by_user_arr.append(summary)
+    by_user_arr.sort(key=lambda x: x.get("user") or "")
+
+    by_question_arr = []
+    for summary in by_question.values():
+        summary["accuracy"] = _accuracy_pct(
+            summary.get("correct", 0), summary.get("answered", 0)
+        )
+        by_question_arr.append(summary)
+    by_question_arr.sort(key=lambda x: (x.get("id") or "", x.get("prompt") or ""))
+
+    payload = {
+        "subject": subject,
+        "totals": totals,
+        "byUser": by_user_arr,
+        "byQuestion": by_question_arr,
+    }
+
+    if user_filter:
+        payload["userFilter"] = user_filter
+
+    return jsonify(payload)
+
+
 @app.get("/api/stats")
 def question_stat():
     user = request.args.get("user") or ""
