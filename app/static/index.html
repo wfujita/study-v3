@@ -148,7 +148,8 @@
 
   <script>
     /********** 設定 **********/
-    const QUESTIONS_URL = "/data/questions.json"; // Flaskで配信
+    const SUBJECT = 'english';
+    const QUESTIONS_URL = `/data/${SUBJECT}/questions.json`; // Flaskで配信
     const DEFAULT_ENDPOINT = "/api/results";
 
     // 設定の記憶用キー
@@ -404,7 +405,7 @@
       const stats = await Promise.all(
         deckArr.map(q=>{
           if(!state.user || !q.id) return Promise.resolve(null);
-          const url = `/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`;
+          const url = `/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}&subject=${encodeURIComponent(SUBJECT)}`;
           return fetch(url,{cache:'no-store'})
             .then(r=>r.ok?r.json():null)
             .catch(()=>null);
@@ -503,7 +504,7 @@
         elAcc.textContent='正解率: --';
         return;
       }
-      fetch(`/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}`, {cache:'no-store'})
+      fetch(`/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}&subject=${encodeURIComponent(SUBJECT)}`, {cache:'no-store'})
         .then(res=>res.ok?res.json():null)
         .then(data=>{
           if(!data){
@@ -550,7 +551,7 @@
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
       const fullDeck = deckByType(state.qType);
-      if(!fullDeck.length){ alert('この出題タイプの問題がありません。/data/questions.json をご確認ください。'); show('setup'); return; }
+      if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
       const filteredDeck = deck();
       if(state.mode==='normal' && !filteredDeck.length){
         alert('選択したユニットの問題がありません。ユニット条件を見直してください。');
@@ -785,8 +786,9 @@
       const url = state.endpoint || DEFAULT_ENDPOINT;
       if(url){
         saveEl.textContent = '結果送信: 送信中…';
-        console.log('[POST] results =>', url, sessionWire);
-        postJSON(url, sessionWire).then(r=>{
+        const payload = { ...sessionWire, subject: SUBJECT };
+        console.log('[POST] results =>', url, payload);
+        postJSON(url, payload).then(r=>{
           if(r.ok){ saveEl.innerHTML = '<span class="ok">結果送信: 成功</span>'; }
           else { saveEl.innerHTML = `<span class=\"ng\">結果送信: 失敗</span> ${r.status||r.error||''}`; }
         });

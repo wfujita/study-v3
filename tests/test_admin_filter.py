@@ -29,7 +29,9 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
             },
         ],
     }
-    with open(tmp_path / "results.ndjson", "w", encoding="utf-8") as f:
+    subject_dir = tmp_path / "english"
+    subject_dir.mkdir(parents=True, exist_ok=True)
+    with open(subject_dir / "results.ndjson", "w", encoding="utf-8") as f:
         f.write(json.dumps(rec) + "\n")
 
     res = client.get("/api/admin/summary", query_string={"show": "vocab"})

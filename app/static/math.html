@@ -42,8 +42,10 @@
     <div class="card" id="error" style="display:none;color:#ef4444"></div>
   </main>
   <script>
-    const QUESTIONS_URL = "/data/math_questions.json";
-    const state = { questions: [], index: 0, graded: false, inputs: [], fieldSpecs: [] };
+    const SUBJECT = 'math';
+    const QUESTIONS_URL = "/data/math/questions.json";
+    const RESULT_ENDPOINT = '/api/results';
+    const state = { questions: [], index: 0, graded: false, inputs: [], fieldSpecs: [], sessionId: null, attempt: 0 };
 
     function $(sel){ return document.querySelector(sel); }
 
@@ -309,6 +311,8 @@
       state.graded = true;
       $('#btn-next').disabled = false;
       const explain = q && q.explain ? `<div class="muted" style="margin-top:8px">解説: ${q.explain}</div>` : '';
+      state.attempt += 1;
+      sendMathResult(q, isCorrect, userValues, fieldSpecs);
       if(isCorrect){
         $('#feedback').className = 'ok';
         $('#feedback').innerHTML = `✅ 正解です！${explain}`;
@@ -322,11 +326,67 @@
     function nextQuestion(){
       if(!state.graded) checkAnswer();
       state.index = (state.index + 1) % state.questions.length;
+      if(state.index === 0){
+        state.sessionId = createSessionId();
+        state.attempt = 0;
+      }
       renderQuestion();
     }
 
     $('#btn-check').addEventListener('click', checkAnswer);
     $('#btn-next').addEventListener('click', nextQuestion);
+    function createSessionId(){
+      return `math-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+    }
+
+    function toAnswerPayload(question, userValues, fieldSpecs, isCorrect){
+      const payload = {
+        id: question && question.id ? String(question.id) : null,
+        correct: !!isCorrect,
+        prompt: question && (question.prompt || question.question) ? String(question.prompt || question.question) : '',
+      };
+      if(fieldSpecs && fieldSpecs.length){
+        const answerMap = {};
+        fieldSpecs.forEach((field, idx) => {
+          const key = field && field.key ? String(field.key) : `field${idx}`;
+          answerMap[key] = userValues[idx] || '';
+        });
+        payload.response = answerMap;
+      } else {
+        payload.response = Array.isArray(userValues) && userValues.length === 1 ? userValues[0] : userValues;
+      }
+      const answers = getAnswerList(question);
+      if(answers && answers.length){
+        payload.acceptedAnswers = answers;
+      }
+      return payload;
+    }
+
+    function sendMathResult(question, isCorrect, userValues, fieldSpecs){
+      if(!question) return;
+      if(!state.sessionId){
+        state.sessionId = createSessionId();
+      }
+      const record = {
+        subject: SUBJECT,
+        user: 'math',
+        mode: 'math-drill',
+        sessionId: state.sessionId,
+        attempt: state.attempt,
+        questionIndex: state.index,
+        total: 1,
+        correct: isCorrect ? 1 : 0,
+        wrong: isCorrect ? 0 : 1,
+        endedAt: new Date().toISOString(),
+        answered: [toAnswerPayload(question, userValues, fieldSpecs, isCorrect)]
+      };
+      fetch(RESULT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record)
+      }).catch(err => console.warn('数学の結果送信に失敗しました', err));
+    }
+
     fetch(QUESTIONS_URL, { cache: 'no-store' })
       .then(res => {
         if(!res.ok) throw new Error(`fetch ${QUESTIONS_URL} ${res.status}`);
@@ -340,6 +400,8 @@
           $('#loading').textContent = '問題が見つかりませんでした。';
           return;
         }
+        state.sessionId = createSessionId();
+        state.attempt = 0;
         renderQuestion();
       })
       .catch(err => {
