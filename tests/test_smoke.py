@@ -23,13 +23,13 @@ def test_routes_and_post(tmp_path, monkeypatch):
     r = client.post("/api/results", json=payload)
     assert r.status_code in (200, 201, 204)
 
-    path = os.path.join("data", "results.ndjson")
+    path = os.path.join("data", "english", "results.ndjson")
     assert os.path.exists(path)
     with open(path, "rb") as f:
         last = f.readlines()[-1]
     json.loads(last)  # NDJSON でパースできること
 
-    math_res = client.get("/data/math_questions.json")
+    math_res = client.get("/data/math/questions.json")
     assert math_res.status_code == 200
     math_payload = json.loads(math_res.data)
     assert isinstance(math_payload.get("questions"), list)

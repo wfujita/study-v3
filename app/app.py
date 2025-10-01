@@ -9,8 +9,24 @@ STATIC_DATA_DIR = os.path.join(STATIC_DIR, "data")
 RUNTIME_DATA_DIR = os.getenv(
     "DATA_DIR", os.path.join(os.path.dirname(BASE_DIR), "data")
 )  # 既定: リポジトリ直下 ./data
+DEFAULT_SUBJECT = "english"
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+
+
+# ===== ヘルパー =====
+def normalize_subject(value):
+    value = (value or "").strip().lower()
+    cleaned = "".join(ch for ch in value if ch.isalnum() or ch in ("-", "_"))
+    return cleaned or DEFAULT_SUBJECT
+
+
+def subject_static_dir(subject: str) -> str:
+    return os.path.join(STATIC_DATA_DIR, normalize_subject(subject))
+
+
+def subject_runtime_dir(subject: str) -> str:
+    return os.path.join(RUNTIME_DATA_DIR, normalize_subject(subject))
 
 
 # ===== 静的ページ =====
@@ -24,21 +40,33 @@ def admin_page():
     return send_from_directory("static", "admin.html")
 
 
-# 出題ファイル（フロントは /data/questions.json を参照）
+# 出題ファイル（フロントは /data/<subject>/questions.json を参照）
+@app.get("/data/<subject>/questions.json")
+def get_subject_questions(subject):
+    directory = subject_static_dir(subject)
+    path = os.path.join(directory, "questions.json")
+    if not os.path.exists(path):
+        return jsonify({"error": "subject not found"}), 404
+    return send_from_directory(directory, "questions.json")
+
+
 @app.get("/data/questions.json")
 def get_questions():
-    # ← 移動後は static/data/ から配信
-    return send_from_directory(STATIC_DATA_DIR, "questions.json")
+    # 後方互換用: 既定教科の問題を返す
+    return get_subject_questions(DEFAULT_SUBJECT)
 
 
 # ===== 受信（結果保存） =====
 @app.post("/api/results")
 def save_results():
     rec = request.get_json(force=True, silent=True) or {}
+    subject = normalize_subject(rec.get("subject"))
+    rec["subject"] = subject
     rec["receivedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-    os.makedirs(RUNTIME_DATA_DIR, exist_ok=True)
-    path = os.path.join(RUNTIME_DATA_DIR, "results.ndjson")
+    target_dir = subject_runtime_dir(subject)
+    os.makedirs(target_dir, exist_ok=True)
+    path = os.path.join(target_dir, "results.ndjson")
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
@@ -46,13 +74,13 @@ def save_results():
 
 
 # ====== 管理ダッシュボード用ユーティリティ ======
-def load_questions_map():
+def load_questions_map(subject: str = DEFAULT_SUBJECT):
     """
     static/data/questions.json を読み、id -> {jp,en,unit,type} にまとめる。
     並べ替え（questions）と単語（vocab）の両方をサポート。
     """
     qmap = {}
-    path = os.path.join(STATIC_DATA_DIR, "questions.json")
+    path = os.path.join(subject_static_dir(subject), "questions.json")
     if not os.path.exists(path):
         return qmap
     try:
@@ -84,9 +112,9 @@ def load_questions_map():
     return qmap
 
 
-def iter_results():
+def iter_results(subject: str = DEFAULT_SUBJECT):
     """保存済みの results.ndjson を配列で返す（1行=1セッション）。"""
-    path = os.path.join(RUNTIME_DATA_DIR, "results.ndjson")
+    path = os.path.join(subject_runtime_dir(subject), "results.ndjson")
     if not os.path.exists(path):
         return []
     out = []
@@ -106,10 +134,11 @@ def iter_results():
 def question_stat():
     user = request.args.get("user") or ""
     qid = request.args.get("id") or ""
+    subject = normalize_subject(request.args.get("subject"))
     if not user or not qid:
         return jsonify({"answered": 0, "correct": 0, "streak": 0})
 
-    res = iter_results()
+    res = iter_results(subject)
     attempts = []
     for r in res:
         if r.get("user") != user:
@@ -138,7 +167,8 @@ def question_stat():
 # ====== /admin 用 API ======
 @app.get("/api/admin/users")
 def admin_users():
-    res = iter_results()
+    subject = normalize_subject(request.args.get("subject"))
+    res = iter_results(subject)
     users = {}
     cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     for r in res:
@@ -187,9 +217,10 @@ def admin_summary():
     qtext = (request.args.get("q") or "").lower()
     mode = request.args.get("mode") or "normal"
     qtype = request.args.get("show") or "all"
+    subject = normalize_subject(request.args.get("subject"))
 
-    qmap = load_questions_map()
-    res = iter_results()
+    qmap = load_questions_map(subject)
+    res = iter_results(subject)
 
     def match_user(r):
         return (user in (None, "", "__all__")) or (r.get("user", "guest") == user)

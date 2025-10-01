@@ -63,7 +63,9 @@ def test_stats_endpoint_excludes_review_and_counts_all(tmp_path, monkeypatch):
             ],
         },
     ]
-    path = tmp_path / "results.ndjson"
+    subject_dir = tmp_path / "english"
+    subject_dir.mkdir(parents=True, exist_ok=True)
+    path = subject_dir / "results.ndjson"
     with open(path, "w", encoding="utf-8") as f:
         for r in recs:
             f.write(json.dumps(r) + "\n")
