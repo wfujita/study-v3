@@ -85,18 +85,17 @@
       </div>
     </section>
 
-    <section class="grid cols-2">
-      <div class="card">
-        <h3 style="margin:0 0 8px">よく間違える問題（TOP10）</h3>
-        <div style="max-height:340px; overflow:auto">
-          <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
-        </div>
+    <section class="card">
+      <h3 style="margin:0 0 8px">最近の解答（最大100件）</h3>
+      <div style="max-height:340px; overflow:auto">
+        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
       </div>
-      <div class="card">
-        <h3 style="margin:0 0 8px">最近の解答（最大100件）</h3>
-        <div style="max-height:340px; overflow:auto">
-          <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th>結果</th><th>あなたの解答</th><th>正解</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
-        </div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin:0 0 8px">よく間違える問題（TOP10）</h3>
+      <div style="max-height:340px; overflow:auto">
+        <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -217,14 +216,18 @@
       const recent=$('#tbl-recent tbody'); recent.innerHTML='';
       data.recentAnswers.forEach(r=>{
         const tr=document.createElement('tr');
-        const ok = r.correct; const mark = ok? '○':'×';
-        tr.innerHTML = `<td>${new Date(r.at||r.endedAt).toLocaleString()}</td>
-                        <td>${r.id||''}</td>
-                        <td class="center ${ok?'ok':'ng'}">${mark}</td>
-                        <td>${r.userAnswer||''}</td>
-                        <td>${r.en||''}</td>
-                        <td>${r.unit||''}</td>
-                        <td>${r.user||''}</td>`;
+        const ok = !!r.correct;
+        const mark = ok? '○':'×';
+        const at = r.at || r.endedAt;
+        const dateText = at? new Date(at).toLocaleString(): '―';
+        tr.innerHTML = `<td>${dateText}</td>`+
+                       `<td>${r.id||''}</td>`+
+                       `<td class="center ${ok?'ok':'ng'}">${mark}</td>`+
+                       `<td>${r.userAnswer||''}</td>`+
+                       `<td>${r.en||''}</td>`+
+                       `<td>${r.jp||''}</td>`+
+                       `<td>${r.unit||''}</td>`+
+                       `<td>${r.user||''}</td>`;
         if(!ok){ tr.style.background='rgba(239,68,68,.08)'; }
         recent.appendChild(tr);
       });
