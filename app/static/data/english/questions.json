@@ -300,6 +300,20 @@
       ]
     },
     {
+      "id": "r022",
+      "unit": "be-verb-q",
+      "jp": "あなたは美術部に興味を持っていますか。",
+      "en": "Are you interested in the art club?",
+      "chunks": ["are", "you", "interested", "in", "the", "art", "club", "?"],
+      "tip": "be動詞 + interested in ～? で「～に興味がありますか」を表す",
+      "explain": "興味があるかを尋ねる疑問文では be 動詞 Are を文頭に置き、形容詞 interested の後ろに前置詞 in と目的語 the art club を続けます。",
+      "wrong": [
+        "do",
+        "does",
+        "did"
+      ]
+    },
+    {
       "id": "u3-001",
       "unit": "be-going-to",
       "jp": "私は来週京都を訪れるつもりです。",
