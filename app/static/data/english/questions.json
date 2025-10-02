@@ -555,212 +555,212 @@
     {
       "id": "cj-and-001",
       "unit": "conjunction-and",
-      "jp": "私の友達は音楽と美術が好きです。",
-      "en": "My friends like music and art.",
-      "chunks": ["My", "friends", "like", "music", "and", "art", "."],
+      "jp": "私はリンゴとオレンジが好きです。",
+      "en": "I like apples and oranges.",
+      "chunks": ["I", "like", "apples", "and", "oranges", "."],
       "tip": "and で「AとB」をつなぐ",
       "wrong": [
         "but",
         "so",
         "because"
       ],
-      "explain": "同じ主語 My friends の好きなもの music と art を and で並べ、「～と～が好きです」と表します。"
+      "explain": "同じ主語 I が好きなもの apples と oranges を and で並べ、「～と～が好きです」と表します。"
     },
     {
       "id": "cj-and-002",
       "unit": "conjunction-and",
-      "jp": "私の友達は背が高くて力持ちです。",
-      "en": "My friends are tall and strong.",
-      "chunks": ["My", "friends", "are", "tall", "and", "strong", "."],
-      "tip": "形容詞と形容詞を and で並べる",
+      "jp": "彼は牛乳とパンを買いました。",
+      "en": "He bought milk and bread.",
+      "chunks": ["He", "bought", "milk", "and", "bread", "."],
+      "tip": "名詞と名詞を and で並べる",
       "wrong": [
         "but",
         "because",
         "if"
       ],
-      "explain": "主語 My friends の2つの特徴 tall と strong を and でつなぎ、性質を並べています。"
+      "explain": "買ったもの milk と bread を and でつなぎ、2つの名詞を並列しています。"
     },
     {
       "id": "cj-and-003",
       "unit": "conjunction-and",
-      "jp": "私の友達は毎日英語と数学を勉強します。",
-      "en": "My friends study English and math every day.",
-      "chunks": ["My", "friends", "study", "English", "and", "math", "every", "day", "."],
-      "tip": "教科名も and で並べて表す",
+      "jp": "彼らはペンとノートを持っています。",
+      "en": "They have a pen and a notebook.",
+      "chunks": ["They", "have", "a", "pen", "and", "a", "notebook", "."],
+      "tip": "持ち物も and でまとめられる",
       "wrong": [
         "but",
         "so",
         "although"
       ],
-      "explain": "動詞 study の目的語 English と math を and で結び、My friends が2教科を学ぶことを示します。"
+      "explain": "have の目的語 a pen と a notebook を and で結び、2つの持ち物を並べています。"
     },
     {
       "id": "cj-but-001",
       "unit": "conjunction-but",
-      "jp": "私の友達はサッカーをしたかったが、雨が降りました。",
-      "en": "My friends wanted to play soccer, but it rained.",
-      "chunks": ["My", "friends", "wanted", "to", "play", "soccer", ",", "but", "it", "rained", "."],
+      "jp": "私は外で遊びたかったが雨が降りました。",
+      "en": "I wanted to play outside, but it rained.",
+      "chunks": ["I", "wanted", "to", "play", "outside", ",", "but", "it", "rained", "."],
       "tip": "but で前後の内容を対比する",
       "wrong": [
         "and",
         "so",
         "because"
       ],
-      "explain": "My friends の希望と実際の結果 it rained を but で対比し、「しかし」を表現します。"
+      "explain": "希望 wanted to play outside と結果 it rained を but で対比し、「しかし」を表現します。"
     },
     {
       "id": "cj-but-002",
       "unit": "conjunction-but",
-      "jp": "私の友達は親切ですが忙しいです。",
-      "en": "My friends are kind but busy.",
-      "chunks": ["My", "friends", "are", "kind", "but", "busy", "."],
+      "jp": "彼は小さいですが強いです。",
+      "en": "He is small but strong.",
+      "chunks": ["He", "is", "small", "but", "strong", "."],
       "tip": "but は性質の対比にも使える",
       "wrong": [
         "and",
         "so",
         "while"
       ],
-      "explain": "主語 My friends について、性質の異なる kind と busy を but でつなぎ対比を示します。"
+      "explain": "同じ主語 He の2つの性質 small と strong を but でつなぎ対比を示します。"
     },
     {
       "id": "cj-but-003",
       "unit": "conjunction-but",
-      "jp": "私の友達は一生懸命挑戦しましたが失敗しました。",
-      "en": "My friends tried hard but failed.",
-      "chunks": ["My", "friends", "tried", "hard", "but", "failed", "."],
+      "jp": "彼女は速く走りましたがバスに乗り遅れました。",
+      "en": "She ran fast but missed the bus.",
+      "chunks": ["She", "ran", "fast", "but", "missed", "the", "bus", "."],
       "tip": "but で努力と結果のギャップを示す",
       "wrong": [
         "and",
         "because",
         "if"
       ],
-      "explain": "努力を表す tried hard と結果 failed を but で逆接につなぎます。"
+      "explain": "行動 ran fast と結果 missed the bus を but で逆接につなぎます。"
     },
     {
       "id": "cj-because-001",
       "unit": "conjunction-because",
-      "jp": "私の友達は体調が悪かったので家にいました。",
-      "en": "My friends stayed home because they were sick.",
-      "chunks": ["My", "friends", "stayed", "home", "because", "they", "were", "sick", "."],
+      "jp": "私は病気だったので家にいました。",
+      "en": "I stayed home because I was sick.",
+      "chunks": ["I", "stayed", "home", "because", "I", "was", "sick", "."],
       "tip": "because で理由を説明する",
       "wrong": [
         "so",
         "but",
         "although"
       ],
-      "explain": "行動 stayed home とその理由 they were sick を because で結びます。"
+      "explain": "行動 stayed home とその理由 I was sick を because で結びます。"
     },
     {
       "id": "cj-because-002",
       "unit": "conjunction-because",
-      "jp": "私の友達はチームが勝ったのでうれしいです。",
-      "en": "My friends are happy because their team won.",
-      "chunks": ["My", "friends", "are", "happy", "because", "their", "team", "won", "."],
+      "jp": "彼は賞をもらったのでうれしいです。",
+      "en": "He is happy because he won a prize.",
+      "chunks": ["He", "is", "happy", "because", "he", "won", "a", "prize", "."],
       "tip": "感情の理由も because で表せる",
       "wrong": [
         "so",
         "but",
         "if"
       ],
-      "explain": "気持ち happy の理由となる出来事を because で導き、原因と結果の関係を示します。"
+      "explain": "気持ち happy の理由となる出来事 he won a prize を because で導き、原因と結果の関係を示します。"
     },
     {
       "id": "cj-because-003",
       "unit": "conjunction-because",
-      "jp": "私の友達は寒かったので早く帰りました。",
-      "en": "My friends left early because they were cold.",
-      "chunks": ["My", "friends", "left", "early", "because", "they", "were", "cold", "."],
+      "jp": "私たちは寒かったので上着を着ました。",
+      "en": "We wore coats because it was cold.",
+      "chunks": ["We", "wore", "coats", "because", "it", "was", "cold", "."],
       "tip": "because 節は文末に置くことが多い",
       "wrong": [
         "so",
         "but",
         "unless"
       ],
-      "explain": "行動 left early と理由 they were cold を because で結び、因果関係を示します。"
+      "explain": "行動 wore coats と理由 it was cold を because で結び、因果関係を示します。"
     },
     {
       "id": "cj-so-001",
       "unit": "conjunction-so",
-      "jp": "私の友達は暑かったので窓を開けました。",
-      "en": "My friends were hot, so they opened the window.",
-      "chunks": ["My", "friends", "were", "hot", ",", "so", "they", "opened", "the", "window", "."],
+      "jp": "私はおなかがすいていたので昼ごはんを食べました。",
+      "en": "I was hungry, so I ate lunch.",
+      "chunks": ["I", "was", "hungry", ",", "so", "I", "ate", "lunch", "."],
       "tip": "so で原因から結果を導く",
       "wrong": [
         "because",
         "but",
         "and"
       ],
-      "explain": "状態 were hot が原因で、結果 they opened the window を so でつなぎます。"
+      "explain": "状態 was hungry が原因で、結果 ate lunch を so でつなぎます。"
     },
     {
       "id": "cj-so-002",
       "unit": "conjunction-so",
-      "jp": "私の友達は疲れていたので早く寝ました。",
-      "en": "My friends were tired, so they went to bed early.",
-      "chunks": ["My", "friends", "were", "tired", ",", "so", "they", "went", "to", "bed", "early", "."],
+      "jp": "遅かったので私たちは家に帰りました。",
+      "en": "It was late, so we went home.",
+      "chunks": ["It", "was", "late", ",", "so", "we", "went", "home", "."],
       "tip": "so は「だから、結果として」を表す",
       "wrong": [
         "because",
         "but",
         "if"
       ],
-      "explain": "原因 were tired と結果 went to bed early を so で結び、「だから～した」を表します。"
+      "explain": "原因 was late と結果 went home を so で結び、「だから～した」を表します。"
     },
     {
       "id": "cj-so-003",
       "unit": "conjunction-so",
-      "jp": "私の友達は一生懸命勉強したのでテストに合格しました。",
-      "en": "My friends studied hard, so they passed the test.",
-      "chunks": ["My", "friends", "studied", "hard", ",", "so", "they", "passed", "the", "test", "."],
+      "jp": "彼女はよく勉強したのでテストに合格しました。",
+      "en": "She studied hard, so she passed the test.",
+      "chunks": ["She", "studied", "hard", ",", "so", "she", "passed", "the", "test", "."],
       "tip": "努力と結果を so でつなげる",
       "wrong": [
         "because",
         "but",
         "although"
       ],
-      "explain": "努力を表す主節 My friends studied hard と結果 they passed the test を so で結びます。"
+      "explain": "努力を表す主節 She studied hard と結果 she passed the test を so で結びます。"
     },
     {
       "id": "cj-when-001",
       "unit": "conjunction-when",
-      "jp": "私の友達は雨が降るとき本を読みます。",
-      "en": "My friends read books when it rains.",
-      "chunks": ["My", "friends", "read", "books", "when", "it", "rains", "."],
+      "jp": "私は雨が降るとき本を読みます。",
+      "en": "I read books when it rains.",
+      "chunks": ["I", "read", "books", "when", "it", "rains", "."],
       "tip": "when で「～するとき」を表す",
       "wrong": [
         "if",
         "because",
         "so"
       ],
-      "explain": "習慣を表す主節 My friends read books に、条件となる when it rains を続けます。"
+      "explain": "習慣を表す主節 I read books に、条件となる when it rains を続けます。"
     },
     {
       "id": "cj-when-002",
       "unit": "conjunction-when",
-      "jp": "私の友達は学校に着いたとき私に電話します。",
-      "en": "My friends call me when they arrive at school.",
-      "chunks": ["My", "friends", "call", "me", "when", "they", "arrive", "at", "school", "."],
-      "tip": "命令文でも when 節を後ろに置ける",
+      "jp": "彼女は家に着いたとき私に電話します。",
+      "en": "She calls me when she gets home.",
+      "chunks": ["She", "calls", "me", "when", "she", "gets", "home", "."],
+      "tip": "主節の後ろに when 節を置く",
       "wrong": [
         "if",
         "because",
         "after"
       ],
-      "explain": "主節 My friends call me のタイミングを when they arrive at school で示します。"
+      "explain": "主節 She calls me のタイミングを when she gets home で示します。"
     },
     {
       "id": "cj-when-003",
       "unit": "conjunction-when",
-      "jp": "私の友達は勉強するとき音楽を聴きます。",
-      "en": "My friends listen to music when they study.",
-      "chunks": ["My", "friends", "listen", "to", "music", "when", "they", "study", "."],
+      "jp": "私たちは食べるとき手を洗います。",
+      "en": "We wash our hands when we eat.",
+      "chunks": ["We", "wash", "our", "hands", "when", "we", "eat", "."],
       "tip": "when 節は文末に置くと読みやすい",
       "wrong": [
         "if",
         "because",
         "while"
       ],
-      "explain": "主節 My friends listen to music に条件節 when they study をつなぎ、「～するとき」を表します。"
+      "explain": "習慣 wash our hands とそのタイミング when we eat を when で結んでいます。"
     }
   ],
   "vocab": [
