@@ -79,6 +79,13 @@
             <option value="vocab" selected>単語（意味→スペル）</option>
           </select>
         </label>
+        <label class="row" style="gap:6px"><span class="muted">レベル</span>
+          <select id="level-filter">
+            <option value="Lv1" selected>Lv1（中学一年生相当）</option>
+            <option value="Lv2">Lv2（中学二年生相当）</option>
+            <option value="Lv3">Lv3（中学三年生相当）</option>
+          </select>
+        </label>
         <label class="row" style="gap:6px"><span class="muted">ユニット</span>
           <select id="unit-filter">
             <option value="">全ユニット</option>
@@ -90,6 +97,7 @@
       <div class="muted" style="margin-top:8px">
         並べ替え: <span class="kbd">1-9</span> で選択、<span class="kbd">Backspace</span> で戻す、<span class="kbd">Enter</span> で採点/次へ。<br>
         単語: 入力欄にスペルを入力（英字・大文字小文字は不問）。
+        <br>レベルの目安: Lv1＝中学一年生、Lv2＝中学二年生、Lv3＝中学三年生。
       </div>
     </section>
 
@@ -151,11 +159,14 @@
     const SUBJECT = 'english';
     const QUESTIONS_URL = `/data/${SUBJECT}/questions.json`; // Flaskで配信
     const DEFAULT_ENDPOINT = "/api/results";
+    const LEVEL_ORDER = ['Lv1','Lv2','Lv3'];
+    const DEFAULT_LEVEL = LEVEL_ORDER[0];
 
     // 設定の記憶用キー
     const REMEMBER_USER_KEY = 'quiz:lastUser';
     const REMEMBER_QTYPE_KEY = 'quiz:lastQType';
     const REMEMBER_UNIT_KEY = 'quiz:lastUnitFilter';
+    const REMEMBER_LEVEL_KEY = 'quiz:lastLevel';
     const USER_SUGGEST_KEY = 'quiz:userList';
 
     /********** 問題ロード **********/
@@ -190,6 +201,23 @@
       return unique;
     };
 
+    const normalizeLevel = (value)=>{
+      const str = (value==null ? '' : String(value)).trim();
+      if(LEVEL_ORDER.includes(str)) return str;
+      const match = str.match(/([1-3])/);
+      if(match){
+        const candidate = `Lv${match[1]}`;
+        if(LEVEL_ORDER.includes(candidate)) return candidate;
+      }
+      return DEFAULT_LEVEL;
+    };
+
+    const levelIndex = (value)=>{
+      const lvl = normalizeLevel(value);
+      const idx = LEVEL_ORDER.indexOf(lvl);
+      return idx === -1 ? LEVEL_ORDER.length : idx;
+    };
+
     const buildQuestion = (item, type)=>{
       const answers = collectAnswerSet(item);
       const primary = answers[0] || (typeof item.en==='string'? item.en.trim(): '');
@@ -201,7 +229,8 @@
         en: primary,
         answers,
         tip: item.tip||'',
-        explain: item.explain||''
+        explain: item.explain||'',
+        level: normalizeLevel(item.level)
       };
       if(type==='reorder'){
         base.chunks = item.chunks;
@@ -227,6 +256,7 @@
       user:'guest', endpoint: DEFAULT_ENDPOINT,
       qType:'reorder',
       unitFilter:'',
+      levelMax: DEFAULT_LEVEL,
       totalPerSet:5, order:[], setIndex:0,
       qIndex:0, correct:0, wrong:0,
       startedAt:null, seconds:0, timerId:null,
@@ -323,7 +353,7 @@
     function renderUnitFilterOptions(){
       const sel = document.getElementById('unit-filter');
       if(!sel) return;
-      const deckArr = deckByType(state.qType);
+      const deckArr = deckByType(state.qType).filter(q=> levelIndex(q.level) <= levelIndex(state.levelMax));
       const units = Array.from(new Set(deckArr.map(q=>normalizeUnit(q.unit)).filter(u=>u))).sort((a,b)=>a.localeCompare(b, 'ja', { numeric:true, sensitivity:'base' }));
       sel.innerHTML='';
       const optAll=document.createElement('option'); optAll.value=''; optAll.textContent='全ユニット'; sel.appendChild(optAll);
@@ -331,6 +361,10 @@
       if(deckArr.length===0){
         sel.value='';
         sel.disabled=true;
+        if(state.unitFilter){
+          state.unitFilter='';
+          rememberUnitFilter(state.qType, '');
+        }
         return;
       }
       sel.disabled=false;
@@ -346,6 +380,11 @@
       const qt=(localStorage.getItem(REMEMBER_QTYPE_KEY)||'').trim();
       const qs=document.getElementById('qtype');
       if(qt){ state.qType=qt; if(qs) qs.value=qt; }
+      const levelSel = document.getElementById('level-filter');
+      const rememberedLevel = (localStorage.getItem(REMEMBER_LEVEL_KEY)||DEFAULT_LEVEL).trim();
+      const normalizedLevel = LEVEL_ORDER.includes(rememberedLevel) ? rememberedLevel : DEFAULT_LEVEL;
+      state.levelMax = normalizedLevel;
+      if(levelSel){ levelSel.value = normalizedLevel; }
       state.unitFilter = getRememberedUnitFilter(state.qType);
       const unitSel = document.getElementById('unit-filter');
       if(unitSel){ unitSel.value = state.unitFilter || ''; }
@@ -355,6 +394,7 @@
     function rememberSettings(){
       if(state.user) localStorage.setItem(REMEMBER_USER_KEY, state.user);
       if(state.qType) localStorage.setItem(REMEMBER_QTYPE_KEY, state.qType);
+      localStorage.setItem(REMEMBER_LEVEL_KEY, state.levelMax || DEFAULT_LEVEL);
       rememberUnitFilter(state.qType, state.unitFilter||'');
       const raw=JSON.parse(localStorage.getItem(USER_SUGGEST_KEY)||'[]');
       const list=Array.isArray(raw)? raw.slice(0) : [];
@@ -384,10 +424,13 @@
     function deckByType(type){ return type==='reorder' ? BANK_REORDER : BANK_VOCAB; }
     function deck(){
       const all = deckByType(state.qType);
-      if(state.mode!=='normal') return all;
-      const unit = state.unitFilter || '';
-      if(!unit) return all;
-      return all.filter(q=> normalizeUnit(q.unit) === unit);
+      if(state.mode==='review') return all;
+      const maxLevelIdx = levelIndex(state.levelMax);
+      const byLevel = all.filter(q=> levelIndex(q.level) <= maxLevelIdx);
+      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+      const unit = shouldFilterByUnit ? (state.unitFilter || '') : '';
+      if(!unit) return byLevel;
+      return byLevel.filter(q=> normalizeUnit(q.unit) === unit);
     }
 
     /********** セット準備 **********/
@@ -554,7 +597,7 @@
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
       const filteredDeck = deck();
       if(state.mode==='normal' && !filteredDeck.length){
-        alert('選択したユニットの問題がありません。ユニット条件を見直してください。');
+        alert('選択したレベル／ユニットの条件に合う問題がありません。条件を見直してください。');
         show('setup');
         return;
       }
@@ -704,7 +747,7 @@
           ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
           : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
         // 復習用には詳細保持
-        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', userAnswer: ans, at: record.at });
+        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, level:q.level||DEFAULT_LEVEL, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', userAnswer: ans, at: record.at });
       }
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
@@ -805,6 +848,11 @@
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
+        const levelSel=document.getElementById('level-filter');
+        if(levelSel){
+          state.levelMax = normalizeLevel(levelSel.value||DEFAULT_LEVEL);
+          levelSel.value = state.levelMax;
+        }
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
@@ -830,6 +878,11 @@
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
+        const levelSel=document.getElementById('level-filter');
+        if(levelSel){
+          state.levelMax = normalizeLevel(levelSel.value||DEFAULT_LEVEL);
+          levelSel.value = state.levelMax;
+        }
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
@@ -851,6 +904,16 @@
     document.getElementById('unit-filter').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim();
       state.unitFilter=v;
+      rememberSettings();
+    });
+    document.getElementById('level-filter').addEventListener('change', (e)=>{
+      const selected = normalizeLevel(e.target.value||DEFAULT_LEVEL);
+      state.levelMax = selected;
+      const levelSel = document.getElementById('level-filter');
+      if(levelSel) levelSel.value = selected;
+      renderUnitFilterOptions();
+      const unitSel = document.getElementById('unit-filter');
+      if(unitSel){ state.unitFilter = (unitSel.value||'').trim(); }
       rememberSettings();
     });
     document.getElementById('qtype').addEventListener('change', async (e)=>{
