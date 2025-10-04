@@ -72,5 +72,11 @@ def test_stats_endpoint_excludes_review_and_counts_all(tmp_path, monkeypatch):
     res = client.get("/api/stats", query_string={"user": "alice", "id": "q1"})
     assert res.status_code == 200
     data = res.get_json()
-    assert data == {"answered": 3, "correct": 2, "streak": 2}
+    assert data == {
+        "answered": 3,
+        "correct": 2,
+        "streak": 2,
+        "lastWrongAt": (now - timedelta(days=40)).isoformat().replace("+00:00", "Z"),
+        "lastCorrectAt": now.isoformat().replace("+00:00", "Z"),
+    }
     sys.modules.pop("app.app", None)

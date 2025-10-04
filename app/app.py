@@ -247,6 +247,22 @@ def question_stat():
 
     res = iter_results(subject)
     attempts = []
+    def parse_iso(dt_str):
+        if not dt_str:
+            return None
+        try:
+            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+        except Exception:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    last_wrong_at = None
+    last_wrong_dt = None
+    last_correct_at = None
+    last_correct_dt = None
+
     for r in res:
         if r.get("user") != user:
             continue
@@ -257,7 +273,20 @@ def question_stat():
             if str(a.get("id") or "") != qid:
                 continue
             at = a.get("at") or r.get("endedAt") or r.get("receivedAt") or ""
-            attempts.append({"correct": bool(a.get("correct")), "at": at})
+            is_correct = bool(a.get("correct"))
+            attempts.append({"correct": is_correct, "at": at})
+
+            at_dt = parse_iso(at)
+            if not at_dt:
+                continue
+            if is_correct:
+                if not last_correct_dt or at_dt > last_correct_dt:
+                    last_correct_dt = at_dt
+                    last_correct_at = at
+            else:
+                if not last_wrong_dt or at_dt > last_wrong_dt:
+                    last_wrong_dt = at_dt
+                    last_wrong_at = at
 
     attempts.sort(key=lambda x: x["at"] or "")
     total = len(attempts)
@@ -268,7 +297,15 @@ def question_stat():
             streak += 1
         else:
             break
-    return jsonify({"answered": total, "correct": correct, "streak": streak})
+    return jsonify(
+        {
+            "answered": total,
+            "correct": correct,
+            "streak": streak,
+            "lastWrongAt": last_wrong_at,
+            "lastCorrectAt": last_correct_at,
+        }
+    )
 
 
 # ====== /admin 用 API ======
