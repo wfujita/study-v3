@@ -433,6 +433,17 @@
       return byLevel.filter(q=> normalizeUnit(q.unit) === unit);
     }
 
+    function parseIsoDate(value){
+      if(!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function isSameCalendarDay(a,b){
+      if(!(a instanceof Date) || !(b instanceof Date)) return false;
+      return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+    }
+
     /********** セット準備 **********/
     async function buildOrderFromBank(){
       const deckArr = deck();
@@ -457,7 +468,11 @@
 
       for(let i=0;i<deckArr.length;i++){
         const s = stats[i];
-        if(!s){ bucketB.push({idx:i, streak:0}); continue; }
+        if(!s || typeof s !== 'object'){ bucketB.push({idx:i, streak:0}); continue; }
+        const lastWrong = parseIsoDate(s.lastWrongAt);
+        const lastCorrect = parseIsoDate(s.lastCorrectAt);
+        const recoveredSameDay = lastWrong && lastCorrect && isSameCalendarDay(lastWrong, lastCorrect) && lastCorrect.getTime() >= lastWrong.getTime();
+        if(recoveredSameDay){ bucketB.push({idx:i, streak:0}); continue; }
         const streak = s.streak||0;
         const ans = s.answered||0;
         const ok = s.correct||0;
