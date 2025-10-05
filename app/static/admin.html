@@ -28,12 +28,12 @@
     select,input{ background:#0b1220; color:#e5e7eb; border:1px solid #334155; border-radius:10px; padding:8px 10px }
     .right{ margin-left:auto }
     .center{ text-align:center }
-    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
-    .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:10px; display:flex; flex-direction:column; max-height:320px }
+    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(340px,1fr)); }
+    .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:12px; display:flex; flex-direction:column; max-height:340px }
     .stage-col h4{ margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between }
     .stage-col h4 span{ font-size:11px; color:var(--muted) }
     .stage-col .stage-scroll{ overflow:auto; flex:1 }
-    .stage-col table{ font-size:12px; }
+    .stage-col table{ font-size:12px; width:100%; }
     .stage-col th, .stage-col td{ padding:6px 8px }
     .stage-col .empty{ color:var(--muted); font-size:12px; padding:4px 0 }
   </style>
@@ -108,7 +108,7 @@
     </section>
 
     <section class="card" id="sec-stages" style="display:none">
-      <h3 style="margin:0 0 8px">復習ステージ進捗</h3>
+      <h3 style="margin:0 0 8px">ステージ進捗</h3>
       <div class="stage-grid" id="stage-grid"></div>
     </section>
 
