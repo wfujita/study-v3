@@ -619,15 +619,55 @@ def admin_summary():
 
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
 
-    if user not in (None, "", "__all__"):
+    stage_buckets = {}
+    selected_user = user not in (None, "", "__all__")
+
+    if selected_user:
+        normalized_user = (user or "").strip() or "guest"
         for item in question_stats:
-            state = stage_tracker.get_question_state(stage_store, user, item.get("id"))
+            state = stage_tracker.get_question_state(stage_store, normalized_user, item.get("id"))
             if state:
                 item["stage"] = state.get("stage")
                 item["nextDueAt"] = state.get("nextDueAt")
             else:
                 item["stage"] = None
                 item["nextDueAt"] = None
+
+        user_bucket = {}
+        if isinstance(stage_store, dict):
+            user_bucket = stage_store.get(normalized_user) or {}
+            if not isinstance(user_bucket, dict):
+                user_bucket = {}
+
+        for stage_name in stage_tracker.STAGE_SEQUENCE:
+            bucket_items = []
+            for qid, state in user_bucket.items():
+                if not isinstance(state, dict):
+                    continue
+                state_stage = state.get("stage") or ""
+                if state_stage != stage_name:
+                    continue
+                meta = qmap.get(qid) or {}
+                bucket_items.append(
+                    {
+                        "id": qid,
+                        "stage": state_stage,
+                        "nextDueAt": state.get("nextDueAt"),
+                        "jp": meta.get("jp"),
+                        "en": meta.get("en"),
+                        "unit": meta.get("unit"),
+                        "type": meta.get("type"),
+                    }
+                )
+
+            def next_due_sort_key(item):
+                due = item.get("nextDueAt")
+                if not due:
+                    return (1, "")
+                return (0, due)
+
+            bucket_items.sort(key=next_due_sort_key)
+            stage_buckets[stage_name] = bucket_items
     else:
         for item in question_stats:
             item["stage"] = None
@@ -640,6 +680,7 @@ def admin_summary():
             "topMissed": top_missed,
             "recentAnswers": recent,
             "questionStats": question_stats,
+            "stageBuckets": stage_buckets,
             "sessions": sorted(
                 sessions, key=lambda x: x["endedAt"] or "", reverse=True
             )[:100],

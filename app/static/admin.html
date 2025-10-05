@@ -28,6 +28,14 @@
     select,input{ background:#0b1220; color:#e5e7eb; border:1px solid #334155; border-radius:10px; padding:8px 10px }
     .right{ margin-left:auto }
     .center{ text-align:center }
+    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+    .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:10px; display:flex; flex-direction:column; max-height:320px }
+    .stage-col h4{ margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between }
+    .stage-col h4 span{ font-size:11px; color:var(--muted) }
+    .stage-col .stage-scroll{ overflow:auto; flex:1 }
+    .stage-col table{ font-size:12px; }
+    .stage-col th, .stage-col td{ padding:6px 8px }
+    .stage-col .empty{ color:var(--muted); font-size:12px; padding:4px 0 }
   </style>
 </head>
 <body>
@@ -97,6 +105,11 @@
       <div style="max-height:340px; overflow:auto">
         <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
       </div>
+    </section>
+
+    <section class="card" id="sec-stages" style="display:none">
+      <h3 style="margin:0 0 8px">復習ステージ進捗</h3>
+      <div class="stage-grid" id="stage-grid"></div>
     </section>
 
     <section class="grid cols-2" id="sec-words">
@@ -253,6 +266,56 @@
                         <td class="center">${acc}%</td>`;
         if(q.type==='vocab') qVocab.appendChild(tr); else qReorder.appendChild(tr);
       });
+
+      const stageSec = $('#sec-stages');
+      const stageGrid = $('#stage-grid');
+      stageGrid.innerHTML = '';
+      const selectedUser = $('#user').value || '__all__';
+      const stageBuckets = data.stageBuckets || {};
+      if(selectedUser === '__all__'){
+        stageSec.style.display = 'none';
+      }else{
+        stageSec.style.display = '';
+        const entries = Object.entries(stageBuckets);
+        if(entries.length === 0){
+          const emptyBox = document.createElement('div');
+          emptyBox.className = 'stage-col';
+          emptyBox.innerHTML = '<h4>ステージ情報<span>データなし</span></h4><div class="stage-scroll"><div class="empty">ステージデータがありません。</div></div>';
+          stageGrid.appendChild(emptyBox);
+        }else{
+          entries.forEach(([stageName, questions])=>{
+            const col = document.createElement('div');
+            col.className = 'stage-col';
+            const header = document.createElement('h4');
+            header.innerHTML = `Stage ${stageName}<span>${Array.isArray(questions)? questions.length:0} 件</span>`;
+            col.appendChild(header);
+            const scroll = document.createElement('div');
+            scroll.className = 'stage-scroll';
+            if(!Array.isArray(questions) || questions.length===0){
+              scroll.innerHTML = '<div class="empty">該当なし</div>';
+            }else{
+              const table = document.createElement('table');
+              table.innerHTML = '<thead><tr><th>ID</th><th>日本語</th><th>英語</th><th>次回</th><th>単元</th><th>種別</th></tr></thead>';
+              const body = document.createElement('tbody');
+              questions.forEach(q=>{
+                const tr = document.createElement('tr');
+                const dueText = q.nextDueAt ? new Date(q.nextDueAt).toLocaleString() : '―';
+                tr.innerHTML = `<td>${q.id||''}</td>`+
+                               `<td>${q.jp||''}</td>`+
+                               `<td>${q.en||''}</td>`+
+                               `<td>${dueText}</td>`+
+                               `<td>${q.unit||''}</td>`+
+                               `<td>${q.type||''}</td>`;
+                body.appendChild(tr);
+              });
+              table.appendChild(body);
+              scroll.appendChild(table);
+            }
+            col.appendChild(scroll);
+            stageGrid.appendChild(col);
+          });
+        }
+      }
       $('#last-updated').textContent = '更新: ' + new Date().toLocaleTimeString();
     }
 
