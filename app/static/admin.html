@@ -33,6 +33,7 @@
     .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:12px; display:flex; flex-direction:column; max-height:340px }
     .stage-col h4{ margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between }
     .stage-col h4 span{ font-size:11px; color:var(--muted) }
+    .stage-col .stage-desc{ margin:0 0 10px; font-size:11px; color:var(--muted); line-height:1.5 }
     .stage-col .stage-scroll{ overflow:auto; flex:1 }
     .stage-col table{ font-size:12px; width:100%; }
     .stage-col th, .stage-col td{ padding:6px 8px }
@@ -306,6 +307,14 @@
 
       const stageSec = $('#sec-stages');
       const stageGrid = $('#stage-grid');
+      const stageDescriptions = {
+        'A': '最終正解から14日以上空いた出題でも連続正解したもの。',
+        'B': '最終正解から7日以上空いた出題でも連続正解したもの。',
+        'C': '最終正解から3日以上空いた出題でも連続正解したもの。',
+        'D': '最終正解から2日以上空いた出題で連続正解を達成したもの。',
+        'E': '連続正解が3回以上のもの。',
+        'F': '未回答、または連続正解が3回以下のもの。'
+      };
       stageGrid.innerHTML = '';
       const selectedUser = $('#user').value || '__all__';
       const stageBuckets = data.stageBuckets || {};
@@ -326,6 +335,13 @@
             const header = document.createElement('h4');
             header.innerHTML = `Stage ${stageName}<span>${Array.isArray(questions)? questions.length:0} 件</span>`;
             col.appendChild(header);
+            const description = stageDescriptions[stageName];
+            if(description){
+              const descEl = document.createElement('p');
+              descEl.className = 'stage-desc';
+              descEl.textContent = description;
+              col.appendChild(descEl);
+            }
             const scroll = document.createElement('div');
             scroll.className = 'stage-scroll';
             if(!Array.isArray(questions) || questions.length===0){
