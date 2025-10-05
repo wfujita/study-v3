@@ -29,7 +29,7 @@
     select,input{ background:#0b1220; color:#e5e7eb; border:1px solid #334155; border-radius:10px; padding:8px 10px }
     .right{ margin-left:auto }
     .center{ text-align:center }
-    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); }
+    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
     .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:12px; display:flex; flex-direction:column; max-height:340px }
     .stage-col h4{ margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between }
     .stage-col h4 span{ font-size:11px; color:var(--muted) }
@@ -52,7 +52,18 @@
       .row.filters .pill{ justify-content:center; margin-left:0 }
       .grid.cols-3,
       .grid.cols-2{ grid-template-columns:1fr }
-      .stage-grid{ grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+      .stage-grid{ grid-template-columns:1fr; }
+      .stage-col{ max-height:none; }
+      .stage-col .stage-scroll{ overflow:visible; max-height:none; }
+    }
+
+    @media (max-width: 640px){
+      .stage-col table{ border:0; }
+      .stage-col thead{ display:none; }
+      .stage-col tbody{ display:grid; gap:10px; }
+      .stage-col tr{ display:grid; grid-template-columns:minmax(0,1fr); gap:6px; padding:10px; border:1px solid #334155; border-radius:10px; background:#101726; }
+      .stage-col td{ border:none; padding:0; display:block; }
+      .stage-col td::before{ content:attr(data-label); color:var(--muted); font-weight:600; font-size:11px; display:block; margin-bottom:2px; }
     }
 
     @media (max-width: 480px){
@@ -326,12 +337,15 @@
               questions.forEach(q=>{
                 const tr = document.createElement('tr');
                 const dueText = q.nextDueAt ? new Date(q.nextDueAt).toLocaleString() : '―';
-                tr.innerHTML = `<td>${q.id||''}</td>`+
-                               `<td>${q.jp||''}</td>`+
-                               `<td>${q.en||''}</td>`+
-                               `<td>${dueText}</td>`+
-                               `<td>${q.unit||''}</td>`+
-                               `<td>${q.type||''}</td>`;
+                const cells = [
+                  ['ID', q.id||''],
+                  ['日本語', q.jp||''],
+                  ['英語', q.en||''],
+                  ['次回', dueText],
+                  ['単元', q.unit||''],
+                  ['種別', q.type||'']
+                ];
+                tr.innerHTML = cells.map(([label, value])=>`<td data-label="${label}">${value}</td>`).join('');
                 body.appendChild(tr);
               });
               table.appendChild(body);
