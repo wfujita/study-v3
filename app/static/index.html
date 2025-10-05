@@ -109,6 +109,7 @@
           <span class="pill">誤答: <b id="stat-wrong">0</b></span>
           <span class="pill" id="stat-streak">連続正解: --</span>
           <span class="pill" id="stat-accuracy">正解率: --</span>
+          <span class="pill" id="stat-stage">ランク: --</span>
           <span class="pill" id="stat-bucket">バケット: --</span>
           <span class="pill right" id="timer">⏱ 00:00</span>
       </div>
@@ -556,7 +557,9 @@
       const elStreak = $('#stat-streak');
       const elAcc = $('#stat-accuracy');
       const elBucket = $('#stat-bucket');
+      const elStage = $('#stat-stage');
       elBucket.textContent = bucket ? `バケット: ${bucket}` : 'バケット: --';
+      elStage.textContent = 'ランク: --';
       if(!state.user || !q.id){
         elStreak.textContent='連続正解: --';
         elAcc.textContent='正解率: --';
@@ -568,15 +571,18 @@
           if(!data){
             elStreak.textContent='連続正解: --';
             elAcc.textContent='正解率: --';
+            elStage.textContent='ランク: --';
             return;
           }
           const ans=data.answered||0; const ok=data.correct||0;
           elStreak.textContent = `連続正解: ${data.streak||0}`;
           elAcc.textContent = ans? `正解率: ${Math.round((ok/ans)*100)}% (${ok}/${ans})` : '正解率: --';
+          elStage.textContent = data.stage ? `ランク: ${data.stage}` : 'ランク: --';
         })
         .catch(()=>{
           elStreak.textContent='連続正解: --';
           elAcc.textContent='正解率: --';
+          elStage.textContent='ランク: --';
         });
     }
     function weakCandidates(windowDays){
