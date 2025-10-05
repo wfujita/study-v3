@@ -405,6 +405,53 @@ def admin_summary():
     if not stage_store and res:
         stage_store = stage_tracker.rebuild_store(runtime_dir, res)
 
+    def compute_attempt_rank_map(records):
+        required_attrs = (
+            "_iter_session_attempts",
+            "_normalize_user",
+            "_normalize_qid",
+            "_ensure_state",
+            "_apply_attempt",
+        )
+        if not all(hasattr(stage_tracker, attr) for attr in required_attrs):
+            return {}
+        attempt_map = {}
+        timeline = []
+        for rec in records:
+            user_norm = stage_tracker._normalize_user(rec.get("user"))
+            try:
+                attempts = stage_tracker._iter_session_attempts(rec)
+            except Exception:
+                attempts = []
+            for attempt_dt, payload in attempts:
+                timeline.append((attempt_dt, user_norm, payload))
+        timeline.sort(key=lambda x: x[0])
+
+        local_store = {}
+        for attempt_dt, user_norm, payload in timeline:
+            try:
+                qid_norm = stage_tracker._normalize_qid(payload.get("id"))
+            except Exception:
+                qid_norm = None
+            if qid_norm is None:
+                continue
+            try:
+                state = stage_tracker._ensure_state(local_store, user_norm, qid_norm)
+            except Exception:
+                continue
+            stage_value = state.get("stage")
+            if stage_value:
+                attempt_map[id(payload)] = stage_value
+            stage_tracker._apply_attempt(
+                state, attempt_dt, bool(payload.get("correct"))
+            )
+        return attempt_map
+
+    try:
+        attempt_rank_map = compute_attempt_rank_map(res)
+    except Exception:
+        attempt_rank_map = {}
+
     def match_user(r):
         return (user in (None, "", "__all__")) or (r.get("user", "guest") == user)
 
@@ -492,6 +539,9 @@ def admin_summary():
                 "userAnswer": a.get("userAnswer"),
                 "at": at_str,
             }
+            rank_value = attempt_rank_map.get(id(a))
+            if rank_value is not None:
+                item["rank"] = rank_value
             if unit and item["unit"] != unit:
                 continue
             if qtext:
