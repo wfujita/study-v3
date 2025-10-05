@@ -11,6 +11,7 @@
     header{ position:sticky; top:0; background:rgba(17,24,39,.9); backdrop-filter:saturate(150%) blur(6px); border-bottom:1px solid var(--border); z-index:10 }
     .container{ width:min(1400px, calc(100vw - 48px)); margin:0 auto; padding:16px }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+    .row.filters{ align-items:flex-end }
     .pill{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #334155; background:#0b1220; color:#cbd5e1; font-size:12px }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; margin:16px 0 }
     .grid{ display:grid; gap:12px }
@@ -28,7 +29,7 @@
     select,input{ background:#0b1220; color:#e5e7eb; border:1px solid #334155; border-radius:10px; padding:8px 10px }
     .right{ margin-left:auto }
     .center{ text-align:center }
-    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(340px,1fr)); }
+    .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); }
     .stage-col{ background:#0b1220; border:1px solid #334155; border-radius:12px; padding:12px; display:flex; flex-direction:column; max-height:340px }
     .stage-col h4{ margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between }
     .stage-col h4 span{ font-size:11px; color:var(--muted) }
@@ -36,6 +37,29 @@
     .stage-col table{ font-size:12px; width:100%; }
     .stage-col th, .stage-col td{ padding:6px 8px }
     .stage-col .empty{ color:var(--muted); font-size:12px; padding:4px 0 }
+    @media (max-width: 1024px){
+      .grid.cols-3{ grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+
+    @media (max-width: 768px){
+      .container{ width:calc(100vw - 32px); padding:12px }
+      header .container{ padding:12px }
+      .row.filters{ flex-direction:column; align-items:stretch; gap:12px }
+      .row.filters label,
+      .row.filters input,
+      .row.filters select,
+      .row.filters .pill{ width:100% }
+      .row.filters .pill{ justify-content:center; margin-left:0 }
+      .grid.cols-3,
+      .grid.cols-2{ grid-template-columns:1fr }
+      .stage-grid{ grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+    }
+
+    @media (max-width: 480px){
+      body{ font-size:14px }
+      h2{ font-size:20px }
+      .stage-grid{ grid-template-columns:1fr }
+    }
   </style>
 </head>
 <body>
@@ -51,7 +75,7 @@
 
   <main class="container">
     <section class="card">
-      <div class="row">
+      <div class="row filters">
         <label class="row" style="gap:6px">
           <span class="muted">ユーザ</span>
           <select id="user"></select>
