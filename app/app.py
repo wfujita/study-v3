@@ -75,9 +75,7 @@ def save_results():
     try:
         stage_tracker.update_store_from_session(target_dir, rec)
     except Exception:
-        app.logger.exception(
-            "failed to update stage cache for subject=%s", subject
-        )
+        app.logger.exception("failed to update stage cache for subject=%s", subject)
 
     return jsonify({"ok": True}), 201
 
@@ -623,9 +621,7 @@ def admin_summary():
 
     if user not in (None, "", "__all__"):
         for item in question_stats:
-            state = stage_tracker.get_question_state(
-                stage_store, user, item.get("id")
-            )
+            state = stage_tracker.get_question_state(stage_store, user, item.get("id"))
             if state:
                 item["stage"] = state.get("stage")
                 item["nextDueAt"] = state.get("nextDueAt")

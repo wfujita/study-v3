@@ -57,6 +57,7 @@ def _to_iso(dt: Optional[datetime]) -> Optional[str]:
         return None
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
+
 def _compute_next_due(stage: str, reference: Optional[datetime]) -> Optional[str]:
     rules = NEXT_STAGE_RULES.get(stage, {})
     gap_days = rules.get("gap_days")
@@ -83,11 +84,7 @@ def _apply_correct(state: Dict[str, Any], attempt_dt: datetime) -> None:
     else:
         gap_days_req = stage_rules.get("gap_days")
         next_stage = stage_rules.get("next")
-        if (
-            next_stage
-            and gap_days_req is not None
-            and prev_last_correct is not None
-        ):
+        if next_stage and gap_days_req is not None and prev_last_correct is not None:
             gap = (attempt_dt - prev_last_correct).total_seconds() / 86400.0
             if gap >= float(gap_days_req):
                 stage = next_stage
@@ -165,7 +162,9 @@ def _ensure_state(store: Dict[str, Any], user: str, qid: str) -> Dict[str, Any]:
     return state
 
 
-def _iter_session_attempts(record: Dict[str, Any]) -> Iterable[Tuple[datetime, Dict[str, Any]]]:
+def _iter_session_attempts(
+    record: Dict[str, Any],
+) -> Iterable[Tuple[datetime, Dict[str, Any]]]:
     mode = (record.get("mode") or "normal").lower()
     if mode == "review":
         return []
@@ -216,7 +215,9 @@ def update_store_from_session(runtime_dir: str, record: Dict[str, Any]) -> None:
         save_store(runtime_dir, store)
 
 
-def rebuild_store(runtime_dir: str, records: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+def rebuild_store(
+    runtime_dir: str, records: Iterable[Dict[str, Any]]
+) -> Dict[str, Any]:
     ordered: List[Tuple[datetime, Dict[str, Any]]] = []
     for rec in records:
         fallback = rec.get("endedAt") or rec.get("receivedAt")
