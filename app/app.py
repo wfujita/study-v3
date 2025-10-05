@@ -3,6 +3,8 @@ from datetime import datetime, timezone, timedelta
 import os
 import json
 
+import app.stage_tracker as stage_tracker
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 STATIC_DATA_DIR = os.path.join(STATIC_DIR, "data")
@@ -69,6 +71,13 @@ def save_results():
     path = os.path.join(target_dir, "results.ndjson")
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+    try:
+        stage_tracker.update_store_from_session(target_dir, rec)
+    except Exception:
+        app.logger.exception(
+            "failed to update stage cache for subject=%s", subject
+        )
 
     return jsonify({"ok": True}), 201
 
@@ -243,10 +252,33 @@ def question_stat():
     qid = request.args.get("id") or ""
     subject = normalize_subject(request.args.get("subject"))
     if not user or not qid:
-        return jsonify({"answered": 0, "correct": 0, "streak": 0})
+        return jsonify({"answered": 0, "correct": 0, "streak": 0, "stage": "F"})
 
-    res = iter_results(subject)
-    attempts = []
+    runtime_dir = subject_runtime_dir(subject)
+    store = stage_tracker.load_store(runtime_dir)
+    state = stage_tracker.get_question_state(store, user, qid)
+    cached_results = None
+
+    if state is None:
+        cached_results = iter_results(subject)
+        if cached_results:
+            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
+            state = stage_tracker.get_question_state(store, user, qid)
+
+    if state is not None:
+        payload = {
+            "answered": int(state.get("answered") or 0),
+            "correct": int(state.get("correct") or 0),
+            "streak": int(state.get("streak") or 0),
+            "lastWrongAt": state.get("lastWrongAt"),
+            "lastCorrectAt": state.get("lastCorrectAt"),
+            "stage": state.get("stage") or "F",
+            "nextDueAt": state.get("nextDueAt"),
+        }
+        return jsonify(payload)
+
+    results = cached_results if cached_results is not None else iter_results(subject)
+
     def parse_iso(dt_str):
         if not dt_str:
             return None
@@ -258,12 +290,13 @@ def question_stat():
             dt = dt.replace(tzinfo=timezone.utc)
         return dt
 
+    attempts = []
     last_wrong_at = None
     last_wrong_dt = None
     last_correct_at = None
     last_correct_dt = None
 
-    for r in res:
+    for r in results:
         if r.get("user") != user:
             continue
         ans = r.get("answered") or []
@@ -297,6 +330,7 @@ def question_stat():
             streak += 1
         else:
             break
+
     return jsonify(
         {
             "answered": total,
@@ -304,6 +338,8 @@ def question_stat():
             "streak": streak,
             "lastWrongAt": last_wrong_at,
             "lastCorrectAt": last_correct_at,
+            "stage": "F",
+            "nextDueAt": None,
         }
     )
 
@@ -365,6 +401,11 @@ def admin_summary():
 
     qmap = load_questions_map(subject)
     res = iter_results(subject)
+
+    runtime_dir = subject_runtime_dir(subject)
+    stage_store = stage_tracker.load_store(runtime_dir)
+    if not stage_store and res:
+        stage_store = stage_tracker.rebuild_store(runtime_dir, res)
 
     def match_user(r):
         return (user in (None, "", "__all__")) or (r.get("user", "guest") == user)
@@ -579,6 +620,22 @@ def admin_summary():
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
+
+    if user not in (None, "", "__all__"):
+        for item in question_stats:
+            state = stage_tracker.get_question_state(
+                stage_store, user, item.get("id")
+            )
+            if state:
+                item["stage"] = state.get("stage")
+                item["nextDueAt"] = state.get("nextDueAt")
+            else:
+                item["stage"] = None
+                item["nextDueAt"] = None
+    else:
+        for item in question_stats:
+            item["stage"] = None
+            item["nextDueAt"] = None
 
     return jsonify(
         {

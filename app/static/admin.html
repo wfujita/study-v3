@@ -103,13 +103,13 @@
       <div class="card" id="sec-vocab">
         <h3 style="margin:0 0 8px">単語問題</h3>
         <div style="max-height:340px; overflow:auto">
-          <table id="tbl-words-vocab"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+          <table id="tbl-words-vocab"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
       <div class="card" id="sec-reorder">
         <h3 style="margin:0 0 8px">並べ替え問題</h3>
         <div style="max-height:340px; overflow:auto">
-          <table id="tbl-words-reorder"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+          <table id="tbl-words-reorder"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
     </section>
@@ -240,11 +240,15 @@
       data.questionStats.forEach(q=>{
         const acc = q.answered? Math.round(q.correct/q.answered*100):0;
         const tr=document.createElement('tr');
+        const stageCell = q.stage ? `<span class="badge">${q.stage}</span>` : '<span class="muted">--</span>';
+        const dueText = q.nextDueAt ? new Date(q.nextDueAt).toLocaleDateString() : '―';
         tr.innerHTML = `<td>${q.id||''}</td>
                         <td>${q.jp||''}</td>
                         <td>${q.en||''}</td>
                         <td class="center ok">${fmt(q.correct)}</td>
                         <td class="center ng">${fmt(q.wrong)}</td>
+                        <td class="center">${stageCell}</td>
+                        <td class="center">${dueText}</td>
                         <td class="center">${fmt(q.streak||0)}</td>
                         <td class="center">${acc}%</td>`;
         if(q.type==='vocab') qVocab.appendChild(tr); else qReorder.appendChild(tr);
