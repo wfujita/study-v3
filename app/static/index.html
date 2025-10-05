@@ -743,6 +743,7 @@
         const inp = $('#vocab-input'); inp.value=''; inp.focus();
         $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
       }
+      updateNextState();
     }
 
     function showHint(){
@@ -758,10 +759,33 @@
 
     function placeChip(chip){ if(chip.classList.contains('used')) return; chip.classList.add('used'); const btn=document.createElement('button'); btn.className='chip'; btn.textContent=chip.getAttribute('data-text'); btn.onclick=()=>{ btn.remove(); chip.classList.remove('used'); updateNextState(); }; $('#target').appendChild(btn); updateNextState(); }
     function undo(){ if(state.qType!=='reorder') return; const t=$$('#target .chip'); const last=t[t.length-1]; if(!last) return; const text=last.textContent; last.remove(); const bankChip=[...$$('#bank .chip')].find(c=>c.getAttribute('data-text')===text); if(bankChip) bankChip.classList.remove('used'); updateNextState(); }
-    function clearAnswer(){ if(state.qType==='reorder'){ $$('#target .chip').forEach(n=>n.remove()); $$('#bank .chip').forEach(n=>n.classList.remove('used')); updateNextState(); } else { $('#vocab-input').value=''; $('#vocab-input').focus(); } }
+    function clearAnswer(){
+      if(state.qType==='reorder'){
+        $$('#target .chip').forEach(n=>n.remove());
+        $$('#bank .chip').forEach(n=>n.classList.remove('used'));
+        updateNextState();
+      } else {
+        $('#vocab-input').value='';
+        $('#vocab-input').focus();
+        updateNextState();
+      }
+    }
 
     function currentAnswer(){ if(state.qType==='reorder'){ return [...$('#target').children].map(x=>x.textContent).join(' ');} return $('#vocab-input').value||''; }
-    function updateNextState(){ if(state.qType==='reorder'){ $('#btn-next').disabled = state.graded ? false : true; } }
+    function updateNextState(){
+      const btnCheck = $('#btn-check');
+      const btnNext = $('#btn-next');
+      if(!btnCheck || !btnNext) return;
+      if(state.qType==='reorder'){
+        const hasAnswer = $$('#target .chip').length > 0;
+        btnCheck.disabled = state.graded || !hasAnswer;
+        btnNext.disabled = state.graded ? false : true;
+      } else {
+        const value = ($('#vocab-input').value || '').trim();
+        btnCheck.disabled = state.graded || value.length===0;
+        btnNext.disabled = false;
+      }
+    }
 
     function buildFeedbackDetail(q, includeTip=false){
       const lines = [];
@@ -830,6 +854,7 @@
       updateQuestionStat(q, state.order[state.qIndex].bucket);
       state.graded = true;
       $('#btn-next').disabled = false;
+      updateNextState();
     }
 
     function nextQuestion(){
@@ -1007,7 +1032,8 @@
       rememberSettings();
     });
 
-    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); }; document.getElementById('btn-hint').onclick=showHint;
+    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); updateNextState(); }; document.getElementById('btn-hint').onclick=showHint;
+    document.getElementById('vocab-input').addEventListener('input', updateNextState);
     document.getElementById('btn-speak').onclick=()=>{
       const q=getCurrentQuestion();
       if(!q) return;
