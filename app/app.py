@@ -625,7 +625,9 @@ def admin_summary():
     if selected_user:
         normalized_user = (user or "").strip() or "guest"
         for item in question_stats:
-            state = stage_tracker.get_question_state(stage_store, normalized_user, item.get("id"))
+            state = stage_tracker.get_question_state(
+                stage_store, normalized_user, item.get("id")
+            )
             if state:
                 item["stage"] = state.get("stage")
                 item["nextDueAt"] = state.get("nextDueAt")
