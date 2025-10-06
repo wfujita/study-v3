@@ -503,6 +503,80 @@
       "level": "Lv1"
     },
     {
+      "id": "r023",
+      "unit": "present-simple-q",
+      "jp": "夏休みの間、あなたは何をしますか。",
+      "en": "What do you do during the summer vacation?",
+      "chunks": [
+        "what",
+        "do",
+        "you",
+        "do",
+        "during",
+        "the",
+        "summer",
+        "vacation",
+        "?"
+      ],
+      "tip": "Wh疑問文: What + do + 主語 + 動詞原形 ...?",
+      "explain": "What で始まる一般動詞の疑問文では do を続け、主語 you の後に動詞の原形 do を置き、期間を表す during the summer vacation を文末に置きます。",
+      "wrong": [
+        "are",
+        "does",
+        "did"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r024",
+      "unit": "like-ing",
+      "jp": "私は音楽を聴くことが好きです。",
+      "en": "I like listening to music.",
+      "accept": [
+        "I like to listen to music."
+      ],
+      "chunks": [
+        "I",
+        "like",
+        "listening",
+        "to",
+        "music",
+        "."
+      ],
+      "tip": "like + 動詞-ing で「〜することが好き」です",
+      "explain": "like の後ろに動詞のing形 listening を置いて「〜することが好き」を表し、to music で「音楽を」を続けます。",
+      "wrong": [
+        "likes",
+        "am",
+        "listens"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r025",
+      "unit": "present-simple-q",
+      "jp": "あなたはどんな種類の本が好きですか。",
+      "en": "What kind of books do you like?",
+      "chunks": [
+        "what",
+        "kind",
+        "of",
+        "books",
+        "do",
+        "you",
+        "like",
+        "?"
+      ],
+      "tip": "What kind of ～ do you like? で「どんな種類の〜が好きですか」を尋ねます",
+      "explain": "What kind of 〜 で「どんな種類の〜」を表し、一般動詞の疑問文なので do を続け、主語 you の後に like を置いて好きなものを尋ねます。",
+      "wrong": [
+        "are",
+        "does",
+        "did"
+      ],
+      "level": "Lv1"
+    },
+    {
       "id": "u3-001",
       "unit": "be-going-to",
       "jp": "私は来週京都を訪れるつもりです。",
