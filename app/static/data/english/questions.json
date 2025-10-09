@@ -577,6 +577,133 @@
       "level": "Lv1"
     },
     {
+      "id": "r026",
+      "unit": "possessive-adj",
+      "jp": "彼はあなたのクラスメートですか。",
+      "en": "Is he your classmate?",
+      "chunks": [
+        "is",
+        "he",
+        "your",
+        "classmate",
+        "?"
+      ],
+      "tip": "所有格 your を使って「あなたの」を表します",
+      "explain": "相手の所属を表すには you の所有格 your を用いて「あなたのクラスメートですか」と尋ねます。",
+      "wrong": [
+        "you",
+        "yours",
+        "yourself"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r027",
+      "unit": "possessive-adj",
+      "jp": "グリーン先生は彼らの英語の先生です。",
+      "en": "Mr. Green is their English teacher.",
+      "chunks": [
+        "Mr.",
+        "Green",
+        "is",
+        "their",
+        "English",
+        "teacher",
+        "."
+      ],
+      "tip": "they の所有格は their です",
+      "explain": "所有を表すときは代名詞 they の所有格 their を使って「彼らの先生」と表現します。",
+      "wrong": [
+        "they",
+        "them",
+        "theirs"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r028",
+      "unit": "possessive-adj",
+      "jp": "彼の教室は大きいです。",
+      "en": "His classroom is big.",
+      "chunks": [
+        "His",
+        "classroom",
+        "is",
+        "big",
+        "."
+      ],
+      "tip": "文頭では He の所有格 His を使います",
+      "explain": "主語が「彼の教室」のように所有を表すときは he の所有格 His を使い、文頭なので大文字で始めます。",
+      "wrong": [
+        "He",
+        "Him",
+        "Hers"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r029",
+      "unit": "possessive-adj",
+      "jp": "彼女の父は厳しいです。",
+      "en": "Her father is tough.",
+      "chunks": [
+        "Her",
+        "father",
+        "is",
+        "tough",
+        "."
+      ],
+      "tip": "she の所有格は her です",
+      "explain": "所有を表すには代名詞 she の所有格 her を使って「彼女の父」を表します。",
+      "wrong": [
+        "She",
+        "Hers",
+        "His"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r030",
+      "unit": "object-pronoun",
+      "jp": "私たちは彼のことが好きです。",
+      "en": "We like him.",
+      "chunks": [
+        "We",
+        "like",
+        "him",
+        "."
+      ],
+      "tip": "動詞 like の目的語には he の目的格 him を置きます",
+      "explain": "一般動詞 like の後ろで人を目的語にする場合は代名詞 he の目的格 him を用いて「彼が好き」と表現します。",
+      "wrong": [
+        "his",
+        "he",
+        "her"
+      ],
+      "level": "Lv1"
+    },
+    {
+      "id": "r031",
+      "unit": "possessive-noun",
+      "jp": "私はジムの隣人です。",
+      "en": "I am Jim's neighbor.",
+      "chunks": [
+        "I",
+        "am",
+        "Jim's",
+        "neighbor",
+        "."
+      ],
+      "tip": "名詞の所有格は 's をつけて表します",
+      "explain": "人名 Jim の所有を表すには語尾に 's を付けて Jim's とし、「ジムの隣人です」と言います。",
+      "wrong": [
+        "Jim",
+        "Jims",
+        "Jim."
+      ],
+      "level": "Lv1"
+    },
+    {
       "id": "u3-001",
       "unit": "be-going-to",
       "jp": "私は来週京都を訪れるつもりです。",
