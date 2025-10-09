@@ -1520,6 +1520,28 @@
       "level": "Lv1"
     },
     {
+      "id": "who-001",
+      "unit": "who-questions",
+      "jp": "あなたの好きな歌手は誰ですか。",
+      "en": "Who is your favorite singer?",
+      "chunks": [
+        "who",
+        "is",
+        "your",
+        "favorite",
+        "singer",
+        "?"
+      ],
+      "tip": "Who is your favorite + 名詞? で「あなたの好きな〜は誰ですか」と尋ねます",
+      "wrong": [
+        "what",
+        "where",
+        "how"
+      ],
+      "explain": "人の好みを尋ねる疑問文は Who is your favorite + 名詞? の語順を用いて、favorite singer の前に your を置きます。",
+      "level": "Lv1"
+    },
+    {
       "id": "place-002",
       "unit": "place-prepositions",
       "jp": "彼らは案内図の前にいます。",
