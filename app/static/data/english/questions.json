@@ -1324,6 +1324,100 @@
       "level": "Lv1"
     },
     {
+      "id": "place-001",
+      "unit": "place-prepositions",
+      "jp": "あなたの消しゴムは机の下にあります。",
+      "en": "Your eraser is under the desk.",
+      "chunks": [
+        "your",
+        "eraser",
+        "is",
+        "under",
+        "the",
+        "desk",
+        "."
+      ],
+      "tip": "under the desk で「机の下に」を表します",
+      "wrong": [
+        "are",
+        "on",
+        "behind"
+      ],
+      "explain": "主語 Your eraser に合わせて be 動詞は is を使い、under the desk で場所「机の下にある」と伝えます。",
+      "level": "Lv1"
+    },
+    {
+      "id": "like-animals-001",
+      "unit": "like-questions",
+      "jp": "私はウサギが好きです。あなたはそれらが好きですか。",
+      "en": "I like rabbits. Do you like them?",
+      "chunks": [
+        "I",
+        "like",
+        "rabbits",
+        ".",
+        "do",
+        "you",
+        "like",
+        "them",
+        "?"
+      ],
+      "tip": "Do you like ～? で好みをたずね、them で直前の複数名詞を受けます",
+      "wrong": [
+        "does",
+        "likes",
+        "it"
+      ],
+      "explain": "自分の好みを述べる I like rabbits. に続けて、相手には Do you like them? と疑問文の語順（Do + 主語 + 動詞）を使い、them で rabbits を言い換えます。",
+      "level": "Lv1"
+    },
+    {
+      "id": "whose-001",
+      "unit": "whose-questions",
+      "jp": "これは誰のかばんですか。",
+      "en": "Whose bag is this?",
+      "chunks": [
+        "whose",
+        "bag",
+        "is",
+        "this",
+        "?"
+      ],
+      "tip": "Whose + 名詞 で「誰の〜ですか」と持ち主を尋ねます",
+      "wrong": [
+        "who",
+        "what",
+        "where"
+      ],
+      "explain": "持ち主をたずねる疑問文は Whose + 名詞 から始め、Whose bag is this? で「これは誰のかばんですか」となります。",
+      "level": "Lv1"
+    },
+    {
+      "id": "place-002",
+      "unit": "place-prepositions",
+      "jp": "彼らは案内図の前にいます。",
+      "en": "They are in front of the floor plan.",
+      "chunks": [
+        "they",
+        "are",
+        "in",
+        "front",
+        "of",
+        "the",
+        "floor",
+        "plan",
+        "."
+      ],
+      "tip": "in front of ～ で「〜の前に」を表します",
+      "wrong": [
+        "is",
+        "on",
+        "behind"
+      ],
+      "explain": "be 動詞 are で複数主語 They に合わせ、in front of the floor plan で「案内図の前にいる」と位置を伝えます。",
+      "level": "Lv1"
+    },
+    {
       "id": "dir-001",
       "unit": "directions",
       "jp": "レストランはこちらです。",
