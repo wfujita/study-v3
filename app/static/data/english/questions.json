@@ -1302,6 +1302,72 @@
       ],
       "explain": "習慣 wash our hands とそのタイミング when we eat を when で結んでいます。",
       "level": "Lv2"
+    },
+    {
+      "id": "lets-001",
+      "unit": "lets-suggestion",
+      "jp": "はるかにたずねましょう。",
+      "en": "Let's ask Haruka.",
+      "chunks": [
+        "let's",
+        "ask",
+        "Haruka",
+        "."
+      ],
+      "tip": "Let's + 動詞原形 で「〜しましょう」を表します",
+      "wrong": [
+        "do",
+        "are",
+        "asks"
+      ],
+      "explain": "提案や誘いを表すときは Let's + 動詞原形 を使い、固有名詞 Haruka を目的語に置きます。",
+      "level": "Lv1"
+    },
+    {
+      "id": "dir-001",
+      "unit": "directions",
+      "jp": "レストランはこちらです。",
+      "en": "The restaurant is over here.",
+      "chunks": [
+        "the",
+        "restaurant",
+        "is",
+        "over",
+        "here",
+        "."
+      ],
+      "tip": "over here で「こちらです」「この場所です」と案内できます",
+      "wrong": [
+        "are",
+        "that",
+        "there"
+      ],
+      "explain": "場所を案内するときは The restaurant is over here. のように主語 + be動詞 + over here で位置を示します。",
+      "level": "Lv1"
+    },
+    {
+      "id": "want-001",
+      "unit": "want-to",
+      "jp": "あなたはその俳優に会いたいですか。",
+      "en": "Do you want to meet the actor?",
+      "chunks": [
+        "do",
+        "you",
+        "want",
+        "to",
+        "meet",
+        "the",
+        "actor",
+        "?"
+      ],
+      "tip": "Do you want to ～? で「〜したいですか」とたずねます",
+      "wrong": [
+        "are",
+        "does",
+        "wants"
+      ],
+      "explain": "希望を尋ねる疑問文は Do you want to + 動詞原形 ...? の形で、meet の前に to を置いて不定詞にします。",
+      "level": "Lv1"
     }
   ],
   "vocab": [
