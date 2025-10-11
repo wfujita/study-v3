@@ -269,10 +269,11 @@ def math_results():
             {
                 "sessionId": record.get("sessionId"),
                 "attempt": record.get("attempt"),
-                "endedAt": record.get("endedAt")
-                or record.get("receivedAt"),
+                "endedAt": record.get("endedAt") or record.get("receivedAt"),
                 "prompt": first.get("prompt") if isinstance(first, dict) else None,
-                "correct": bool(first.get("correct")) if isinstance(first, dict) else False,
+                "correct": (
+                    bool(first.get("correct")) if isinstance(first, dict) else False
+                ),
                 "user": record.get("user") or "math",
                 "difficulty": record.get("difficulty")
                 or (first.get("difficulty") if isinstance(first, dict) else None)
