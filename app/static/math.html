@@ -505,7 +505,11 @@
       const btnCheck = $('#btn-check');
       if(btnCheck) btnCheck.disabled = false;
       const btnNext = $('#btn-next');
-      if(btnNext) btnNext.disabled = true;
+      if(btnNext){
+        btnNext.disabled = true;
+        const isLastQuestion = state.questions.length && state.index >= state.questions.length - 1;
+        btnNext.textContent = isLastQuestion ? 'トップに戻る' : '次の問題 ▶';
+      }
       if(quizCard) quizCard.style.display = '';
       if(loadingCard) loadingCard.style.display = 'none';
       if(state.inputs[0]){
@@ -564,12 +568,26 @@
     }
 
     function nextQuestion(){
-      if(!state.graded) checkAnswer();
-      state.index = (state.index + 1) % state.questions.length;
-      if(state.index === 0){
-        state.sessionId = createSessionId();
-        state.attempt = 0;
+      if(!state.graded){
+        checkAnswer();
+        if(!state.graded) return;
       }
+      const totalQuestions = state.questions.length;
+      if(!totalQuestions){
+        showSetupView();
+        return;
+      }
+      const isLastQuestion = state.index >= totalQuestions - 1;
+      if(isLastQuestion){
+        state.sessionId = null;
+        state.attempt = 0;
+        showSetupView();
+        if(startNote){
+          startNote.textContent = '選択した条件の問題をすべて解き終えました。演習を再開するには「演習を開始」を押してください。';
+        }
+        return;
+      }
+      state.index += 1;
       renderQuestion();
     }
 
