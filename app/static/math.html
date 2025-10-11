@@ -49,13 +49,11 @@
       <div class="field-stack">
         <label class="field-label" for="question-count-select">出題する問題数</label>
         <select id="question-count-select">
-          <option value="5">5問</option>
-          <option value="10" selected>10問</option>
-          <option value="15">15問</option>
-          <option value="20">20問</option>
-          <option value="all">すべての問題</option>
+          <option value="1" selected>1問</option>
+          <option value="2">2問</option>
+          <option value="3">3問</option>
         </select>
-        <p class="field-note">選択した難易度で出題される問題数を指定できます。</p>
+        <p class="field-note">選択した難易度で出題される問題数を指定できます（最大3問）。</p>
       </div>
       <div class="field-stack" style="margin-top:16px">
         <button id="btn-start" disabled>問題を読み込んでいます…</button>
@@ -96,9 +94,12 @@
       sessionId: null,
       attempt: 0,
       difficulty: 'normal',
-      questionCount: '10',
+      questionCount: '1',
       started: false,
     };
+
+    const MIN_QUESTION_COUNT = 1;
+    const MAX_QUESTION_COUNT = 3;
 
     function $(sel){ return document.querySelector(sel); }
 
@@ -150,22 +151,22 @@
     }
 
     function normalizeQuestionCount(value){
-      const text = (value == null ? '' : String(value)).toLowerCase();
-      if(text === 'all') return 'all';
+      const text = value == null ? '' : String(value).trim();
       const num = Number(text);
-      if(Number.isFinite(num) && num > 0){
-        return String(Math.round(num));
+      if(!Number.isFinite(num)){
+        return String(MIN_QUESTION_COUNT);
       }
-      return 'all';
+      const clamped = Math.min(MAX_QUESTION_COUNT, Math.max(MIN_QUESTION_COUNT, Math.floor(num)));
+      return String(clamped);
     }
 
     function limitQuestions(questions, count){
       const list = Array.isArray(questions) ? questions.slice() : [];
       if(!list.length) return list;
-      if(count === 'all') return list;
       const numeric = Number(count);
       if(!Number.isFinite(numeric) || numeric <= 0) return list;
-      const limit = Math.min(list.length, Math.max(1, Math.floor(numeric)));
+      const capped = Math.min(MAX_QUESTION_COUNT, Math.max(MIN_QUESTION_COUNT, Math.floor(numeric)));
+      const limit = Math.min(list.length, capped);
       return list.slice(0, limit);
     }
 
@@ -413,11 +414,9 @@
         return;
       }
       let message = `開始を押すと${limitedCount}問が出題されます。`;
-      if(state.questionCount !== 'all'){
-        const requested = Number(state.questionCount);
-        if(Number.isFinite(requested) && requested > availableCount){
-          message += `（利用可能な問題は${availableCount}問のみです。）`;
-        }
+      const requested = Number(state.questionCount);
+      if(Number.isFinite(requested) && requested > availableCount){
+        message += `（利用可能な問題は${availableCount}問のみです。）`;
       }
       startNote.textContent = message;
     }
