@@ -12,7 +12,6 @@
     button{background:#2563eb;border:1px solid #2563eb;border-radius:10px;color:#fff;padding:10px 18px;font-size:16px;cursor:pointer;}
     button:disabled{opacity:.5;cursor:not-allowed;}
     input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
-    input[type="file"]{padding:10px;background:#0b1220;border:1px dashed #334155;cursor:pointer;}
     .field-stack{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
     .field-row{display:flex;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap;}
     .field-label{font-size:14px;color:#94a3b8;}
@@ -38,7 +37,7 @@
   <main>
     <div class="card">
       <h1>数学演習モード</h1>
-      <p class="muted">出題レベルを選んで問題に挑戦し、解答ファイルをアップロードしてから採点してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
+      <p class="muted">出題レベルを選んで問題に挑戦し、表示された解答欄に入力してから採点してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
       <div class="field-stack">
         <label class="field-label" for="difficulty-select">出題レベル</label>
         <select id="difficulty-select">
@@ -48,16 +47,6 @@
         <p class="field-note">難問を選ぶと文章題など発展的な問題のみが出題されます。</p>
       </div>
       <p class="field-note" style="margin-top:16px"><a class="link" href="/math-results.html">提出履歴を確認する</a></p>
-    </div>
-    <div class="card" id="upload-card">
-      <h2 style="margin:0 0 8px 0;font-size:20px">解答ファイルのアップロード</h2>
-      <p class="muted">計算過程や解答を撮影した画像・PDFなど10MB以内のファイルを添付してください。採点前に必ずアップロードする必要があります。</p>
-      <div class="field-stack">
-        <label class="field-label" for="answer-upload">解答ファイル</label>
-        <input type="file" id="answer-upload" accept="image/*,application/pdf" />
-        <div id="upload-status" class="status-text muted">ファイルを選択してください。</div>
-        <div id="upload-feedback" class="status-text" style="display:none"></div>
-      </div>
     </div>
     <div class="card" id="quiz" style="display:none">
       <div class="question-header">
@@ -70,6 +59,7 @@
         <button id="btn-next" disabled>次の問題 ▶</button>
       </div>
       <div id="feedback" class="muted"></div>
+      <div id="save-status" class="status-text muted" aria-live="polite" style="margin-top:8px;min-height:1.4em"></div>
     </div>
     <div class="card" id="loading">読み込み中…</div>
     <div class="card" id="error" style="display:none;color:#ef4444"></div>
@@ -78,7 +68,6 @@
     const SUBJECT = 'math';
     const QUESTIONS_URL = "/data/math/questions.json";
     const RESULT_ENDPOINT = '/api/results';
-    const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
     const state = {
       allQuestions: [],
       questions: [],
@@ -89,19 +78,30 @@
       sessionId: null,
       attempt: 0,
       difficulty: 'normal',
-      upload: null
     };
 
     function $(sel){ return document.querySelector(sel); }
 
     const difficultySelect = $('#difficulty-select');
-    const uploadInput = $('#answer-upload');
-    const uploadStatusEl = $('#upload-status');
-    const uploadFeedbackEl = $('#upload-feedback');
     const difficultyBadge = $('#difficulty-badge');
     const quizCard = $('#quiz');
     const loadingCard = $('#loading');
     const errorCard = $('#error');
+    const saveStatusEl = $('#save-status');
+
+    function setSaveStatus(message, status = 'muted'){
+      if(!saveStatusEl) return;
+      const classes = ['status-text'];
+      if(status === 'success'){
+        classes.push('status-success');
+      } else if(status === 'error'){
+        classes.push('status-error');
+      } else {
+        classes.push('muted');
+      }
+      saveStatusEl.className = classes.join(' ');
+      saveStatusEl.textContent = message || '';
+    }
 
     function normalizeDifficulty(value){
       const text = (value == null ? '' : String(value)).toLowerCase();
@@ -119,111 +119,9 @@
       difficultyBadge.className = `badge ${normalized === 'hard' ? 'badge-hard' : 'badge-normal'}`;
     }
 
-    function updateUploadStatus(message, status = 'muted'){
-      if(!uploadStatusEl) return;
-      const classes = ['status-text'];
-      if(status === 'success'){
-        classes.push('status-success');
-      } else if(status === 'error'){
-        classes.push('status-error');
-      } else {
-        classes.push('muted');
-      }
-      uploadStatusEl.className = classes.join(' ');
-      uploadStatusEl.textContent = message;
-    }
-
-    function setUploadError(message){
-      if(!uploadFeedbackEl) return;
-      if(!message){
-        uploadFeedbackEl.textContent = '';
-        uploadFeedbackEl.style.display = 'none';
-      } else {
-        uploadFeedbackEl.textContent = message;
-        uploadFeedbackEl.className = 'status-text status-error';
-        uploadFeedbackEl.style.display = '';
-      }
-    }
-
-    function resetUploadPrompt(){
-      state.upload = null;
-      if(uploadInput){
-        uploadInput.value = '';
-      }
-      updateUploadStatus('ファイルを選択してください。', 'muted');
-      setUploadError('');
-    }
-
-    function markUploadSending(name){
-      if(name){
-        updateUploadStatus(`${name} を送信しています…`, 'muted');
-      } else {
-        updateUploadStatus('ファイルを送信しています…', 'muted');
-      }
-      setUploadError('');
-      if(uploadInput){
-        uploadInput.value = '';
-      }
-    }
-
-    function markUploadSuccess(name){
-      if(name){
-        updateUploadStatus(`${name} を送信しました。次の問題で新しいファイルを選択してください。`, 'success');
-      } else {
-        updateUploadStatus('ファイルを送信しました。', 'success');
-      }
-      setUploadError('');
-    }
-
-    function markUploadFailure(name){
-      if(name){
-        updateUploadStatus(`${name} の送信に失敗しました。`, 'error');
-      } else {
-        updateUploadStatus('ファイルの送信に失敗しました。', 'error');
-      }
-    }
-
     function filterQuestionsByDifficulty(level){
       const normalized = normalizeDifficulty(level);
       return state.allQuestions.filter(q => normalizeDifficulty(q && q.difficulty) === normalized);
-    }
-
-    function handleUploadChange(event){
-      setUploadError('');
-      const files = event.target && event.target.files ? Array.from(event.target.files) : [];
-      if(!files.length){
-        state.upload = null;
-        updateUploadStatus('ファイルを選択してください。', 'muted');
-        return;
-      }
-      const file = files[0];
-      if(file.size > MAX_UPLOAD_BYTES){
-        state.upload = null;
-        updateUploadStatus(`${file.name} はサイズが大きすぎます。`, 'error');
-        setUploadError('10MB以下のファイルを選択してください。');
-        return;
-      }
-      updateUploadStatus(`${file.name} を読み込み中です…`, 'muted');
-      const reader = new FileReader();
-      reader.onload = () => {
-        state.upload = {
-          name: file.name,
-          type: file.type || 'application/octet-stream',
-          data: reader.result
-        };
-        updateUploadStatus(`${file.name} を読み込みました。`, 'success');
-        setUploadError('');
-      };
-      reader.onerror = () => {
-        state.upload = null;
-        updateUploadStatus('ファイルの読み込みに失敗しました。', 'error');
-        setUploadError('ファイルを読み込めませんでした。別のファイルでお試しください。');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    if(uploadInput){
-      uploadInput.addEventListener('change', handleUploadChange);
     }
     if(difficultySelect){
       difficultySelect.value = state.difficulty;
@@ -236,8 +134,6 @@
         }
       });
     }
-
-    resetUploadPrompt();
 
     const normalizeDigits = value => (value == null ? '' : String(value).replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)));
     function normalize(value){
@@ -484,11 +380,11 @@
       if(questionEl){
         questionEl.textContent = q.prompt || q.question || '';
       }
-      resetUploadPrompt();
       buildInputs(q);
       state.inputs.forEach(input => { input.value = ''; });
       $('#feedback').textContent = '';
       $('#feedback').className = 'muted';
+      setSaveStatus('', 'muted');
       state.graded = false;
       const btnCheck = $('#btn-check');
       if(btnCheck) btnCheck.disabled = false;
@@ -518,11 +414,9 @@
     function checkAnswer(){
       if(state.graded) return;
       const q = state.questions[state.index];
-      if(!state.upload){
-        setUploadError('解答ファイルをアップロードしてから採点してください。');
-        if(uploadInput){
-          uploadInput.focus();
-        }
+      if(!q){
+        $('#feedback').className = 'ng';
+        $('#feedback').textContent = '問題が読み込めませんでした。';
         return;
       }
       const userValues = getUserValues();
@@ -532,13 +426,15 @@
         $('#feedback').className = 'muted';
         $('#feedback').textContent = '正解が登録されていません。';
         state.graded = true;
-        $('#btn-next').disabled = false;
+        const btnNext = $('#btn-next');
+        if(btnNext) btnNext.disabled = false;
         return;
       }
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
-      $('#btn-next').disabled = false;
-      const explain = q && q.explain ? `<div class="muted" style="margin-top:8px">解説: ${q.explain}</div>` : '';
+      const btnNext = $('#btn-next');
+      if(btnNext) btnNext.disabled = false;
+      const explain = buildExplain(q);
       state.attempt += 1;
       sendMathResult(q, isCorrect, userValues, fieldSpecs);
       if(isCorrect){
@@ -597,8 +493,6 @@
         state.sessionId = createSessionId();
       }
       const questionDifficulty = normalizeDifficulty(question && question.difficulty);
-      const uploadPayload = state.upload ? { ...state.upload } : null;
-      const uploadName = uploadPayload ? uploadPayload.name : '';
       const record = {
         subject: SUBJECT,
         user: 'math',
@@ -614,28 +508,18 @@
         answered: [toAnswerPayload(question, userValues, fieldSpecs, isCorrect)]
       };
       record.answered[0].difficulty = questionDifficulty;
-      if(uploadPayload){
-        record.answerUpload = uploadPayload;
-        markUploadSending(uploadName);
-        state.upload = null;
-      }
+      setSaveStatus('採点結果を送信しています…', 'muted');
       fetch(RESULT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record)
       })
         .then(() => {
-          if(uploadPayload){
-            markUploadSuccess(uploadName);
-          }
+          setSaveStatus('採点結果を記録しました。', 'success');
         })
         .catch(err => {
           console.warn('数学の結果送信に失敗しました', err);
-          if(uploadPayload){
-            state.upload = uploadPayload;
-            markUploadFailure(uploadName);
-            setUploadError('結果の送信に失敗しました。時間をおいて再度お試しください。');
-          }
+          setSaveStatus('結果の送信に失敗しました。時間をおいて再度お試しください。', 'error');
         });
     }
 
@@ -664,6 +548,6 @@
           errorCard.textContent = `問題の読み込みに失敗しました: ${err.message}`;
         }
       });
-  </script>
+</script>
 </body>
 </html>

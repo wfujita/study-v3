@@ -37,7 +37,7 @@
   <main>
     <div class="card">
       <h1>数学演習の提出履歴</h1>
-      <p class="muted">数学演習モードでアップロードした解答の提出履歴を確認できます。提出日時順に最新のものから表示しています。</p>
+      <p class="muted">数学演習モードで送信した解答の提出履歴を確認できます。提出日時順に最新のものから表示しています。</p>
       <p class="muted" style="margin-top:12px"><a class="link" href="/math.html">← 演習ページへ戻る</a></p>
     </div>
     <div class="card">
@@ -50,7 +50,6 @@
               <th style="width:36%">問題</th>
               <th style="width:12%">正誤</th>
               <th style="width:12%">レベル</th>
-              <th>解答ファイル</th>
             </tr>
           </thead>
           <tbody id="results-body"></tbody>
@@ -84,18 +83,6 @@
       }
     }
 
-    function formatFileSize(bytes){
-      if(!(bytes > 0)) return '';
-      const units = ['B','KB','MB','GB'];
-      let size = bytes;
-      let unitIndex = 0;
-      while(size >= 1024 && unitIndex < units.length - 1){
-        size /= 1024;
-        unitIndex += 1;
-      }
-      return `${size.toFixed(unitIndex === 0 ? 0 : 1)}${units[unitIndex]}`;
-    }
-
     function createDifficultyBadge(level){
       const span = document.createElement('span');
       const normalized = normalizeDifficulty(level);
@@ -115,8 +102,7 @@
         { label: '提出日時', content: endedAt },
         { label: '問題', content: prompt },
         { label: '正誤', content: correct ? createStatusPill('正解', true) : createStatusPill('不正解', false) },
-        { label: 'レベル', content: difficultyBadge },
-        { label: '解答ファイル', content: createUploadCell(item.answerUpload) }
+        { label: 'レベル', content: difficultyBadge }
       ];
 
       cells.forEach(({ label, content }) => {
@@ -140,47 +126,12 @@
       return span;
     }
 
-    function createUploadCell(upload){
-      if(!upload || typeof upload !== 'object'){
-        const span = document.createElement('span');
-        span.className = 'muted';
-        span.textContent = '—';
-        return span;
-      }
-      const wrapper = document.createElement('div');
-      wrapper.style.display = 'flex';
-      wrapper.style.flexDirection = 'column';
-      wrapper.style.gap = '4px';
-
-      const link = document.createElement('a');
-      link.href = upload.url || '#';
-      link.textContent = upload.originalName || '提出ファイル';
-      link.className = 'link';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      wrapper.appendChild(link);
-
-      if(upload.size){
-        const size = document.createElement('span');
-        size.className = 'muted';
-        size.textContent = `サイズ: ${formatFileSize(upload.size)}`;
-        wrapper.appendChild(size);
-      }
-      if(upload.mimeType){
-        const meta = document.createElement('span');
-        meta.className = 'muted';
-        meta.textContent = `形式: ${upload.mimeType}`;
-        wrapper.appendChild(meta);
-      }
-      return wrapper;
-    }
-
     function renderResults(data){
       const status = $('#status');
       const tableWrapper = $('#table-wrapper');
       const body = $('#results-body');
       if(!Array.isArray(data) || !data.length){
-        status.textContent = 'まだ提出はありません。数学演習ページから解答をアップロードしてください。';
+        status.textContent = 'まだ提出はありません。数学演習ページから答えを送信してください。';
         status.classList.add('muted');
         return;
       }
