@@ -1,9 +1,13 @@
-from flask import Flask, request, send_from_directory, jsonify
+from flask import Flask, request, send_from_directory, jsonify, abort
 from datetime import datetime, timezone, timedelta
 import os
 import json
+import base64
+import mimetypes
+import uuid
 
 import app.stage_tracker as stage_tracker
+from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -12,6 +16,7 @@ RUNTIME_DATA_DIR = os.getenv(
     "DATA_DIR", os.path.join(os.path.dirname(BASE_DIR), "data")
 )  # 既定: リポジトリ直下 ./data
 DEFAULT_SUBJECT = "english"
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 
@@ -65,6 +70,16 @@ def save_results():
     subject = normalize_subject(rec.get("subject"))
     rec["subject"] = subject
     rec["receivedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    upload_meta = None
+    try:
+        upload_meta = _persist_answer_upload(subject, rec.get("answerUpload"))
+    except Exception:
+        app.logger.exception("failed to persist answer upload for subject=%s", subject)
+    if upload_meta:
+        rec["answerUpload"] = upload_meta
+    else:
+        rec.pop("answerUpload", None)
 
     target_dir = subject_runtime_dir(subject)
     os.makedirs(target_dir, exist_ok=True)
@@ -166,6 +181,77 @@ def _is_math_record(record: dict) -> bool:
     return isinstance(answered, list) and bool(answered)
 
 
+def _persist_answer_upload(subject: str, payload):
+    """データURL形式のアップロードを保存し、メタ情報を返す。"""
+
+    if not payload or not isinstance(payload, dict):
+        return None
+
+    data_url = payload.get("data")
+    if not data_url or not isinstance(data_url, str):
+        return None
+
+    header = ""
+    encoded = data_url
+    if "," in data_url:
+        header, encoded = data_url.split(",", 1)
+    if not encoded:
+        return None
+
+    mime_type = payload.get("type") or "application/octet-stream"
+    if header:
+        parts = header.split(";")
+        for part in parts:
+            if part.startswith("data:"):
+                mime_type = part.split(":", 1)[1] or mime_type
+            if part.strip().lower() == "base64":
+                break
+        else:
+            # base64 指定が無い場合は処理しない
+            return None
+
+    try:
+        binary = base64.b64decode(encoded, validate=True)
+    except Exception:
+        app.logger.warning("failed to decode upload payload", exc_info=True)
+        return None
+
+    if not binary:
+        return None
+
+    if len(binary) > MAX_UPLOAD_BYTES:
+        app.logger.warning(
+            "answer upload exceeded size limit", extra={"size": len(binary)}
+        )
+        return None
+
+    original_name = payload.get("name") or "answer"
+    filename_root = secure_filename(os.path.splitext(original_name)[0]) or "answer"
+    guessed_ext = os.path.splitext(original_name)[1]
+    if not guessed_ext:
+        guessed_ext = mimetypes.guess_extension(mime_type or "") or ""
+    if guessed_ext and not guessed_ext.startswith("."):
+        guessed_ext = f".{guessed_ext}"
+
+    unique_suffix = uuid.uuid4().hex
+    stored_name = f"{filename_root}-{unique_suffix}{guessed_ext}" if filename_root else f"upload-{unique_suffix}{guessed_ext}"
+
+    uploads_dir = os.path.join(subject_runtime_dir(subject), "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    stored_path = os.path.join(uploads_dir, stored_name)
+
+    with open(stored_path, "wb") as fp:
+        fp.write(binary)
+
+    return {
+        "originalName": original_name,
+        "mimeType": mime_type,
+        "size": len(binary),
+        "storedName": stored_name,
+        "url": f"/api/uploads/{subject}/{stored_name}",
+    }
+
+
 @app.get("/api/math/accuracy")
 def math_accuracy():
     """数学演習モードの正答率を返す。"""
@@ -252,6 +338,56 @@ def math_accuracy():
         payload["userFilter"] = user_filter
 
     return jsonify(payload)
+
+
+@app.get("/api/math/results")
+def math_results():
+    subject = normalize_subject(request.args.get("subject") or "math")
+    results = iter_results(subject)
+
+    items = []
+    for record in results:
+        if not _is_math_record(record):
+            continue
+        answered_list = record.get("answered") or []
+        first = answered_list[0] if answered_list else {}
+        items.append(
+            {
+                "sessionId": record.get("sessionId"),
+                "attempt": record.get("attempt"),
+                "endedAt": record.get("endedAt")
+                or record.get("receivedAt"),
+                "prompt": first.get("prompt") if isinstance(first, dict) else None,
+                "correct": bool(first.get("correct")) if isinstance(first, dict) else False,
+                "user": record.get("user") or "math",
+                "difficulty": record.get("difficulty")
+                or (first.get("difficulty") if isinstance(first, dict) else None)
+                or "normal",
+                "answerUpload": record.get("answerUpload"),
+            }
+        )
+
+    items.sort(key=lambda x: x.get("endedAt") or "", reverse=True)
+    return jsonify(items)
+
+
+@app.get("/api/uploads/<subject>/<path:filename>")
+def download_answer_upload(subject, filename):
+    subject = normalize_subject(subject)
+    filename = os.path.normpath(filename)
+    if filename.startswith("..") or os.path.sep in filename or (os.path.altsep and os.path.altsep in filename):
+        abort(404)
+
+    uploads_dir = os.path.join(subject_runtime_dir(subject), "uploads")
+    full_path = os.path.join(uploads_dir, filename)
+    if not os.path.isfile(full_path):
+        abort(404)
+
+    uploads_dir_abs = os.path.abspath(uploads_dir)
+    if os.path.commonpath([uploads_dir_abs, os.path.abspath(full_path)]) != uploads_dir_abs:
+        abort(404)
+
+    return send_from_directory(uploads_dir, filename, as_attachment=True)
 
 
 @app.get("/api/stats")
