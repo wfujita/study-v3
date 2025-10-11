@@ -46,6 +46,10 @@
         </select>
         <p class="field-note">難問を選ぶと文章題など発展的な問題のみが出題されます。</p>
       </div>
+      <div class="field-stack" style="margin-top:16px">
+        <button id="btn-start" disabled>問題を読み込んでいます…</button>
+        <p class="field-note" id="start-note">問題の読み込みが完了したら演習を開始できます。</p>
+      </div>
       <p class="field-note" style="margin-top:16px"><a class="link" href="/math-results.html">提出履歴を確認する</a></p>
     </div>
     <div class="card" id="quiz" style="display:none">
@@ -78,12 +82,15 @@
       sessionId: null,
       attempt: 0,
       difficulty: 'normal',
+      started: false,
     };
 
     function $(sel){ return document.querySelector(sel); }
 
     const difficultySelect = $('#difficulty-select');
     const difficultyBadge = $('#difficulty-badge');
+    const startButton = $('#btn-start');
+    const startNote = $('#start-note');
     const quizCard = $('#quiz');
     const loadingCard = $('#loading');
     const errorCard = $('#error');
@@ -353,9 +360,39 @@
       }
       state.questions = filterQuestionsByDifficulty(normalized);
       state.index = 0;
-      state.sessionId = createSessionId();
       state.attempt = 0;
-      renderQuestion();
+      if(state.started){
+        state.sessionId = createSessionId();
+        renderQuestion();
+      } else {
+        state.sessionId = null;
+        clearInputEventHandlers();
+        state.inputs = [];
+        state.fieldSpecs = [];
+        const answerContainer = $('#answer-inputs');
+        if(answerContainer){
+          answerContainer.innerHTML = '';
+        }
+        const questionEl = $('#question');
+        if(questionEl){
+          questionEl.textContent = '';
+        }
+        if(quizCard) quizCard.style.display = 'none';
+        if(loadingCard) loadingCard.style.display = 'none';
+        if(errorCard) errorCard.style.display = 'none';
+        const btnCheck = $('#btn-check');
+        if(btnCheck) btnCheck.disabled = true;
+        const btnNext = $('#btn-next');
+        if(btnNext) btnNext.disabled = true;
+        $('#feedback').textContent = '';
+        $('#feedback').className = 'muted';
+        setSaveStatus('', 'muted');
+        if(startNote){
+          startNote.textContent = state.questions.length
+            ? '開始を押すと問題が表示されます。'
+            : '選択した難易度の問題が見つかりません。別の難易度を選んでください。';
+        }
+      }
     }
 
     function renderQuestion(){
@@ -457,6 +494,19 @@
       renderQuestion();
     }
 
+    if(startButton){
+      startButton.addEventListener('click', ev => {
+        ev.preventDefault();
+        if(startButton.disabled) return;
+        if(!state.allQuestions.length) return;
+        state.started = true;
+        setDifficulty(state.difficulty);
+        if(startNote){
+          startNote.textContent = '演習をリセットするには再度「演習を開始」を押してください。';
+        }
+      });
+    }
+
     $('#btn-check').addEventListener('click', checkAnswer);
     $('#btn-next').addEventListener('click', nextQuestion);
     function createSessionId(){
@@ -536,7 +586,22 @@
             loadingCard.style.display = '';
             loadingCard.textContent = '問題が見つかりませんでした。';
           }
+          if(startButton){
+            startButton.disabled = true;
+            startButton.textContent = '演習を開始';
+          }
+          if(startNote){
+            startNote.textContent = '問題が見つからないため演習を開始できません。';
+          }
           return;
+        }
+        if(loadingCard) loadingCard.style.display = 'none';
+        if(startButton){
+          startButton.disabled = false;
+          startButton.textContent = '演習を開始';
+        }
+        if(startNote){
+          startNote.textContent = '開始を押すと問題が表示されます。';
         }
         setDifficulty(state.difficulty);
       })
@@ -546,6 +611,13 @@
         if(errorCard){
           errorCard.style.display = '';
           errorCard.textContent = `問題の読み込みに失敗しました: ${err.message}`;
+        }
+        if(startButton){
+          startButton.disabled = true;
+          startButton.textContent = '演習を開始';
+        }
+        if(startNote){
+          startNote.textContent = '問題の読み込みに失敗しました。時間をおいて再度お試しください。';
         }
       });
 </script>
