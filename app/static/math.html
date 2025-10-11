@@ -35,7 +35,7 @@
 </head>
 <body>
   <main>
-    <div class="card">
+    <div class="card" id="setup-card">
       <h1>数学演習モード</h1>
       <p class="muted">出題レベルを選んで問題に挑戦し、表示された解答欄に入力してから採点してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
       <div class="field-stack">
@@ -53,6 +53,9 @@
       <p class="field-note" style="margin-top:16px"><a class="link" href="/math-results.html">提出履歴を確認する</a></p>
     </div>
     <div class="card" id="quiz" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button id="btn-change-settings" style="background:#1e293b;border-color:#1e293b;color:#cbd5e1">⚙️ 出題条件を変更</button>
+      </div>
       <div class="question-header">
         <div id="question" style="font-size:18px;font-weight:600"></div>
         <span id="difficulty-badge" class="badge badge-normal">標準</span>
@@ -91,10 +94,12 @@
     const difficultyBadge = $('#difficulty-badge');
     const startButton = $('#btn-start');
     const startNote = $('#start-note');
+    const setupCard = $('#setup-card');
     const quizCard = $('#quiz');
     const loadingCard = $('#loading');
     const errorCard = $('#error');
     const saveStatusEl = $('#save-status');
+    const changeSettingsButton = $('#btn-change-settings');
 
     function setSaveStatus(message, status = 'muted'){
       if(!saveStatusEl) return;
@@ -352,6 +357,15 @@
       }
     }
 
+    function showSetupView(){
+      state.started = false;
+      if(setupCard) setupCard.style.display = '';
+      if(quizCard) quizCard.style.display = 'none';
+      if(loadingCard) loadingCard.style.display = 'none';
+      if(errorCard) errorCard.style.display = 'none';
+      setDifficulty(state.difficulty);
+    }
+
     function setDifficulty(level){
       const normalized = normalizeDifficulty(level);
       state.difficulty = normalized;
@@ -500,9 +514,22 @@
         if(startButton.disabled) return;
         if(!state.allQuestions.length) return;
         state.started = true;
+        if(setupCard) setupCard.style.display = 'none';
         setDifficulty(state.difficulty);
         if(startNote){
-          startNote.textContent = '演習をリセットするには再度「演習を開始」を押してください。';
+          startNote.textContent = '出題条件を変更するには「出題条件を変更」を押してください。';
+        }
+      });
+    }
+
+    if(changeSettingsButton){
+      changeSettingsButton.addEventListener('click', ev => {
+        ev.preventDefault();
+        showSetupView();
+        if(startNote){
+          startNote.textContent = state.questions.length
+            ? '開始を押すと問題が表示されます。'
+            : '選択した難易度の問題が見つかりません。別の難易度を選んでください。';
         }
       });
     }
@@ -603,6 +630,7 @@
         if(startNote){
           startNote.textContent = '開始を押すと問題が表示されます。';
         }
+        if(setupCard) setupCard.style.display = '';
         setDifficulty(state.difficulty);
       })
       .catch(err => {
@@ -619,6 +647,7 @@
         if(startNote){
           startNote.textContent = '問題の読み込みに失敗しました。時間をおいて再度お試しください。';
         }
+        if(setupCard) setupCard.style.display = '';
       });
 </script>
 </body>
