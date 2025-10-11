@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>英語クイズ｜並べ替え＋単語（意味→スペル）</title>
+  <title>英語クイズ｜並べ替え＋単語＋書き換え</title>
   <style>
     :root{ --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --border:#1f2937; --accent:#3b82f6; --warn:#ef4444 }
     *{ box-sizing:border-box }
@@ -42,6 +42,7 @@
     :root{ --tap:44px }
     body{ touch-action:manipulation }
     #vocab-input{ width:100% }
+    #rewrite-input{ width:100%; min-height:72px; resize:vertical; }
     #target,#bank{ gap:10px }
     #bank{ max-height:40vh; overflow:auto; padding-bottom:6px }
 
@@ -60,7 +61,7 @@
   <header>
     <div class="container row">
       <div>
-        <h2 style="margin:0">英語クイズ <span class="muted">（並べ替え＋単語）</span></h2>
+        <h2 style="margin:0">英語クイズ <span class="muted">（並べ替え＋単語＋書き換え）</span></h2>
         <div class="muted" style="font-size:12px">外部JSON／復習モード／一問一採点／完了時は最小ペイロードをサーバ保存。</div>
       </div>
       <div class="right pill" id="user-pill">👤 ゲスト</div>
@@ -76,6 +77,7 @@
         <label class="row" style="gap:6px"><span class="muted">出題タイプ</span>
           <select id="qtype">
             <option value="reorder">並べ替え（文法）</option>
+            <option value="rewrite">書き換え（指定の形に）</option>
             <option value="vocab" selected>単語（意味→スペル）</option>
           </select>
         </label>
@@ -96,6 +98,7 @@
       </div>
       <div class="muted" style="margin-top:8px">
         並べ替え: <span class="kbd">1-9</span> で選択、<span class="kbd">Backspace</span> で戻す、<span class="kbd">Enter</span> で採点/次へ。<br>
+        書き換え: 指示に従って英文を入力（句読点も忘れずに）。<br>
         単語: 入力欄にスペルを入力（英字・大文字小文字は不問）。
         <br>レベルの目安: Lv1＝中学一年生、Lv2＝中学二年生、Lv3＝中学三年生。
       </div>
@@ -128,6 +131,16 @@
           <button id="btn-clear-vocab">🧹 クリア</button>
         </div>
         <div class="muted" id="vocab-tip" style="margin-top:6px"></div>
+      </div>
+
+      <!-- 書き換えUI -->
+      <div id="ui-rewrite" style="display:none; margin-top:10px">
+        <div class="muted" id="rewrite-extra" style="margin-bottom:6px"></div>
+        <div class="field">
+          <textarea id="rewrite-input" class="input" placeholder="指示に合わせて英文を書き換えてください" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+          <button id="btn-clear-rewrite">🧹 クリア</button>
+        </div>
+        <div class="muted" id="rewrite-tip" style="margin-top:6px"></div>
       </div>
 
       <div class="row actions" style="margin-top:10px">
@@ -173,6 +186,7 @@
     /********** 問題ロード **********/
     let BANK_REORDER = [];
     let BANK_VOCAB = [];
+    let BANK_REWRITE = [];
 
     const toAnswerList = (value)=>{
       if(Array.isArray(value)){
@@ -202,6 +216,81 @@
       return unique;
     };
 
+    const caseAware = (match, replacement)=>{
+      if(!match) return replacement;
+      if(match === match.toUpperCase()) return replacement.toUpperCase();
+      if(match[0] === match[0].toUpperCase()){
+        return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+      }
+      return replacement.toLowerCase();
+    };
+
+    const replaceAmNot = text=>{
+      const regex = /\b(I)\s+am not\b/gi;
+      let changed = false;
+      const result = text.replace(regex, (match)=>{
+        changed = true;
+        if(match === match.toUpperCase()) return "I'M NOT";
+        const base = match[0]===match[0].toUpperCase()? "I'm not" : "i'm not";
+        return caseAware(match, base);
+      });
+      return changed && result!==text ? result : null;
+    };
+
+    const replaceSimple = (text, pattern, contracted)=>{
+      let changed = false;
+      const result = text.replace(pattern, match=>{
+        changed = true;
+        return caseAware(match, contracted);
+      });
+      return changed && result!==text ? result : null;
+    };
+
+    const expandRewriteVariants = list=>{
+      const queue = [];
+      const seen = new Set();
+      const push = value=>{
+        if(typeof value !== 'string') return;
+        const trimmed = value.trim();
+        if(!trimmed || seen.has(trimmed)) return;
+        seen.add(trimmed);
+        queue.push(trimmed);
+      };
+      list.forEach(push);
+      const variants = [];
+      const replacers = [
+        text=>replaceAmNot(text),
+        text=>replaceSimple(text, /\bare not\b/gi, "aren't"),
+        text=>replaceSimple(text, /\bis not\b/gi, "isn't"),
+        text=>replaceSimple(text, /\bwas not\b/gi, "wasn't"),
+        text=>replaceSimple(text, /\bwere not\b/gi, "weren't"),
+        text=>replaceSimple(text, /\bdo not\b/gi, "don't"),
+        text=>replaceSimple(text, /\bdoes not\b/gi, "doesn't"),
+        text=>replaceSimple(text, /\bdid not\b/gi, "didn't"),
+        text=>replaceSimple(text, /\bhas not\b/gi, "hasn't"),
+        text=>replaceSimple(text, /\bhave not\b/gi, "haven't"),
+        text=>replaceSimple(text, /\bhad not\b/gi, "hadn't"),
+        text=>replaceSimple(text, /\bwill not\b/gi, "won't"),
+        text=>replaceSimple(text, /\bwould not\b/gi, "wouldn't"),
+        text=>replaceSimple(text, /\bshould not\b/gi, "shouldn't"),
+        text=>replaceSimple(text, /\bmust not\b/gi, "mustn't"),
+        text=>replaceSimple(text, /\bneed not\b/gi, "needn't"),
+        text=>replaceSimple(text, /\bcould not\b/gi, "couldn't"),
+        text=>replaceSimple(text, /\bcannot\b/gi, "can't"),
+        text=>replaceSimple(text, /\bcan not\b/gi, "can't"),
+        text=>replaceSimple(text, /\bmight not\b/gi, "mightn't")
+      ];
+      while(queue.length){
+        const current = queue.shift();
+        variants.push(current);
+        replacers.forEach(fn=>{
+          const next = fn(current);
+          if(next){ push(next); }
+        });
+      }
+      return variants;
+    };
+
     const normalizeLevel = (value)=>{
       const str = (value==null ? '' : String(value)).trim();
       if(LEVEL_ORDER.includes(str)) return str;
@@ -220,8 +309,11 @@
     };
 
     const buildQuestion = (item, type)=>{
-      const answers = collectAnswerSet(item);
+      let answers = collectAnswerSet(item);
       const primary = answers[0] || (typeof item.en==='string'? item.en.trim(): '');
+      if(type==='rewrite'){
+        answers = expandRewriteVariants(answers);
+      }
       const base = {
         type,
         id: item.id||null,
@@ -238,6 +330,10 @@
         base.wrong = item.wrong||[];
       } else if(type==='vocab'){
         base.pos = item.pos||'';
+      } else if(type==='rewrite'){
+        base.source = item.source || '';
+        base.task = item.task || '';
+        base.note = item.note || '';
       }
       return base;
     };
@@ -249,6 +345,7 @@
       // 互換: 旧形式 questions は並べ替え扱い
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
       BANK_VOCAB   = (data.vocab||[]).map(v=>buildQuestion(v, 'vocab'));
+      BANK_REWRITE = (data.rewrite||[]).map(w=>buildQuestion(w, 'rewrite'));
       renderUnitFilterOptions();
     }
 
@@ -273,11 +370,17 @@
     const $ = s=>document.querySelector(s);
     const $$ = s=>Array.from(document.querySelectorAll(s));
 
+    const typedInputElement = ()=>{
+      if(state.qType==='vocab') return $('#vocab-input');
+      if(state.qType==='rewrite') return $('#rewrite-input');
+      return null;
+    };
+
     /********** ユーティリティ **********/
     const fmtTime = s=>{ const m=String(Math.floor(s/60)).padStart(2,'0'); const r=String(s%60).padStart(2,'0'); return `${m}:${r}` };
     const shuffle = arr=>arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
     const NBSP = String.fromCharCode(160);
-    const normalizeDigits = s=> (s==null ? '' : String(s).replace(/[０-９]/g, ch=> String.fromCharCode(ch.charCodeAt(0)-0xFEE0)));
+    const normalizeDigits = s=> (s==null ? '' : String(s).replace(/[‘’‚‛‹›`´]/g,"'").replace(/[“”„‟«»]/g,'"').replace(/[０-９]/g, ch=> String.fromCharCode(ch.charCodeAt(0)-0xFEE0)));
     const normalizeSpaces = s=> normalizeDigits(s).replace(new RegExp(`[${NBSP}\\s]+`,'g'),' ').trim();
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
@@ -422,7 +525,12 @@
     function show(id){ ['setup','quiz','finished'].forEach(sec=>{ const el=$(`#${sec}`); if(!el) return; el.style.display = (sec===id)?'block':'none'; }); }
 
     /********** デッキ取得 **********/
-    function deckByType(type){ return type==='reorder' ? BANK_REORDER : BANK_VOCAB; }
+    function deckByType(type){
+      if(type==='reorder') return BANK_REORDER;
+      if(type==='vocab') return BANK_VOCAB;
+      if(type==='rewrite') return BANK_REWRITE;
+      return [];
+    }
     function deck(){
       const all = deckByType(state.qType);
       if(state.mode==='review') return all;
@@ -715,6 +823,7 @@
       if(state.qType==='reorder'){
         $('#ui-reorder').style.display='block';
         $('#ui-vocab').style.display='none';
+        $('#ui-rewrite').style.display='none';
         const basePrompt = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
         $('#prompt').innerHTML = basePrompt;
         $('#btn-hint').disabled = !q.tip;
@@ -734,14 +843,30 @@
         $('#target').ondragover=e=>{ e.preventDefault(); };
         $('#target').ondrop=e=>{ e.preventDefault(); const text=e.dataTransfer.getData('text/plain'); const src=[...$$('#bank .chip')].find(ch=>ch.getAttribute('data-text')===text && !ch.classList.contains('used')); if(src) placeChip(src); };
         $('#btn-next').disabled = true;
-      } else {
+      } else if(state.qType==='vocab'){
         $('#ui-reorder').style.display='none';
         $('#ui-vocab').style.display='block';
+        $('#ui-rewrite').style.display='none';
         $('#prompt').innerHTML = `意味: <b>${q.jp}</b>`;
         $('#vocab-tip').innerHTML = '';
         $('#btn-hint').disabled = !q.tip;
         const inp = $('#vocab-input'); inp.value=''; inp.focus();
         $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
+      } else if(state.qType==='rewrite'){
+        $('#ui-reorder').style.display='none';
+        $('#ui-vocab').style.display='none';
+        $('#ui-rewrite').style.display='block';
+        const instruction = q.jp || '<span class="muted">指示に従って英文を書き換えましょう</span>';
+        $('#prompt').innerHTML = instruction;
+        const extras = [];
+        if(q.source) extras.push(`元の文: <b>${q.source}</b>`);
+        if(q.task) extras.push(`指定: ${q.task}`);
+        if(q.note) extras.push(q.note);
+        $('#rewrite-extra').innerHTML = extras.join('<br>');
+        $('#rewrite-tip').innerHTML = '';
+        $('#btn-hint').disabled = !q.tip;
+        const area = $('#rewrite-input'); area.value=''; area.focus();
+        $('#btn-next').disabled = false;
       }
       updateNextState();
     }
@@ -752,8 +877,10 @@
       if(state.qType==='reorder'){
         const base = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
         $('#prompt').innerHTML = `${base}<br><span class="muted">ヒント: ${q.tip}</span>`;
-      } else {
+      } else if(state.qType==='vocab'){
         $('#vocab-tip').innerHTML = `ヒント: ${q.tip}`;
+      } else if(state.qType==='rewrite'){
+        $('#rewrite-tip').innerHTML = `ヒント: ${q.tip}`;
       }
     }
 
@@ -765,13 +892,19 @@
         $$('#bank .chip').forEach(n=>n.classList.remove('used'));
         updateNextState();
       } else {
-        $('#vocab-input').value='';
-        $('#vocab-input').focus();
+        const inp = typedInputElement();
+        if(inp){ inp.value=''; inp.focus(); }
         updateNextState();
       }
     }
 
-    function currentAnswer(){ if(state.qType==='reorder'){ return [...$('#target').children].map(x=>x.textContent).join(' ');} return $('#vocab-input').value||''; }
+    function currentAnswer(){
+      if(state.qType==='reorder'){
+        return [...$('#target').children].map(x=>x.textContent).join(' ');
+      }
+      const inp = typedInputElement();
+      return inp? (inp.value||'') : '';
+    }
     function updateNextState(){
       const btnCheck = $('#btn-check');
       const btnNext = $('#btn-next');
@@ -781,7 +914,8 @@
         btnCheck.disabled = state.graded || !hasAnswer;
         btnNext.disabled = state.graded ? false : true;
       } else {
-        const value = ($('#vocab-input').value || '').trim();
+        const inp = typedInputElement();
+        const value = inp ? (inp.value || '').trim() : '';
         btnCheck.disabled = state.graded || value.length===0;
         btnNext.disabled = false;
       }
@@ -817,6 +951,14 @@
         const normalizedAnsLower = typeof normalizedAns === 'string' ? normalizedAns.toLowerCase() : normalizedAns;
         const normalizedAnswersLower = normalizedAnswers.map(a=>typeof a === 'string' ? a.toLowerCase() : a);
         correct = normalizedAnswersLower.includes(normalizedAnsLower);
+      } else if(state.qType==='rewrite'){
+        const keepPunc = true;
+        const normalizedAns = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
+        ans = normalizedAns? normalizedAns.charAt(0).toUpperCase()+normalizedAns.slice(1) : normalizedAns;
+        const normalizedAnswers = answerList.map(a=>normalizeEndPunc(normalizeSpaces(a), keepPunc));
+        const normalizedAnsLower = typeof normalizedAns === 'string' ? normalizedAns.toLowerCase() : normalizedAns;
+        const normalizedAnswersLower = normalizedAnswers.map(a=>typeof a === 'string' ? a.toLowerCase() : a);
+        correct = normalizedAnswersLower.includes(normalizedAnsLower);
       } else { // vocab
         ans = normalizeWord(currentAnswer());
         const normalizedAnswers = answerList.map(a=>normalizeWord(a));
@@ -846,7 +988,7 @@
           ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
           : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
         // 復習用には詳細保持
-        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, level:q.level||DEFAULT_LEVEL, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', userAnswer: ans, at: record.at });
+        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, level:q.level||DEFAULT_LEVEL, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', source:q.source||'', task:q.task||'', userAnswer: ans, at: record.at });
       }
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
@@ -1032,8 +1174,9 @@
       rememberSettings();
     });
 
-    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); updateNextState(); }; document.getElementById('btn-hint').onclick=showHint;
+    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); updateNextState(); }; document.getElementById('btn-clear-rewrite').onclick=()=>{ $('#rewrite-input').value=''; $('#rewrite-input').focus(); updateNextState(); }; document.getElementById('btn-hint').onclick=showHint;
     document.getElementById('vocab-input').addEventListener('input', updateNextState);
+    document.getElementById('rewrite-input').addEventListener('input', updateNextState);
     document.getElementById('btn-speak').onclick=()=>{
       const q=getCurrentQuestion();
       if(!q) return;

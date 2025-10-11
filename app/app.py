@@ -116,6 +116,16 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "unit": v.get("unit"),
                 "type": "vocab",
             }
+    for w in data.get("rewrite") or []:
+        qid = w.get("id")
+        if qid:
+            qmap[qid] = {
+                "id": qid,
+                "jp": w.get("jp"),
+                "en": w.get("en"),
+                "unit": w.get("unit"),
+                "type": "rewrite",
+            }
     return qmap
 
 
@@ -503,7 +513,7 @@ def admin_summary():
         ans = ans_all
 
         # 表示タイプ（単語/並べ替え）で絞り込み
-        if qtype in ("vocab", "reorder"):
+        if qtype in ("vocab", "reorder", "rewrite"):
             filtered = []
             for a in ans_all:
                 qm = qmap.get(a.get("id")) or {}
