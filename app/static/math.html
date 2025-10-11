@@ -6,12 +6,12 @@
   <title>数学演習モード</title>
   <style>
     body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#0f172a;color:#e5e7eb;}
-    main{max-width:720px;margin:0 auto;padding:24px;}
+    main{max-width:760px;margin:0 auto;padding:24px;}
     h1{margin-top:0;}
     .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;margin-bottom:16px;}
     button{background:#2563eb;border:1px solid #2563eb;border-radius:10px;color:#fff;padding:10px 18px;font-size:16px;cursor:pointer;}
     button:disabled{opacity:.5;cursor:not-allowed;}
-    input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
+    input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
     .field-stack{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
     .field-row{display:flex;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap;}
     .field-label{font-size:14px;color:#94a3b8;}
@@ -21,22 +21,45 @@
     .muted{color:#94a3b8;}
     .ok{color:#22c55e;}
     .ng{color:#ef4444;}
+    .question-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+    .badge-normal{background:rgba(37,99,235,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.4);}
+    .badge-hard{background:rgba(236,72,153,.15);color:#f9a8d4;border:1px solid rgba(244,114,182,.4);}
+    .status-text{font-size:14px;}
+    .status-success{color:#4ade80;}
+    .status-error{color:#f87171;}
+    .field-note{font-size:14px;color:#94a3b8;margin:0;}
+    a.link{color:#93c5fd;text-decoration:none;}
+    a.link:hover{text-decoration:underline;}
   </style>
 </head>
 <body>
   <main>
     <div class="card">
       <h1>数学演習モード</h1>
-      <p class="muted">入力欄に解答を入力して「答え合わせ」を押してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
+      <p class="muted">出題レベルを選んで問題に挑戦し、表示された解答欄に入力してから採点してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
+      <div class="field-stack">
+        <label class="field-label" for="difficulty-select">出題レベル</label>
+        <select id="difficulty-select">
+          <option value="normal">標準</option>
+          <option value="hard">難問</option>
+        </select>
+        <p class="field-note">難問を選ぶと文章題など発展的な問題のみが出題されます。</p>
+      </div>
+      <p class="field-note" style="margin-top:16px"><a class="link" href="/math-results.html">提出履歴を確認する</a></p>
     </div>
     <div class="card" id="quiz" style="display:none">
-      <div id="question" style="font-size:18px;font-weight:600"></div>
+      <div class="question-header">
+        <div id="question" style="font-size:18px;font-weight:600"></div>
+        <span id="difficulty-badge" class="badge badge-normal">標準</span>
+      </div>
       <div id="answer-inputs" class="field-stack"></div>
       <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
         <button id="btn-check">答え合わせ</button>
         <button id="btn-next" disabled>次の問題 ▶</button>
       </div>
       <div id="feedback" class="muted"></div>
+      <div id="save-status" class="status-text muted" aria-live="polite" style="margin-top:8px;min-height:1.4em"></div>
     </div>
     <div class="card" id="loading">読み込み中…</div>
     <div class="card" id="error" style="display:none;color:#ef4444"></div>
@@ -45,9 +68,72 @@
     const SUBJECT = 'math';
     const QUESTIONS_URL = "/data/math/questions.json";
     const RESULT_ENDPOINT = '/api/results';
-    const state = { questions: [], index: 0, graded: false, inputs: [], fieldSpecs: [], sessionId: null, attempt: 0 };
+    const state = {
+      allQuestions: [],
+      questions: [],
+      index: 0,
+      graded: false,
+      inputs: [],
+      fieldSpecs: [],
+      sessionId: null,
+      attempt: 0,
+      difficulty: 'normal',
+    };
 
     function $(sel){ return document.querySelector(sel); }
+
+    const difficultySelect = $('#difficulty-select');
+    const difficultyBadge = $('#difficulty-badge');
+    const quizCard = $('#quiz');
+    const loadingCard = $('#loading');
+    const errorCard = $('#error');
+    const saveStatusEl = $('#save-status');
+
+    function setSaveStatus(message, status = 'muted'){
+      if(!saveStatusEl) return;
+      const classes = ['status-text'];
+      if(status === 'success'){
+        classes.push('status-success');
+      } else if(status === 'error'){
+        classes.push('status-error');
+      } else {
+        classes.push('muted');
+      }
+      saveStatusEl.className = classes.join(' ');
+      saveStatusEl.textContent = message || '';
+    }
+
+    function normalizeDifficulty(value){
+      const text = (value == null ? '' : String(value)).toLowerCase();
+      return text === 'hard' ? 'hard' : 'normal';
+    }
+
+    function labelForDifficulty(level){
+      return normalizeDifficulty(level) === 'hard' ? '難問' : '標準';
+    }
+
+    function updateDifficultyBadge(level){
+      if(!difficultyBadge) return;
+      const normalized = normalizeDifficulty(level);
+      difficultyBadge.textContent = labelForDifficulty(normalized);
+      difficultyBadge.className = `badge ${normalized === 'hard' ? 'badge-hard' : 'badge-normal'}`;
+    }
+
+    function filterQuestionsByDifficulty(level){
+      const normalized = normalizeDifficulty(level);
+      return state.allQuestions.filter(q => normalizeDifficulty(q && q.difficulty) === normalized);
+    }
+    if(difficultySelect){
+      difficultySelect.value = state.difficulty;
+      difficultySelect.addEventListener('change', ev => {
+        const selected = ev.target.value;
+        if(state.allQuestions.length){
+          setDifficulty(selected);
+        } else {
+          state.difficulty = normalizeDifficulty(selected);
+        }
+      });
+    }
 
     const normalizeDigits = value => (value == null ? '' : String(value).replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)));
     function normalize(value){
@@ -259,22 +345,53 @@
       }
     }
 
+    function setDifficulty(level){
+      const normalized = normalizeDifficulty(level);
+      state.difficulty = normalized;
+      if(difficultySelect){
+        difficultySelect.value = normalized;
+      }
+      state.questions = filterQuestionsByDifficulty(normalized);
+      state.index = 0;
+      state.sessionId = createSessionId();
+      state.attempt = 0;
+      renderQuestion();
+    }
+
     function renderQuestion(){
       if(!state.questions.length){
-        $('#quiz').style.display = 'none';
-        $('#loading').textContent = '問題が見つかりませんでした。';
+        if(quizCard) quizCard.style.display = 'none';
+        if(loadingCard){
+          loadingCard.style.display = '';
+          loadingCard.textContent = '選択した難易度の問題が見つかりませんでした。';
+        }
+        const btnCheck = $('#btn-check');
+        const btnNext = $('#btn-next');
+        if(btnCheck) btnCheck.disabled = true;
+        if(btnNext) btnNext.disabled = true;
         return;
       }
       const q = state.questions[state.index];
-      $('#question').textContent = q.prompt || q.question || '';
+      if(loadingCard) loadingCard.style.display = 'none';
+      if(quizCard) quizCard.style.display = '';
+      if(errorCard) errorCard.style.display = 'none';
+      updateDifficultyBadge(q && q.difficulty ? q.difficulty : state.difficulty);
+      const questionEl = $('#question');
+      if(questionEl){
+        questionEl.textContent = q.prompt || q.question || '';
+      }
       buildInputs(q);
       state.inputs.forEach(input => { input.value = ''; });
       $('#feedback').textContent = '';
       $('#feedback').className = 'muted';
+      setSaveStatus('', 'muted');
       state.graded = false;
-      $('#btn-next').disabled = true;
-      $('#quiz').style.display = '';
-      $('#loading').style.display = 'none';
+      const btnCheck = $('#btn-check');
+      if(btnCheck) btnCheck.disabled = false;
+      const btnNext = $('#btn-next');
+      if(btnNext) btnNext.disabled = true;
+      if(quizCard) quizCard.style.display = '';
+      if(loadingCard) loadingCard.style.display = 'none';
       if(state.inputs[0]){
         state.inputs[0].focus();
       }
@@ -297,6 +414,11 @@
     function checkAnswer(){
       if(state.graded) return;
       const q = state.questions[state.index];
+      if(!q){
+        $('#feedback').className = 'ng';
+        $('#feedback').textContent = '問題が読み込めませんでした。';
+        return;
+      }
       const userValues = getUserValues();
       const fieldSpecs = state.fieldSpecs;
       const answers = getAnswerList(q);
@@ -304,13 +426,15 @@
         $('#feedback').className = 'muted';
         $('#feedback').textContent = '正解が登録されていません。';
         state.graded = true;
-        $('#btn-next').disabled = false;
+        const btnNext = $('#btn-next');
+        if(btnNext) btnNext.disabled = false;
         return;
       }
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
-      $('#btn-next').disabled = false;
-      const explain = q && q.explain ? `<div class="muted" style="margin-top:8px">解説: ${q.explain}</div>` : '';
+      const btnNext = $('#btn-next');
+      if(btnNext) btnNext.disabled = false;
+      const explain = buildExplain(q);
       state.attempt += 1;
       sendMathResult(q, isCorrect, userValues, fieldSpecs);
       if(isCorrect){
@@ -345,6 +469,7 @@
         correct: !!isCorrect,
         prompt: question && (question.prompt || question.question) ? String(question.prompt || question.question) : '',
       };
+      payload.difficulty = normalizeDifficulty(question && question.difficulty);
       if(fieldSpecs && fieldSpecs.length){
         const answerMap = {};
         fieldSpecs.forEach((field, idx) => {
@@ -367,6 +492,7 @@
       if(!state.sessionId){
         state.sessionId = createSessionId();
       }
+      const questionDifficulty = normalizeDifficulty(question && question.difficulty);
       const record = {
         subject: SUBJECT,
         user: 'math',
@@ -374,17 +500,27 @@
         sessionId: state.sessionId,
         attempt: state.attempt,
         questionIndex: state.index,
+        difficulty: questionDifficulty,
         total: 1,
         correct: isCorrect ? 1 : 0,
         wrong: isCorrect ? 0 : 1,
         endedAt: new Date().toISOString(),
         answered: [toAnswerPayload(question, userValues, fieldSpecs, isCorrect)]
       };
+      record.answered[0].difficulty = questionDifficulty;
+      setSaveStatus('採点結果を送信しています…', 'muted');
       fetch(RESULT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record)
-      }).catch(err => console.warn('数学の結果送信に失敗しました', err));
+      })
+        .then(() => {
+          setSaveStatus('採点結果を記録しました。', 'success');
+        })
+        .catch(err => {
+          console.warn('数学の結果送信に失敗しました', err);
+          setSaveStatus('結果の送信に失敗しました。時間をおいて再度お試しください。', 'error');
+        });
     }
 
     fetch(QUESTIONS_URL, { cache: 'no-store' })
@@ -393,23 +529,25 @@
         return res.json();
       })
       .then(data => {
-        state.questions = Array.isArray(data.questions) ? data.questions : [];
-        $('#loading').style.display = 'none';
-        if(!state.questions.length){
-          $('#loading').style.display = '';
-          $('#loading').textContent = '問題が見つかりませんでした。';
+        const loaded = Array.isArray(data.questions) ? data.questions : [];
+        state.allQuestions = loaded.map(q => ({ ...q, difficulty: normalizeDifficulty(q && q.difficulty) }));
+        if(!state.allQuestions.length){
+          if(loadingCard){
+            loadingCard.style.display = '';
+            loadingCard.textContent = '問題が見つかりませんでした。';
+          }
           return;
         }
-        state.sessionId = createSessionId();
-        state.attempt = 0;
-        renderQuestion();
+        setDifficulty(state.difficulty);
       })
       .catch(err => {
-        $('#loading').style.display = 'none';
-        const box = $('#error');
-        box.style.display = '';
-        box.textContent = `問題の読み込みに失敗しました: ${err.message}`;
+        if(loadingCard) loadingCard.style.display = 'none';
+        if(quizCard) quizCard.style.display = 'none';
+        if(errorCard){
+          errorCard.style.display = '';
+          errorCard.textContent = `問題の読み込みに失敗しました: ${err.message}`;
+        }
       });
-  </script>
+</script>
 </body>
 </html>

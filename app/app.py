@@ -254,6 +254,37 @@ def math_accuracy():
     return jsonify(payload)
 
 
+@app.get("/api/math/results")
+def math_results():
+    subject = normalize_subject(request.args.get("subject") or "math")
+    results = iter_results(subject)
+
+    items = []
+    for record in results:
+        if not _is_math_record(record):
+            continue
+        answered_list = record.get("answered") or []
+        first = answered_list[0] if answered_list else {}
+        items.append(
+            {
+                "sessionId": record.get("sessionId"),
+                "attempt": record.get("attempt"),
+                "endedAt": record.get("endedAt") or record.get("receivedAt"),
+                "prompt": first.get("prompt") if isinstance(first, dict) else None,
+                "correct": (
+                    bool(first.get("correct")) if isinstance(first, dict) else False
+                ),
+                "user": record.get("user") or "math",
+                "difficulty": record.get("difficulty")
+                or (first.get("difficulty") if isinstance(first, dict) else None)
+                or "normal",
+            }
+        )
+
+    items.sort(key=lambda x: x.get("endedAt") or "", reverse=True)
+    return jsonify(items)
+
+
 @app.get("/api/stats")
 def question_stat():
     user = request.args.get("user") or ""

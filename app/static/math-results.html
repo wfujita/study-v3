@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数学演習の提出履歴</title>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#0f172a;color:#e5e7eb;}
+    main{max-width:900px;margin:0 auto;padding:24px;}
+    h1{margin-top:0;}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;margin-bottom:16px;}
+    a.link{color:#93c5fd;text-decoration:none;}
+    a.link:hover{text-decoration:underline;}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:15px;}
+    th,td{padding:12px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:top;}
+    th{font-weight:600;color:#cbd5f5;font-size:14px;text-transform:uppercase;letter-spacing:.05em;}
+    tr:hover{background:rgba(30,41,59,.45);}
+    .muted{color:#94a3b8;}
+    .status-text{font-size:14px;margin:0;}
+    .status-error{color:#f87171;}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+    .badge-normal{background:rgba(37,99,235,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.4);}
+    .badge-hard{background:rgba(236,72,153,.15);color:#f9a8d4;border:1px solid rgba(244,114,182,.4);}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-weight:600;font-size:13px;}
+    .pill-ok{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.35);}
+    .pill-ng{background:rgba(248,113,113,.15);color:#fca5a5;border:1px solid rgba(248,113,113,.35);}
+    @media (max-width:640px){
+      table,thead,tbody,tr,th,td{display:block;}
+      thead{display:none;}
+      tr{margin-bottom:16px;border:1px solid #1f2937;border-radius:12px;padding:12px;}
+      td{border:none;padding:6px 0;}
+      td::before{content:attr(data-label);display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>数学演習の提出履歴</h1>
+      <p class="muted">数学演習モードで送信した解答の提出履歴を確認できます。提出日時順に最新のものから表示しています。</p>
+      <p class="muted" style="margin-top:12px"><a class="link" href="/math.html">← 演習ページへ戻る</a></p>
+    </div>
+    <div class="card">
+      <p id="status" class="status-text muted">読み込み中です…</p>
+      <div id="table-wrapper" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:18%">提出日時</th>
+              <th style="width:36%">問題</th>
+              <th style="width:12%">正誤</th>
+              <th style="width:12%">レベル</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <script>
+    const SUBJECT = 'math';
+    const RESULTS_ENDPOINT = `/api/math/results?subject=${SUBJECT}`;
+
+    function $(sel){ return document.querySelector(sel); }
+
+    function normalizeDifficulty(value){
+      const text = (value == null ? '' : String(value)).toLowerCase();
+      return text === 'hard' ? 'hard' : 'normal';
+    }
+
+    function labelForDifficulty(value){
+      return normalizeDifficulty(value) === 'hard' ? '難問' : '標準';
+    }
+
+    function formatDate(value){
+      if(!value) return '-';
+      try{
+        const date = new Date(value);
+        if(Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+      }catch(err){
+        return value;
+      }
+    }
+
+    function createDifficultyBadge(level){
+      const span = document.createElement('span');
+      const normalized = normalizeDifficulty(level);
+      span.className = `badge ${normalized === 'hard' ? 'badge-hard' : 'badge-normal'}`;
+      span.textContent = labelForDifficulty(normalized);
+      return span;
+    }
+
+    function createResultRow(item){
+      const tr = document.createElement('tr');
+      const endedAt = formatDate(item.endedAt);
+      const prompt = item.prompt || '-';
+      const correct = !!item.correct;
+      const difficultyBadge = createDifficultyBadge(item.difficulty);
+
+      const cells = [
+        { label: '提出日時', content: endedAt },
+        { label: '問題', content: prompt },
+        { label: '正誤', content: correct ? createStatusPill('正解', true) : createStatusPill('不正解', false) },
+        { label: 'レベル', content: difficultyBadge }
+      ];
+
+      cells.forEach(({ label, content }) => {
+        const td = document.createElement('td');
+        td.dataset.label = label;
+        if(content instanceof HTMLElement){
+          td.appendChild(content);
+        } else {
+          td.textContent = content;
+        }
+        tr.appendChild(td);
+      });
+
+      return tr;
+    }
+
+    function createStatusPill(text, ok){
+      const span = document.createElement('span');
+      span.className = `pill ${ok ? 'pill-ok' : 'pill-ng'}`;
+      span.textContent = text;
+      return span;
+    }
+
+    function renderResults(data){
+      const status = $('#status');
+      const tableWrapper = $('#table-wrapper');
+      const body = $('#results-body');
+      if(!Array.isArray(data) || !data.length){
+        status.textContent = 'まだ提出はありません。数学演習ページから答えを送信してください。';
+        status.classList.add('muted');
+        return;
+      }
+      status.style.display = 'none';
+      if(tableWrapper) tableWrapper.style.display = '';
+      if(body) body.innerHTML = '';
+      data.forEach(item => {
+        body.appendChild(createResultRow(item));
+      });
+    }
+
+    fetch(RESULTS_ENDPOINT, { cache: 'no-store' })
+      .then(res => {
+        if(!res.ok) throw new Error(`fetch ${RESULTS_ENDPOINT} ${res.status}`);
+        return res.json();
+      })
+      .then(renderResults)
+      .catch(err => {
+        const status = $('#status');
+        status.textContent = `提出履歴の取得に失敗しました: ${err.message}`;
+        status.classList.remove('muted');
+        status.classList.add('status-error');
+      });
+  </script>
+</body>
+</html>
