@@ -3,7 +3,17 @@ import json
 import sys
 
 
-def create_record(user, prompt, correct, *, difficulty="normal", ended_at="2024-01-01T00:00:00Z", response=None, accepted=None, question_id="q1"):
+def create_record(
+    user,
+    prompt,
+    correct,
+    *,
+    difficulty="normal",
+    ended_at="2024-01-01T00:00:00Z",
+    response=None,
+    accepted=None,
+    question_id="q1"
+):
     answered = {
         "id": question_id,
         "prompt": prompt,

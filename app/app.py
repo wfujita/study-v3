@@ -400,16 +400,16 @@ def math_dashboard():
         qid_raw = answer.get("id")
         qid = str(qid_raw) if qid_raw not in (None, "") else ""
 
-        ended_at = (
-            record.get("endedAt")
-            or record.get("receivedAt")
-            or answer.get("at")
-        )
+        ended_at = record.get("endedAt") or record.get("receivedAt") or answer.get("at")
         ended_dt = _parse_timestamp(ended_at)
         if ended_dt and (latest_dt is None or ended_dt > latest_dt):
             latest_dt = ended_dt
 
-        correct = bool(record.get("correct")) if record.get("correct") is not None else bool(answer.get("correct"))
+        correct = (
+            bool(record.get("correct"))
+            if record.get("correct") is not None
+            else bool(answer.get("correct"))
+        )
 
         attempt = {
             "user": user,
@@ -539,7 +539,9 @@ def math_dashboard():
 
     user_options: List[Dict[str, Any]] = []
     for totals in user_totals.values():
-        totals["accuracy"] = _accuracy_pct(totals.get("correct", 0), totals.get("answered", 0))
+        totals["accuracy"] = _accuracy_pct(
+            totals.get("correct", 0), totals.get("answered", 0)
+        )
         user_options.append(totals)
     user_options.sort(key=lambda x: x.get("lastAt") or "", reverse=True)
 
@@ -560,7 +562,9 @@ def math_dashboard():
         "difficultyStats": difficulty_stats,
         "questionStats": question_stats,
         "recentAttempts": recent_attempts,
-        "lastUpdated": latest_dt.isoformat().replace("+00:00", "Z") if latest_dt else None,
+        "lastUpdated": (
+            latest_dt.isoformat().replace("+00:00", "Z") if latest_dt else None
+        ),
     }
 
     return jsonify(payload)
