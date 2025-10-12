@@ -52,9 +52,23 @@
     .stat-value{font-size:28px;font-weight:700;}
     .status{margin-top:12px;font-size:14px;}
     .status-error{color:var(--error);}
+    .stage-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+    .stage-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+    .stage-card-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+    .stage-card-header h4{margin:0;font-size:16px;}
+    .stage-count{color:var(--muted);font-size:13px;}
+    .stage-description{margin:0;color:var(--muted);font-size:13px;line-height:1.6;}
+    .stage-scroll{flex:1;overflow:auto;border:1px solid #1f2937;border-radius:12px;background:#0b1220;}
+    .stage-scroll table{margin:0;}
+    .stage-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .stage-table th,.stage-table td{padding:8px;border-bottom:1px solid #1f2937;vertical-align:top;text-align:left;}
+    .stage-table th{background:#101827;color:#cbd5e1;text-transform:uppercase;letter-spacing:.05em;}
+    .stage-empty{color:var(--muted);font-size:13px;padding:8px 0;}
+    .stage-difficulty{margin-top:6px;font-size:12px;color:var(--muted);}
 
     @media (max-width:1024px){
       .grid.cols-3{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .stage-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     }
     @media (max-width:768px){
       header .container,main{width:calc(100vw-24px);padding:12px;}
@@ -63,6 +77,8 @@
       .row label,select,input,button{width:100%;}
       .pill.right{margin-left:0;justify-content:center;}
       .table-scroll{max-height:none;}
+      .stage-grid{grid-template-columns:1fr;}
+      .stage-scroll{max-height:none;}
     }
     @media (max-width:640px){
       th,td{display:block;padding:8px;}
@@ -72,6 +88,12 @@
       tr{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:8px;}
       td{border:none;}
       td::before{content:attr(data-label);display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+      .stage-table{border:0;}
+      .stage-table thead{display:none;}
+      .stage-table tbody{display:grid;gap:12px;padding:12px;}
+      .stage-table tr{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:8px;}
+      .stage-table td{border:none;padding:4px 0;display:block;}
+      .stage-table td::before{content:attr(data-label);display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;}
     }
   </style>
 </head>
@@ -165,6 +187,12 @@
       </div>
     </section>
 
+    <section class="card" id="stage-section" style="display:none;">
+      <h3 style="margin:0 0 12px">ランク別の問題一覧</h3>
+      <p class="muted" style="font-size:13px;margin:0 0 16px;">ユーザを選択すると、その学習者のランクごとの問題リストが表示されます。</p>
+      <div class="stage-grid" id="stage-grid"></div>
+    </section>
+
     <section class="card">
       <h3 style="margin:0 0 12px">問題別の成績</h3>
       <div class="table-scroll">
@@ -232,6 +260,14 @@
     const searchInput = $('#search');
     const statusEl = $('#status');
     const lastUpdatedEl = $('#last-updated');
+
+    const STAGE_DESCRIPTIONS = {
+      A: '最終正解から30日以上空いても正解できた問題です。',
+      B: '最終正解から7日以上空いても正解できた問題です。',
+      C: '最終正解から3日以上空いても正解できた問題です。',
+      D: '次の目標は3日間の間隔で正解する段階の問題です。',
+      E: '学習し始めたばかり、または直近で正解した問題です。',
+    };
 
     if (searchInput) searchInput.value = state.searchQuery;
     if (difficultySelect) difficultySelect.value = ['normal','hard'].includes(state.selectedDifficulty) ? state.selectedDifficulty : 'all';
@@ -397,6 +433,72 @@
       });
     }
 
+    function renderStageBuckets(buckets, order){
+      const section = $('#stage-section');
+      const grid = $('#stage-grid');
+      if(!section || !grid) return;
+      const hasUser = state.selectedUser && state.selectedUser !== '__all__';
+      if(!hasUser){
+        section.style.display = 'none';
+        grid.innerHTML = '';
+        return;
+      }
+      section.style.display = '';
+      grid.innerHTML = '';
+      const stageOrder = Array.isArray(order) && order.length ? order : ['A','B','C','D','E'];
+      stageOrder.forEach(stageName => {
+        const items = buckets && Array.isArray(buckets[stageName]) ? buckets[stageName] : [];
+        const card = document.createElement('div');
+        card.className = 'stage-card';
+        const header = document.createElement('div');
+        header.className = 'stage-card-header';
+        const title = document.createElement('h4');
+        title.textContent = `ランク${stageName}`;
+        const count = document.createElement('span');
+        count.className = 'stage-count';
+        count.textContent = `${formatNumber(items.length || 0)}件`;
+        header.appendChild(title);
+        header.appendChild(count);
+        card.appendChild(header);
+        const descText = STAGE_DESCRIPTIONS[stageName];
+        if(descText){
+          const descEl = document.createElement('p');
+          descEl.className = 'stage-description';
+          descEl.textContent = descText;
+          card.appendChild(descEl);
+        }
+        const scroll = document.createElement('div');
+        scroll.className = 'stage-scroll';
+        if(!items.length){
+          const empty = document.createElement('div');
+          empty.className = 'stage-empty';
+          empty.textContent = '該当する問題がありません。';
+          scroll.appendChild(empty);
+        }else{
+          const table = document.createElement('table');
+          table.className = 'stage-table';
+          table.innerHTML = '<thead><tr><th style="width:18%">ID</th><th>問題</th><th style="width:16%" class="center">正答率</th><th style="width:16%" class="center">連続正解</th><th style="width:20%" class="center">次回予定</th></tr></thead>';
+          const tbody = document.createElement('tbody');
+          items.forEach(item => {
+            const tr = document.createElement('tr');
+            const prompt = escapeHtml(item.prompt || '-');
+            const diffLabel = item.difficulty ? difficultyLabel(item.difficulty) : '';
+            const diffHtml = diffLabel ? `<div class="stage-difficulty">${diffLabel}</div>` : '';
+            tr.innerHTML = `<td data-label="ID">${escapeHtml(item.id || '-')}</td>`+
+                           `<td data-label="問題">${prompt}${diffHtml}</td>`+
+                           `<td data-label="正答率" class="center">${formatPercent(item.accuracy || 0)}</td>`+
+                           `<td data-label="連続正解" class="center">${formatNumber(item.streak || 0)}</td>`+
+                           `<td data-label="次回予定" class="center">${formatDateTime(item.nextDueAt)}</td>`;
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          scroll.appendChild(table);
+        }
+        card.appendChild(scroll);
+        grid.appendChild(card);
+      });
+    }
+
     function renderQuestionsTable(list){
       const body = $('#tbl-questions tbody');
       const empty = $('#questions-empty');
@@ -454,6 +556,7 @@
       renderSummary(data.totals || {});
       renderUsersTable(data.userSummaries || []);
       renderDifficultyTable(data.difficultyStats || []);
+      renderStageBuckets(data.stageBuckets || {}, data.stageOrder || []);
       renderQuestionsTable(data.questionStats || []);
       renderRecentTable(data.recentAttempts || []);
 

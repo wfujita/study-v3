@@ -192,6 +192,40 @@ def _normalize_math_difficulty(value: str) -> str:
     return "hard" if text == "hard" else "normal"
 
 
+def load_math_questions_map(subject: str) -> Dict[str, Dict[str, Any]]:
+    """Return a mapping of math question id -> metadata for the dashboard."""
+
+    directory = subject_static_dir(subject)
+    path = os.path.join(directory, "questions.json")
+    if not os.path.exists(path):
+        return {}
+
+    try:
+        with open(path, encoding="utf-8") as fp:
+            data = json.load(fp)
+    except Exception:
+        return {}
+
+    questions = data.get("questions")
+    if not isinstance(questions, list):
+        return {}
+
+    out: Dict[str, Dict[str, Any]] = {}
+    for item in questions:
+        if not isinstance(item, dict):
+            continue
+        qid = item.get("id")
+        if not qid:
+            continue
+        qid_str = str(qid)
+        out[qid_str] = {
+            "id": qid_str,
+            "prompt": item.get("prompt"),
+            "difficulty": _normalize_math_difficulty(item.get("difficulty")),
+        }
+    return out
+
+
 def _first_math_answer(record: dict) -> Dict[str, Any]:
     answered_list = record.get("answered") or []
     if isinstance(answered_list, list):
@@ -529,6 +563,84 @@ def math_dashboard():
         )
     )
 
+    stage_config = stage_tracker.get_stage_config(subject)
+    stage_sequence = list(stage_config.sequence)
+    stage_order_display = list(reversed(stage_sequence))
+    stage_buckets: Dict[str, List[Dict[str, Any]]] = {
+        name: [] for name in stage_sequence
+    }
+    math_qmap = load_math_questions_map(subject)
+    stage_states: Dict[str, Dict[str, Any]] = {}
+
+    if user_filter:
+        runtime_dir = subject_runtime_dir(subject)
+        stage_store = stage_tracker.load_store(runtime_dir)
+        if not stage_store and results:
+            stage_store = stage_tracker.rebuild_store(runtime_dir, results)
+
+        normalized_user = (user_filter or "").strip() or "guest"
+        if isinstance(stage_store, dict):
+            try:
+                stage_states = stage_tracker.get_question_states(
+                    stage_store,
+                    normalized_user,
+                    [item.get("id") for item in question_stats if item.get("id")],
+                )
+            except Exception:
+                stage_states = {}
+            user_bucket = stage_store.get(normalized_user)
+            if not isinstance(user_bucket, dict):
+                user_bucket = {}
+        else:
+            user_bucket = {}
+
+        for item in question_stats:
+            qid = item.get("id")
+            state = stage_states.get(qid) if qid else None
+            if state:
+                item["stage"] = state.get("stage")
+                item["nextDueAt"] = state.get("nextDueAt")
+            else:
+                item["stage"] = None
+                item["nextDueAt"] = None
+
+        for qid, state in user_bucket.items():
+            if not isinstance(state, dict):
+                continue
+            stage_value = state.get("stage") or stage_config.default_stage
+            if stage_value not in stage_buckets:
+                continue
+            meta = math_qmap.get(qid) or {}
+            answered_total = int(state.get("answered") or 0)
+            correct_total = int(state.get("correct") or 0)
+            stage_buckets[stage_value].append(
+                {
+                    "id": qid,
+                    "prompt": meta.get("prompt") or "",
+                    "difficulty": meta.get("difficulty") or "",
+                    "answered": answered_total,
+                    "correct": correct_total,
+                    "accuracy": _accuracy_pct(correct_total, answered_total),
+                    "streak": int(state.get("streak") or 0),
+                    "nextDueAt": state.get("nextDueAt"),
+                    "lastCorrectAt": state.get("lastCorrectAt"),
+                }
+            )
+
+        def _bucket_sort_key(item: Dict[str, Any]):
+            due = item.get("nextDueAt")
+            if due:
+                return (0, str(due), item.get("id") or "")
+            return (1, item.get("id") or "")
+
+        for items in stage_buckets.values():
+            items.sort(key=_bucket_sort_key)
+    else:
+        for item in question_stats:
+            item["stage"] = None
+            item["nextDueAt"] = None
+        stage_buckets = {}
+
     recent_attempts = sorted(
         filtered_attempts,
         key=lambda a: (a.get("endedAtTs") or float("-inf")),
@@ -561,6 +673,8 @@ def math_dashboard():
         "userSummaries": user_summaries,
         "difficultyStats": difficulty_stats,
         "questionStats": question_stats,
+        "stageBuckets": stage_buckets,
+        "stageOrder": stage_order_display,
         "recentAttempts": recent_attempts,
         "lastUpdated": (
             latest_dt.isoformat().replace("+00:00", "Z") if latest_dt else None
