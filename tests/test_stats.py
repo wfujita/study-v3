@@ -86,6 +86,68 @@ def test_stats_endpoint_excludes_review_and_counts_all(tmp_path, monkeypatch):
     sys.modules.pop("app.app", None)
 
 
+def test_stats_bulk_endpoint_returns_payloads_in_order(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    import importlib
+    import sys
+
+    sys.modules.pop("app.app", None)
+    mod = importlib.import_module("app.app")
+    flask_app = mod.app
+    client = flask_app.test_client()
+
+    now = datetime.now(timezone.utc)
+    recs = [
+        {
+            "user": "alice",
+            "mode": "normal",
+            "endedAt": now.isoformat().replace("+00:00", "Z"),
+            "answered": [
+                {
+                    "id": "q1",
+                    "correct": True,
+                    "at": now.isoformat().replace("+00:00", "Z"),
+                },
+                {
+                    "id": "q2",
+                    "correct": False,
+                    "at": now.isoformat().replace("+00:00", "Z"),
+                },
+            ],
+        }
+    ]
+
+    subject_dir = tmp_path / "english"
+    subject_dir.mkdir(parents=True, exist_ok=True)
+    path = subject_dir / "results.ndjson"
+    with open(path, "w", encoding="utf-8") as f:
+        for r in recs:
+            f.write(json.dumps(r) + "\n")
+
+    res = client.post(
+        "/api/stats/bulk",
+        json={"user": "alice", "subject": "english", "ids": ["q1", "q2", "missing"]},
+    )
+    assert res.status_code == 200
+    payload = res.get_json()
+    assert isinstance(payload, dict)
+    results = payload.get("results")
+    assert isinstance(results, list)
+    assert [item.get("id") for item in results] == ["q1", "q2", "missing"]
+    first, second, third = results
+    assert first["correct"] == 1
+    assert first["answered"] == 1
+    assert first["stage"] == "F"
+    assert second["answered"] == 1
+    assert second["correct"] == 0
+    assert second["stage"] == "F"
+    assert third["answered"] == 0
+    assert third["correct"] == 0
+    assert third["stage"] == "F"
+
+    sys.modules.pop("app.app", None)
+
+
 def test_stage_progression_updates_on_result_post(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     import importlib

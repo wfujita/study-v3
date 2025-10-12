@@ -564,6 +564,45 @@
       return nextDue.getTime() <= now;
     }
 
+    async function fetchStatsForEntries(entries, user){
+      const trimmedUser = (user || '').trim();
+      const ids = entries
+        .filter(entry => entry.id)
+        .map(entry => entry.id);
+      if(!trimmedUser || !ids.length){
+        return entries.map(() => null);
+      }
+      try{
+        const res = await fetch('/api/stats/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: trimmedUser,
+            subject: SUBJECT,
+            ids,
+          }),
+        });
+        if(!res.ok){
+          throw new Error(`bulk stats failed with ${res.status}`);
+        }
+        const data = await res.json();
+        const list = Array.isArray(data.results) ? data.results : [];
+        const map = new Map();
+        list.forEach(item => {
+          if(item && item.id != null){
+            map.set(String(item.id), item);
+          }
+        });
+        return entries.map(entry => {
+          if(!entry.id) return null;
+          return map.get(entry.id) || null;
+        });
+      }catch(err){
+        console.warn('英語の成績データ取得に失敗しました', err);
+        return entries.map(() => null);
+      }
+    }
+
     /********** セット準備 **********/
     async function buildOrderFromBank(){
       const deckArr = deck();
@@ -573,16 +612,12 @@
         const stageFPool = [];
         const waitingPool = [];
 
-        // サーバから各問題の統計を取得
-        const stats = await Promise.all(
-          deckArr.map(q=>{
-            if(!state.user || !q.id) return Promise.resolve(null);
-            const url = `/api/stats?user=${encodeURIComponent(state.user)}&id=${encodeURIComponent(q.id)}&subject=${encodeURIComponent(SUBJECT)}`;
-            return fetch(url,{cache:'no-store'})
-              .then(r=>r.ok?r.json():null)
-              .catch(()=>null);
-          })
-        );
+        const entries = deckArr.map((q, idx)=>({
+          idx,
+          id: q && q.id ? String(q.id) : null,
+        }));
+
+        const stats = await fetchStatsForEntries(entries, state.user);
 
         const now = Date.now();
 

@@ -614,6 +614,45 @@
       startNote.textContent = message;
     }
 
+    async function fetchStatsForEntries(entries, rawUser){
+      const effectiveUser = getEffectiveUserName(rawUser);
+      const ids = entries
+        .filter(entry => entry.id)
+        .map(entry => entry.id);
+      if(!ids.length){
+        return entries.map(() => null);
+      }
+      try{
+        const res = await fetch('/api/stats/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: effectiveUser,
+            subject: SUBJECT,
+            ids
+          }),
+        });
+        if(!res.ok){
+          throw new Error(`bulk stats failed with ${res.status}`);
+        }
+        const data = await res.json();
+        const list = Array.isArray(data.results) ? data.results : [];
+        const map = new Map();
+        list.forEach(item => {
+          if(item && item.id != null){
+            map.set(String(item.id), item);
+          }
+        });
+        return entries.map(entry => {
+          if(!entry.id) return null;
+          return map.get(entry.id) || null;
+        });
+      }catch(err){
+        console.warn('数学の成績データ取得に失敗しました', err);
+        return entries.map(() => null);
+      }
+    }
+
     async function rankQuestionsForUser(questions, rawUser, limit){
       const pool = Array.isArray(questions) ? questions.slice() : [];
       if(!pool.length){
@@ -626,17 +665,7 @@
         id: question && question.id ? String(question.id) : null,
       }));
 
-      const stats = await Promise.all(
-        entries.map(entry => {
-          if(!entry.id){
-            return Promise.resolve(null);
-          }
-          const url = `/api/stats?user=${encodeURIComponent(effectiveUser)}&id=${encodeURIComponent(entry.id)}&subject=${encodeURIComponent(SUBJECT)}`;
-          return fetch(url, { cache: 'no-store' })
-            .then(res => (res.ok ? res.json() : null))
-            .catch(() => null);
-        })
-      );
+      const stats = await fetchStatsForEntries(entries, effectiveUser);
 
       const nowMs = Date.now();
       const dueByStage = new Map(STAGE_PRIORITY.map(stage => [stage, []]));
