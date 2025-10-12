@@ -121,6 +121,7 @@
     const MIN_QUESTION_COUNT = 1;
     const MAX_QUESTION_COUNT = 3;
     const STAGE_PRIORITY = ['A','B','C','D','E'];
+    const DEFAULT_STAGE = STAGE_PRIORITY[STAGE_PRIORITY.length - 1] || 'E';
 
     const shuffle = arr => Array.isArray(arr)
       ? arr.map(value => ({ value, sort: Math.random() }))
@@ -135,10 +136,10 @@
     }
 
     function normalizeStage(value){
-      if(typeof value !== 'string') return 'F';
+      if(typeof value !== 'string') return DEFAULT_STAGE;
       const upper = value.trim().toUpperCase();
       if(STAGE_PRIORITY.includes(upper) || upper === 'F') return upper;
-      return 'F';
+      return DEFAULT_STAGE;
     }
 
     function willStageUpOnSuccess(stage, nextDue, nowMs){
@@ -676,7 +677,7 @@
       entries.forEach((entry, idx) => {
         const stat = stats[idx];
         const meta = {
-          stage: 'F',
+          stage: DEFAULT_STAGE,
           answered: 0,
           correct: 0,
           streak: 0,
@@ -744,7 +745,7 @@
         if(chosen.has(idx)) {
           return;
         }
-        ordered.push({ question: item.entry.question, meta: { ...item.meta, stage: 'F' } });
+        ordered.push({ question: item.entry.question, meta: { ...item.meta, stage: DEFAULT_STAGE } });
         chosen.add(idx);
       });
 
@@ -766,7 +767,7 @@
       entries.forEach(entry => {
         if(chosen.has(entry.idx)) return;
         const meta = metaByIndex.get(entry.idx) || {
-          stage: 'F',
+          stage: DEFAULT_STAGE,
           answered: 0,
           correct: 0,
           streak: 0,

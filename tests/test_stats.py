@@ -245,3 +245,110 @@ def test_stage_progression_updates_on_result_post(tmp_path, monkeypatch):
         "nextDueAt": None,
     }
     sys.modules.pop("app.app", None)
+
+
+def test_math_stage_progression_and_reset(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    import importlib
+    import sys
+
+    sys.modules.pop("app.app", None)
+    mod = importlib.import_module("app.app")
+    flask_app = mod.app
+    client = flask_app.test_client()
+
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+
+    def iso(dt):
+        return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    def post_session(at_dt, correct):
+        payload = {
+            "subject": "math",
+            "user": "alice",
+            "mode": "math-drill",
+            "endedAt": iso(at_dt),
+            "answered": [
+                {
+                    "id": "m1",
+                    "correct": correct,
+                    "at": iso(at_dt),
+                }
+            ],
+        }
+        res = client.post("/api/results", json=payload)
+        assert res.status_code == 201
+
+    stage_path = tmp_path / "math" / "stages.json"
+
+    post_session(base, True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "D"
+    assert state["streak"] == 1
+    assert state["correct"] == 1
+    assert state["nextDueAt"] == iso(base + timedelta(days=3))
+
+    post_session(base + timedelta(days=2), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "D"
+    assert state["streak"] == 2
+    assert state["nextDueAt"] == iso(base + timedelta(days=5))
+
+    post_session(base + timedelta(days=6), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "C"
+    assert state["streak"] == 3
+    assert state["nextDueAt"] == iso(base + timedelta(days=13))
+
+    post_session(base + timedelta(days=10), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "C"
+    assert state["streak"] == 4
+    assert state["nextDueAt"] == iso(base + timedelta(days=17))
+
+    post_session(base + timedelta(days=17), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "B"
+    assert state["streak"] == 5
+    assert state["nextDueAt"] == iso(base + timedelta(days=47))
+
+    post_session(base + timedelta(days=40), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "B"
+    assert state["streak"] == 6
+    assert state["nextDueAt"] == iso(base + timedelta(days=70))
+
+    post_session(base + timedelta(days=70), True)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "A"
+    assert state["streak"] == 7
+    assert state["nextDueAt"] is None
+    assert state["lastCorrectAt"] == iso(base + timedelta(days=70))
+
+    post_session(base + timedelta(days=80), False)
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    state = store["alice"]["m1"]
+    assert state["stage"] == "E"
+    assert state["streak"] == 0
+    assert state["answered"] == 8
+    assert state["correct"] == 7
+    assert state["nextDueAt"] is None
+    assert state["lastCorrectAt"] == iso(base + timedelta(days=70))
+    assert state["lastWrongAt"] == iso(base + timedelta(days=80))
+
+    sys.modules.pop("app.app", None)
