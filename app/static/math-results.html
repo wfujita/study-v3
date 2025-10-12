@@ -6,7 +6,7 @@
   <title>数学演習の提出履歴</title>
   <style>
     body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#0f172a;color:#e5e7eb;}
-    main{max-width:900px;margin:0 auto;padding:24px;}
+    main{max-width:980px;margin:0 auto;padding:24px;}
     h1{margin-top:0;}
     .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;margin-bottom:16px;}
     a.link{color:#93c5fd;text-decoration:none;}
@@ -24,12 +24,24 @@
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-weight:600;font-size:13px;}
     .pill-ok{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.35);}
     .pill-ng{background:rgba(248,113,113,.15);color:#fca5a5;border:1px solid rgba(248,113,113,.35);}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;}
+    .summary-card{background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;}
+    .summary-label{font-size:13px;color:#94a3b8;letter-spacing:.05em;text-transform:uppercase;}
+    .summary-value{font-size:26px;font-weight:700;color:#e2e8f0;}
+    .stats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px;}
+    .stats-section{background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:14px;display:flex;flex-direction:column;}
+    .stats-section h3{margin:0;font-size:17px;}
+    .stats-section p{margin:6px 0 0;font-size:13px;color:#94a3b8;}
+    .stats-table{margin-top:12px;overflow:auto;}
+    .stats-empty{margin:18px 0 0;color:#94a3b8;font-size:14px;}
     @media (max-width:640px){
       table,thead,tbody,tr,th,td{display:block;}
       thead{display:none;}
       tr{margin-bottom:16px;border:1px solid #1f2937;border-radius:12px;padding:12px;}
       td{border:none;padding:6px 0;}
       td::before{content:attr(data-label);display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;}
+      .summary-grid{grid-template-columns:1fr;}
+      .stats-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -39,6 +51,64 @@
       <h1>数学演習の提出履歴</h1>
       <p class="muted">数学演習モードで送信した解答の提出履歴を確認できます。提出日時順に最新のものから表示しています。</p>
       <p class="muted" style="margin-top:12px"><a class="link" href="/math.html">← 演習ページへ戻る</a></p>
+    </div>
+    <div class="card">
+      <h2 style="margin:0">集計情報</h2>
+      <p class="muted" style="margin:6px 0 0">ユーザ別・問題別の正答数と正答率を確認できます。</p>
+      <p id="stats-status" class="status-text muted" style="margin-top:12px">集計情報を読み込み中です…</p>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">総解答数</div>
+          <div class="summary-value" id="stat-total-answered">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">正解数</div>
+          <div class="summary-value" id="stat-total-correct">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">平均正答率</div>
+          <div class="summary-value" id="stat-total-accuracy">0%</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <section class="stats-section">
+          <h3>ユーザ別の成績</h3>
+          <p>学習者ごとの解答数と正答率です。</p>
+          <div class="stats-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36%">学習者</th>
+                  <th style="width:18%">解答</th>
+                  <th style="width:18%">正解</th>
+                  <th style="width:18%">正答率</th>
+                </tr>
+              </thead>
+              <tbody id="stats-users-body"></tbody>
+            </table>
+          </div>
+          <p id="stats-users-empty" class="stats-empty" style="display:none">まだ集計できる提出がありません。</p>
+        </section>
+        <section class="stats-section">
+          <h3>問題別の成績</h3>
+          <p>問題ごとの正答数と正答率です。</p>
+          <div class="stats-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:18%">ID</th>
+                  <th style="width:38%">問題</th>
+                  <th style="width:14%">解答</th>
+                  <th style="width:14%">正解</th>
+                  <th style="width:14%">正答率</th>
+                </tr>
+              </thead>
+              <tbody id="stats-questions-body"></tbody>
+            </table>
+          </div>
+          <p id="stats-questions-empty" class="stats-empty" style="display:none">まだ集計できる提出がありません。</p>
+        </section>
+      </div>
     </div>
     <div class="card">
       <p id="status" class="status-text muted">読み込み中です…</p>
@@ -61,8 +131,21 @@
   <script>
     const SUBJECT = 'math';
     const RESULTS_ENDPOINT = `/api/math/results?subject=${SUBJECT}`;
+    const ACCURACY_ENDPOINT = `/api/math/accuracy?subject=${SUBJECT}`;
 
     function $(sel){ return document.querySelector(sel); }
+
+    function formatNumber(value){
+      const num = Number(value);
+      if(!Number.isFinite(num)) return '0';
+      return new Intl.NumberFormat('ja-JP').format(num);
+    }
+
+    function formatPercent(value){
+      const num = Number(value);
+      if(!Number.isFinite(num)) return '0%';
+      return `${num.toFixed(1)}%`;
+    }
 
     function normalizeDifficulty(value){
       const text = (value == null ? '' : String(value)).toLowerCase();
@@ -103,6 +186,117 @@
       const lower = sanitized.toLowerCase();
       if(lower === 'guest' || lower === 'math') return 'ゲスト';
       return sanitized;
+    }
+
+    function renderTotals(totals){
+      const answered = totals && Number.isFinite(Number(totals.answered)) ? Number(totals.answered) : 0;
+      const correct = totals && Number.isFinite(Number(totals.correct)) ? Number(totals.correct) : 0;
+      const accuracy = totals && Number.isFinite(Number(totals.accuracy)) ? Number(totals.accuracy) : 0;
+      const answeredEl = $('#stat-total-answered');
+      const correctEl = $('#stat-total-correct');
+      const accEl = $('#stat-total-accuracy');
+      if(answeredEl) answeredEl.textContent = formatNumber(answered);
+      if(correctEl) correctEl.textContent = formatNumber(correct);
+      if(accEl) accEl.textContent = formatPercent(accuracy);
+    }
+
+    function appendCell(tr, label, content){
+      const td = document.createElement('td');
+      if(label) td.dataset.label = label;
+      if(content instanceof HTMLElement){
+        td.appendChild(content);
+      }else{
+        td.textContent = content;
+      }
+      tr.appendChild(td);
+      return td;
+    }
+
+    function createUserSummaryRow(summary){
+      const tr = document.createElement('tr');
+      const name = displayUserName(summary.user);
+      appendCell(tr, '学習者', name);
+      appendCell(tr, '解答', formatNumber(summary.answered || 0));
+      appendCell(tr, '正解', formatNumber(summary.correct || 0));
+      appendCell(tr, '正答率', formatPercent(summary.accuracy || 0));
+      return tr;
+    }
+
+    function renderUserSummaries(items){
+      const body = $('#stats-users-body');
+      const empty = $('#stats-users-empty');
+      if(!body) return;
+      body.innerHTML = '';
+      if(!Array.isArray(items) || !items.length){
+        if(empty) empty.style.display = '';
+        return;
+      }
+      items.forEach(item => {
+        body.appendChild(createUserSummaryRow(item));
+      });
+      if(empty) empty.style.display = 'none';
+    }
+
+    function createQuestionSummaryRow(summary){
+      const tr = document.createElement('tr');
+      const hasId = summary.id != null && summary.id !== '';
+      const id = hasId ? String(summary.id) : '-';
+      const hasPrompt = summary.prompt != null && summary.prompt !== '';
+      const prompt = hasPrompt ? String(summary.prompt) : '-';
+      appendCell(tr, 'ID', id);
+      appendCell(tr, '問題', prompt);
+      appendCell(tr, '解答', formatNumber(summary.answered || 0));
+      appendCell(tr, '正解', formatNumber(summary.correct || 0));
+      appendCell(tr, '正答率', formatPercent(summary.accuracy || 0));
+      return tr;
+    }
+
+    function renderQuestionSummaries(items){
+      const body = $('#stats-questions-body');
+      const empty = $('#stats-questions-empty');
+      if(!body) return;
+      body.innerHTML = '';
+      if(!Array.isArray(items) || !items.length){
+        if(empty) empty.style.display = '';
+        return;
+      }
+      items.forEach(item => {
+        body.appendChild(createQuestionSummaryRow(item));
+      });
+      if(empty) empty.style.display = 'none';
+    }
+
+    function renderAccuracy(data){
+      const status = $('#stats-status');
+      if(!data){
+        if(status){
+          status.textContent = '集計情報を取得できませんでした。';
+          status.classList.remove('muted');
+          status.classList.add('status-error');
+          status.style.display = '';
+        }
+        return;
+      }
+
+      const totals = data.totals || {};
+      if(status){
+        status.classList.remove('status-error');
+        status.classList.add('muted');
+      }
+      renderTotals(totals);
+      renderUserSummaries(data.byUser || []);
+      renderQuestionSummaries(data.byQuestion || []);
+
+      const hasAnyData = (totals.answered || 0) > 0;
+      if(status){
+        if(hasAnyData){
+          status.style.display = 'none';
+        }else{
+          status.style.display = '';
+          status.textContent = 'まだ提出がないため集計できません。';
+          status.classList.add('muted');
+        }
+      }
     }
 
     function createResultRow(item){
@@ -170,6 +364,22 @@
         status.textContent = `提出履歴の取得に失敗しました: ${err.message}`;
         status.classList.remove('muted');
         status.classList.add('status-error');
+      });
+
+    fetch(ACCURACY_ENDPOINT, { cache: 'no-store' })
+      .then(res => {
+        if(!res.ok) throw new Error(`fetch ${ACCURACY_ENDPOINT} ${res.status}`);
+        return res.json();
+      })
+      .then(renderAccuracy)
+      .catch(err => {
+        const status = $('#stats-status');
+        if(status){
+          status.textContent = `集計情報の取得に失敗しました: ${err.message}`;
+          status.classList.remove('muted');
+          status.classList.add('status-error');
+          status.style.display = '';
+        }
       });
   </script>
 </body>
