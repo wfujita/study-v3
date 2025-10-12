@@ -97,6 +97,8 @@ def test_math_dashboard_endpoint(tmp_path, monkeypatch):
     assert round(data["totals"]["accuracy"], 2) == 66.67
 
     assert data["filters"] == {"user": "__all__", "difficulty": "all", "query": ""}
+    assert data["stageOrder"] == ["A", "B", "C", "D", "E"]
+    assert data["stageBuckets"] == {}
 
     user_summaries = data["userSummaries"]
     assert len(user_summaries) == 2
@@ -134,6 +136,10 @@ def test_math_dashboard_endpoint(tmp_path, monkeypatch):
     data_user = res_user.get_json()
     assert data_user["totals"]["answered"] == 2
     assert data_user["totals"]["correct"] == 1
+    assert data_user["stageOrder"] == ["A", "B", "C", "D", "E"]
+    buckets = data_user["stageBuckets"]
+    assert "E" in buckets
+    assert any(item["id"] == "mix-1" for item in buckets.get("E", []))
 
     res_diff = client.get("/api/math/dashboard", query_string={"difficulty": "hard"})
     assert res_diff.status_code == 200
