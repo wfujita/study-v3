@@ -52,8 +52,8 @@
     .stat-value{font-size:28px;font-weight:700;}
     .status{margin-top:12px;font-size:14px;}
     .status-error{color:var(--error);}
-    .stage-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
-    .stage-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+    .stage-grid{display:grid;gap:20px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+    .stage-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;}
     .stage-card-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
     .stage-card-header h4{margin:0;font-size:16px;}
     .stage-count{color:var(--muted);font-size:13px;}
@@ -68,7 +68,7 @@
 
     @media (max-width:1024px){
       .grid.cols-3{grid-template-columns:repeat(2,minmax(0,1fr));}
-      .stage-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .stage-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
     }
     @media (max-width:768px){
       header .container,main{width:calc(100vw-24px);padding:12px;}
@@ -188,8 +188,8 @@
     </section>
 
     <section class="card" id="stage-section" style="display:none;">
-      <h3 style="margin:0 0 12px">ランク別の問題一覧</h3>
-      <p class="muted" style="font-size:13px;margin:0 0 16px;">ユーザを選択すると、その学習者のランクごとの問題リストが表示されます。</p>
+      <h3 style="margin:0 0 12px">ステージ別の問題一覧</h3>
+      <p class="muted" style="font-size:13px;margin:0 0 16px;">ユーザを選択すると、その学習者のステージごとの問題リストが表示されます。</p>
       <div class="stage-grid" id="stage-grid"></div>
     </section>
 
@@ -453,7 +453,7 @@
         const header = document.createElement('div');
         header.className = 'stage-card-header';
         const title = document.createElement('h4');
-        title.textContent = `ランク${stageName}`;
+        title.textContent = `ステージ${stageName}`;
         const count = document.createElement('span');
         count.className = 'stage-count';
         count.textContent = `${formatNumber(items.length || 0)}件`;
