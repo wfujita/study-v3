@@ -134,10 +134,11 @@
           <table id="tbl-users">
             <thead>
               <tr>
+                <th style="width:12%" class="center">順位</th>
                 <th style="width:30%">学習者</th>
-                <th style="width:18%" class="center">解答数</th>
-                <th style="width:18%" class="center">正解数</th>
-                <th style="width:18%" class="center">正答率</th>
+                <th style="width:16%" class="center">解答数</th>
+                <th style="width:16%" class="center">正解数</th>
+                <th style="width:16%" class="center">正答率</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -337,9 +338,11 @@
         if(empty) empty.style.display = '';
         return;
       }
-      list.forEach(item => {
+      list.forEach((item, index) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td data-label="学習者">${displayUserName(item.user)}</td>`+
+        const rank = index + 1;
+        tr.innerHTML = `<td data-label="順位" class="center">${formatNumber(rank)}</td>`+
+                       `<td data-label="学習者">${displayUserName(item.user)}</td>`+
                        `<td data-label="解答数" class="center">${formatNumber(item.answered || 0)}</td>`+
                        `<td data-label="正解数" class="center ok">${formatNumber(item.correct || 0)}</td>`+
                        `<td data-label="正答率" class="center">${formatPercent(item.accuracy || 0)}</td>`;
