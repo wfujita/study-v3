@@ -364,9 +364,7 @@ def question_stats_bulk():
         cached_results = iter_results(subject)
         if cached_results:
             store = stage_tracker.rebuild_store(runtime_dir, cached_results)
-            state_map.update(
-                stage_tracker.get_question_states(store, user, missing)
-            )
+            state_map.update(stage_tracker.get_question_states(store, user, missing))
 
     results = [_state_to_payload(qid, state_map.get(qid)) for qid in normalized_ids]
     return jsonify({"results": results})
