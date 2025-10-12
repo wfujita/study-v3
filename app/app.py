@@ -1,6 +1,6 @@
 from flask import Flask, request, send_from_directory, jsonify
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Any, Dict, List, Optional
 import os
 import json
 
@@ -182,6 +182,68 @@ def _normalize_math_user(value: str) -> str:
     return text
 
 
+def _normalize_math_difficulty(value: str) -> str:
+    if not value:
+        return "normal"
+    try:
+        text = str(value).strip().lower()
+    except Exception:
+        return "normal"
+    return "hard" if text == "hard" else "normal"
+
+
+def _first_math_answer(record: dict) -> Dict[str, Any]:
+    answered_list = record.get("answered") or []
+    if isinstance(answered_list, list):
+        for item in answered_list:
+            if isinstance(item, dict):
+                return item
+    return {}
+
+
+def _format_answer_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, dict):
+        parts: List[str] = []
+        for key in sorted(value.keys()):
+            part_value = value[key]
+            if isinstance(part_value, (list, tuple, set)):
+                joined = ", ".join(str(v) for v in part_value)
+            else:
+                joined = str(part_value)
+            parts.append(f"{key}: {joined}")
+        return " / ".join(parts)
+    if isinstance(value, (list, tuple, set)):
+        return ", ".join(str(v) for v in value)
+    return str(value)
+
+
+def _format_accepted_answers(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        parts = []
+        for item in value:
+            text = _format_answer_text(item)
+            if text:
+                parts.append(text)
+        return " / ".join(parts)
+    return _format_answer_text(value)
+
+
+def _parse_timestamp(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 @app.get("/api/math/accuracy")
 def math_accuracy():
     """数学演習モードの正答率を返す。"""
@@ -301,6 +363,211 @@ def math_results():
 
     items.sort(key=lambda x: x.get("endedAt") or "", reverse=True)
     return jsonify(items)
+
+
+@app.get("/api/math/dashboard")
+def math_dashboard():
+    subject = normalize_subject(request.args.get("subject") or "math")
+
+    raw_user = (request.args.get("user") or "").strip()
+    user_filter = ""
+    if raw_user and raw_user != "__all__":
+        user_filter = _normalize_math_user(raw_user)
+
+    raw_difficulty = (request.args.get("difficulty") or "all").strip().lower()
+    difficulty_filter = raw_difficulty if raw_difficulty in {"normal", "hard"} else ""
+
+    query = (request.args.get("q") or "").strip()
+    query_lower = query.lower()
+
+    results = iter_results(subject)
+
+    attempts: List[Dict[str, Any]] = []
+    user_totals: Dict[str, Dict[str, Any]] = {}
+    latest_dt: Optional[datetime] = None
+
+    for record in results:
+        if not _is_math_record(record):
+            continue
+
+        answer = _first_math_answer(record)
+        user = _normalize_math_user(record.get("user"))
+        difficulty = _normalize_math_difficulty(
+            record.get("difficulty") or answer.get("difficulty")
+        )
+
+        prompt = answer.get("prompt") or record.get("prompt") or ""
+        qid_raw = answer.get("id")
+        qid = str(qid_raw) if qid_raw not in (None, "") else ""
+
+        ended_at = record.get("endedAt") or record.get("receivedAt") or answer.get("at")
+        ended_dt = _parse_timestamp(ended_at)
+        if ended_dt and (latest_dt is None or ended_dt > latest_dt):
+            latest_dt = ended_dt
+
+        correct = (
+            bool(record.get("correct"))
+            if record.get("correct") is not None
+            else bool(answer.get("correct"))
+        )
+
+        attempt = {
+            "user": user,
+            "difficulty": difficulty,
+            "questionId": qid,
+            "prompt": prompt,
+            "endedAt": ended_at,
+            "endedAtTs": ended_dt.timestamp() if ended_dt else None,
+            "correct": correct,
+            "responseText": _format_answer_text(answer.get("response")),
+            "acceptedText": _format_accepted_answers(answer.get("acceptedAnswers")),
+            "sessionId": record.get("sessionId"),
+            "attempt": record.get("attempt"),
+        }
+        attempts.append(attempt)
+
+        totals = user_totals.setdefault(
+            user,
+            {"user": user, "answered": 0, "correct": 0, "lastAt": None},
+        )
+        totals["answered"] += 1
+        if correct:
+            totals["correct"] += 1
+        if ended_at:
+            totals["lastAt"] = max(totals["lastAt"] or "", ended_at)
+
+    filtered_attempts: List[Dict[str, Any]] = []
+    for attempt in attempts:
+        if user_filter and attempt["user"] != user_filter:
+            continue
+        if difficulty_filter and attempt["difficulty"] != difficulty_filter:
+            continue
+        if query:
+            id_text = (attempt.get("questionId") or "").lower()
+            prompt_text = (attempt.get("prompt") or "").lower()
+            if query_lower not in id_text and query_lower not in prompt_text:
+                continue
+        filtered_attempts.append(attempt)
+
+    total_answered = len(filtered_attempts)
+    total_correct = sum(1 for a in filtered_attempts if a.get("correct"))
+
+    user_summaries_map: Dict[str, Dict[str, Any]] = {}
+    for attempt in filtered_attempts:
+        summary = user_summaries_map.setdefault(
+            attempt["user"],
+            {"user": attempt["user"], "answered": 0, "correct": 0},
+        )
+        summary["answered"] += 1
+        if attempt.get("correct"):
+            summary["correct"] += 1
+
+    user_summaries: List[Dict[str, Any]] = []
+    for summary in user_summaries_map.values():
+        summary["accuracy"] = _accuracy_pct(
+            summary.get("correct", 0), summary.get("answered", 0)
+        )
+        user_summaries.append(summary)
+    user_summaries.sort(key=lambda x: (-x.get("answered", 0), x.get("user") or ""))
+
+    difficulty_levels = ["normal", "hard"]
+    difficulty_stats: List[Dict[str, Any]] = []
+    for level in difficulty_levels:
+        level_attempts = [a for a in filtered_attempts if a.get("difficulty") == level]
+        answered_count = len(level_attempts)
+        correct_count = sum(1 for a in level_attempts if a.get("correct"))
+        difficulty_stats.append(
+            {
+                "difficulty": level,
+                "answered": answered_count,
+                "correct": correct_count,
+                "accuracy": _accuracy_pct(correct_count, answered_count),
+            }
+        )
+
+    questions_map: Dict[str, Dict[str, Any]] = {}
+    for attempt in filtered_attempts:
+        key = f"{attempt.get('questionId') or ''}__{attempt.get('prompt') or ''}"
+        entry = questions_map.setdefault(
+            key,
+            {
+                "id": attempt.get("questionId") or "",
+                "prompt": attempt.get("prompt") or "",
+                "difficulty": attempt.get("difficulty"),
+                "answered": 0,
+                "correct": 0,
+                "lastAnsweredAt": None,
+            },
+        )
+        entry["answered"] += 1
+        if attempt.get("correct"):
+            entry["correct"] += 1
+        ts = attempt.get("endedAtTs")
+        if ts is not None:
+            current_ts = (
+                _parse_timestamp(entry["lastAnsweredAt"]).timestamp()
+                if entry.get("lastAnsweredAt")
+                else None
+            )
+            if current_ts is None or ts > current_ts:
+                entry["lastAnsweredAt"] = attempt.get("endedAt")
+
+    question_stats: List[Dict[str, Any]] = []
+    for entry in questions_map.values():
+        answered = entry.get("answered", 0)
+        correct = entry.get("correct", 0)
+        entry["wrong"] = max(answered - correct, 0)
+        entry["accuracy"] = _accuracy_pct(correct, answered)
+        question_stats.append(entry)
+
+    question_stats.sort(
+        key=lambda x: (
+            -x.get("wrong", 0),
+            -x.get("answered", 0),
+            x.get("id") or "",
+            x.get("prompt") or "",
+        )
+    )
+
+    recent_attempts = sorted(
+        filtered_attempts,
+        key=lambda a: (a.get("endedAtTs") or float("-inf")),
+        reverse=True,
+    )[:100]
+    for attempt in recent_attempts:
+        attempt.pop("endedAtTs", None)
+
+    user_options: List[Dict[str, Any]] = []
+    for totals in user_totals.values():
+        totals["accuracy"] = _accuracy_pct(
+            totals.get("correct", 0), totals.get("answered", 0)
+        )
+        user_options.append(totals)
+    user_options.sort(key=lambda x: x.get("lastAt") or "", reverse=True)
+
+    payload = {
+        "subject": subject,
+        "filters": {
+            "user": user_filter or "__all__",
+            "difficulty": difficulty_filter or "all",
+            "query": query,
+        },
+        "totals": {
+            "answered": total_answered,
+            "correct": total_correct,
+            "accuracy": _accuracy_pct(total_correct, total_answered),
+        },
+        "userOptions": user_options,
+        "userSummaries": user_summaries,
+        "difficultyStats": difficulty_stats,
+        "questionStats": question_stats,
+        "recentAttempts": recent_attempts,
+        "lastUpdated": (
+            latest_dt.isoformat().replace("+00:00", "Z") if latest_dt else None
+        ),
+    }
+
+    return jsonify(payload)
 
 
 def _default_stat_payload(qid: str) -> dict:
