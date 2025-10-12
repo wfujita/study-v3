@@ -1,5 +1,6 @@
 from flask import Flask, request, send_from_directory, jsonify
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 import os
 import json
 
@@ -302,6 +303,73 @@ def math_results():
     return jsonify(items)
 
 
+def _default_stat_payload(qid: str) -> dict:
+    return {
+        "id": qid,
+        "answered": 0,
+        "correct": 0,
+        "streak": 0,
+        "lastWrongAt": None,
+        "lastCorrectAt": None,
+        "stage": "F",
+        "nextDueAt": None,
+    }
+
+
+def _state_to_payload(qid: str, state: Optional[dict]) -> dict:
+    payload = _default_stat_payload(qid)
+    if not state:
+        return payload
+    payload.update(
+        {
+            "answered": int(state.get("answered") or 0),
+            "correct": int(state.get("correct") or 0),
+            "streak": int(state.get("streak") or 0),
+            "lastWrongAt": state.get("lastWrongAt"),
+            "lastCorrectAt": state.get("lastCorrectAt"),
+            "stage": state.get("stage") or "F",
+            "nextDueAt": state.get("nextDueAt"),
+        }
+    )
+    return payload
+
+
+@app.post("/api/stats/bulk")
+def question_stats_bulk():
+    body = request.get_json(silent=True) or {}
+    user = (body.get("user") or request.args.get("user") or "").strip()
+    subject = normalize_subject(body.get("subject") or request.args.get("subject"))
+
+    ids = body.get("ids")
+    if ids is None:
+        ids = request.args.getlist("ids")
+    if not isinstance(ids, list):
+        ids = []
+
+    normalized_ids = []
+    for item in ids:
+        if item in (None, ""):
+            continue
+        normalized_ids.append(str(item))
+
+    if not normalized_ids:
+        return jsonify({"results": []})
+
+    runtime_dir = subject_runtime_dir(subject)
+    store = stage_tracker.load_store(runtime_dir)
+    state_map = stage_tracker.get_question_states(store, user, normalized_ids)
+
+    missing = [qid for qid in normalized_ids if qid not in state_map]
+    if missing:
+        cached_results = iter_results(subject)
+        if cached_results:
+            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
+            state_map.update(stage_tracker.get_question_states(store, user, missing))
+
+    results = [_state_to_payload(qid, state_map.get(qid)) for qid in normalized_ids]
+    return jsonify({"results": results})
+
+
 @app.get("/api/stats")
 def question_stat():
     user = request.args.get("user") or ""
@@ -322,15 +390,8 @@ def question_stat():
             state = stage_tracker.get_question_state(store, user, qid)
 
     if state is not None:
-        payload = {
-            "answered": int(state.get("answered") or 0),
-            "correct": int(state.get("correct") or 0),
-            "streak": int(state.get("streak") or 0),
-            "lastWrongAt": state.get("lastWrongAt"),
-            "lastCorrectAt": state.get("lastCorrectAt"),
-            "stage": state.get("stage") or "F",
-            "nextDueAt": state.get("nextDueAt"),
-        }
+        payload = _state_to_payload(str(qid), state)
+        payload.pop("id", None)
         return jsonify(payload)
 
     results = cached_results if cached_results is not None else iter_results(subject)
@@ -387,17 +448,18 @@ def question_stat():
         else:
             break
 
-    return jsonify(
+    payload = _state_to_payload(str(qid), None)
+    payload.update(
         {
             "answered": total,
             "correct": correct,
             "streak": streak,
             "lastWrongAt": last_wrong_at,
             "lastCorrectAt": last_correct_at,
-            "stage": "F",
-            "nextDueAt": None,
         }
     )
+    payload.pop("id", None)
+    return jsonify(payload)
 
 
 # ====== /admin 用 API ======

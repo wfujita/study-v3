@@ -22,7 +22,8 @@
     .muted{color:#94a3b8;}
     .ok{color:#22c55e;}
     .ng{color:#ef4444;}
-    .question-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+    .question-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .question-tags{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
     .badge-normal{background:rgba(37,99,235,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.4);}
     .badge-hard{background:rgba(236,72,153,.15);color:#f9a8d4;border:1px solid rgba(244,114,182,.4);}
@@ -78,8 +79,12 @@
       </div>
       <div class="question-header">
         <div id="question" style="font-size:18px;font-weight:600"></div>
-        <span id="difficulty-badge" class="badge badge-normal">標準</span>
+        <div class="question-tags">
+          <span id="difficulty-badge" class="badge badge-normal">標準</span>
+          <span id="question-stage" class="pill" style="display:none"></span>
+        </div>
       </div>
+      <div id="question-meta" class="muted" style="font-size:13px;margin-top:4px;min-height:1.2em"></div>
       <div id="answer-inputs" class="field-stack"></div>
       <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
         <button id="btn-check">答え合わせ</button>
@@ -110,16 +115,75 @@
       questionCount: '1',
       started: false,
       user: 'guest',
+      stageMeta: [],
     };
 
     const MIN_QUESTION_COUNT = 1;
     const MAX_QUESTION_COUNT = 3;
+    const STAGE_PRIORITY = ['A','B','C','D','E'];
+
+    const shuffle = arr => Array.isArray(arr)
+      ? arr.map(value => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(item => item.value)
+      : [];
+
+    function parseIsoDate(value){
+      if(!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function normalizeStage(value){
+      if(typeof value !== 'string') return 'F';
+      const upper = value.trim().toUpperCase();
+      if(STAGE_PRIORITY.includes(upper) || upper === 'F') return upper;
+      return 'F';
+    }
+
+    function willStageUpOnSuccess(stage, nextDue, nowMs){
+      if(!STAGE_PRIORITY.includes(stage)) return false;
+      if(stage === 'A') return false;
+      if(!(nextDue instanceof Date)) return true;
+      return nextDue.getTime() <= nowMs;
+    }
+
+    function formatAccuracy(correct, answered){
+      const c = Number(correct);
+      const a = Number(answered);
+      if(!Number.isFinite(c) || !Number.isFinite(a) || a <= 0) return null;
+      return (c / a) * 100;
+    }
+
+    function describeNextDue(nextDueStr){
+      const dt = parseIsoDate(nextDueStr);
+      if(!dt) return '';
+      try{
+        return new Intl.DateTimeFormat('ja-JP', {
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(dt);
+      }catch(err){
+        return dt.toISOString().replace('T', ' ').slice(0, 16);
+      }
+    }
+
+    let rankingRequestId = 0;
 
     function $(sel){ return document.querySelector(sel); }
 
     function sanitizeUserName(value){
       if(value == null) return '';
       return String(value).trim().replace(/\s+/g, ' ').slice(0, 60);
+    }
+
+    function getEffectiveUserName(value){
+      const sanitized = sanitizeUserName(value);
+      if(!sanitized) return 'guest';
+      if(sanitized.toLowerCase() === 'math') return 'guest';
+      return sanitized;
     }
 
     function displayUserName(value){
@@ -216,6 +280,8 @@
 
     const difficultySelect = $('#difficulty-select');
     const difficultyBadge = $('#difficulty-badge');
+    const questionStagePill = $('#question-stage');
+    const questionMetaEl = $('#question-meta');
     const startButton = $('#btn-start');
     const startNote = $('#start-note');
     const setupCard = $('#setup-card');
@@ -548,6 +614,233 @@
       startNote.textContent = message;
     }
 
+    async function fetchStatsForEntries(entries, rawUser){
+      const effectiveUser = getEffectiveUserName(rawUser);
+      const ids = entries
+        .filter(entry => entry.id)
+        .map(entry => entry.id);
+      if(!ids.length){
+        return entries.map(() => null);
+      }
+      try{
+        const res = await fetch('/api/stats/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: effectiveUser,
+            subject: SUBJECT,
+            ids
+          }),
+        });
+        if(!res.ok){
+          throw new Error(`bulk stats failed with ${res.status}`);
+        }
+        const data = await res.json();
+        const list = Array.isArray(data.results) ? data.results : [];
+        const map = new Map();
+        list.forEach(item => {
+          if(item && item.id != null){
+            map.set(String(item.id), item);
+          }
+        });
+        return entries.map(entry => {
+          if(!entry.id) return null;
+          return map.get(entry.id) || null;
+        });
+      }catch(err){
+        console.warn('数学の成績データ取得に失敗しました', err);
+        return entries.map(() => null);
+      }
+    }
+
+    async function rankQuestionsForUser(questions, rawUser, limit){
+      const pool = Array.isArray(questions) ? questions.slice() : [];
+      if(!pool.length){
+        return { questions: [], meta: [] };
+      }
+      const effectiveUser = getEffectiveUserName(rawUser);
+      const entries = pool.map((question, idx) => ({
+        question,
+        idx,
+        id: question && question.id ? String(question.id) : null,
+      }));
+
+      const stats = await fetchStatsForEntries(entries, effectiveUser);
+
+      const nowMs = Date.now();
+      const dueByStage = new Map(STAGE_PRIORITY.map(stage => [stage, []]));
+      const stageFPool = [];
+      const waitingPool = [];
+      const metaByIndex = new Map();
+
+      entries.forEach((entry, idx) => {
+        const stat = stats[idx];
+        const meta = {
+          stage: 'F',
+          answered: 0,
+          correct: 0,
+          streak: 0,
+          accuracy: null,
+          nextDueAt: null,
+        };
+
+        if(stat && typeof stat === 'object'){
+          const stage = normalizeStage(stat.stage);
+          const answeredRaw = Number(stat.answered);
+          const correctRaw = Number(stat.correct);
+          const streakRaw = Number(stat.streak);
+          const nextDueRaw = stat.nextDueAt || null;
+          const nextDue = parseIsoDate(nextDueRaw);
+
+          meta.stage = stage;
+          meta.answered = Number.isFinite(answeredRaw) ? answeredRaw : 0;
+          meta.correct = Number.isFinite(correctRaw) ? correctRaw : 0;
+          meta.streak = Number.isFinite(streakRaw) ? streakRaw : 0;
+          meta.accuracy = formatAccuracy(meta.correct, meta.answered);
+          meta.nextDueAt = nextDueRaw;
+
+          if(willStageUpOnSuccess(stage, nextDue, nowMs)){
+            const bucket = dueByStage.get(stage);
+            if(bucket){
+              bucket.push({ entry, meta, nextDue, rand: Math.random() });
+              metaByIndex.set(entry.idx, meta);
+              return;
+            }
+          }
+
+          if(stage === 'F' || !STAGE_PRIORITY.includes(stage)){
+            stageFPool.push({ entry, meta, rand: Math.random() });
+          } else {
+            waitingPool.push({ entry, meta, nextDue, rand: Math.random() });
+          }
+        } else {
+          stageFPool.push({ entry, meta, rand: Math.random() });
+        }
+
+        metaByIndex.set(entry.idx, meta);
+      });
+
+      const ordered = [];
+      const chosen = new Set();
+
+      for(const stage of STAGE_PRIORITY){
+        const arr = dueByStage.get(stage) || [];
+        arr.sort((a, b) => {
+          const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : -Infinity;
+          const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : -Infinity;
+          if(aDue !== bDue) return aDue - bDue;
+          return a.rand - b.rand;
+        });
+        for(const item of arr){
+          const idx = item.entry.idx;
+          if(chosen.has(idx)) continue;
+          ordered.push({ question: item.entry.question, meta: { ...item.meta, stage } });
+          chosen.add(idx);
+        }
+      }
+
+      shuffle(stageFPool).forEach(item => {
+        const idx = item.entry.idx;
+        if(chosen.has(idx)) {
+          return;
+        }
+        ordered.push({ question: item.entry.question, meta: { ...item.meta, stage: 'F' } });
+        chosen.add(idx);
+      });
+
+      waitingPool.sort((a, b) => {
+        const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
+        const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
+        if(aDue !== bDue) return aDue - bDue;
+        return a.rand - b.rand;
+      });
+      waitingPool.forEach(item => {
+        const idx = item.entry.idx;
+        if(chosen.has(idx)) {
+          return;
+        }
+        ordered.push({ question: item.entry.question, meta: { ...item.meta } });
+        chosen.add(idx);
+      });
+
+      entries.forEach(entry => {
+        if(chosen.has(entry.idx)) return;
+        const meta = metaByIndex.get(entry.idx) || {
+          stage: 'F',
+          answered: 0,
+          correct: 0,
+          streak: 0,
+          accuracy: null,
+          nextDueAt: null,
+        };
+        ordered.push({ question: entry.question, meta: { ...meta } });
+        chosen.add(entry.idx);
+      });
+
+      const desired = Number(limit);
+      const maxCount = Number.isFinite(desired)
+        ? Math.max(1, Math.min(ordered.length, Math.floor(desired)))
+        : ordered.length;
+      const selected = ordered.slice(0, maxCount);
+
+      return {
+        questions: selected.map(item => item.question),
+        meta: selected.map(item => ({ ...item.meta })),
+      };
+    }
+
+    function updateStageIndicators(meta){
+      if(questionStagePill){
+        if(meta && typeof meta.stage === 'string' && meta.stage){
+          questionStagePill.style.display = '';
+          questionStagePill.textContent = `ランク: ${meta.stage}`;
+        } else {
+          questionStagePill.style.display = 'none';
+          questionStagePill.textContent = '';
+        }
+      }
+
+      if(!questionMetaEl) return;
+      if(!meta){
+        questionMetaEl.textContent = '';
+        return;
+      }
+
+      const answered = Number(meta.answered);
+      const correct = Number(meta.correct);
+      const streak = Number(meta.streak);
+      const accuracy = typeof meta.accuracy === 'number' && Number.isFinite(meta.accuracy)
+        ? meta.accuracy
+        : null;
+      const parts = [];
+
+      if(Number.isFinite(answered) && answered > 0){
+        const correctText = Number.isFinite(correct) ? correct : 0;
+        const accuracyText = accuracy != null ? `${accuracy.toFixed(1)}%` : '';
+        const segment = accuracyText
+          ? `正解 ${correctText}/${answered}（${accuracyText}）`
+          : `正解 ${correctText}/${answered}`;
+        parts.push(segment);
+      }
+
+      if(Number.isFinite(streak) && streak > 0){
+        parts.push(`連続正解 ${streak}`);
+      }
+
+      const nextDueText = describeNextDue(meta.nextDueAt);
+      if(nextDueText){
+        parts.push(`次回出題 ${nextDueText}`);
+      }
+
+      if(parts.length){
+        questionMetaEl.textContent = parts.join('｜');
+      } else if(Number.isFinite(answered) && answered === 0){
+        questionMetaEl.textContent = 'この問題の履歴はまだありません。';
+      } else {
+        questionMetaEl.textContent = '';
+      }
+    }
+
     function updateQuestionPool(){
       const normalizedDifficulty = normalizeDifficulty(state.difficulty);
       if(difficultySelect){
@@ -557,14 +850,13 @@
         questionCountSelect.value = state.questionCount;
       }
       const available = filterQuestionsByDifficulty(normalizedDifficulty);
-      const limited = limitQuestions(available, state.questionCount);
-      state.questions = limited;
-      state.index = 0;
-      state.attempt = 0;
-      if(state.started){
-        state.sessionId = createSessionId();
-        renderQuestion();
-      } else {
+
+      if(!state.started){
+        const limited = limitQuestions(available, state.questionCount);
+        state.questions = limited;
+        state.stageMeta = limited.map(() => null);
+        state.index = 0;
+        state.attempt = 0;
         state.sessionId = null;
         clearInputEventHandlers();
         state.inputs = [];
@@ -588,7 +880,68 @@
         $('#feedback').className = 'muted';
         setSaveStatus('', 'muted');
         updateStartNote(available.length, limited.length);
+        updateStageIndicators(null);
+        return;
       }
+
+      const btnCheck = $('#btn-check');
+      const btnNext = $('#btn-next');
+      if(btnCheck) btnCheck.disabled = true;
+      if(btnNext) btnNext.disabled = true;
+
+      state.index = 0;
+      state.attempt = 0;
+      state.sessionId = null;
+      state.questions = [];
+      state.stageMeta = [];
+
+      if(!available.length){
+        if(quizCard) quizCard.style.display = 'none';
+        if(loadingCard){
+          loadingCard.style.display = '';
+          loadingCard.textContent = '選択した難易度の問題が見つかりませんでした。';
+        }
+        updateStageIndicators(null);
+        return;
+      }
+
+      const requested = Number(state.questionCount);
+      const desiredCount = Number.isFinite(requested)
+        ? Math.min(available.length, Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.floor(requested))))
+        : Math.min(available.length, MIN_QUESTION_COUNT);
+
+      if(quizCard) quizCard.style.display = 'none';
+      if(errorCard) errorCard.style.display = 'none';
+      if(loadingCard){
+        loadingCard.style.display = '';
+        loadingCard.textContent = '出題順を準備しています…';
+      }
+
+      const currentToken = ++rankingRequestId;
+
+      rankQuestionsForUser(available, state.user, desiredCount)
+        .then(result => {
+          if(rankingRequestId !== currentToken) return;
+          const questions = Array.isArray(result.questions) ? result.questions : [];
+          const meta = Array.isArray(result.meta) ? result.meta : [];
+          state.questions = questions;
+          state.stageMeta = meta;
+          state.index = 0;
+          state.attempt = 0;
+          state.sessionId = createSessionId();
+          renderQuestion();
+        })
+        .catch(err => {
+          console.warn('数学のランク計算に失敗しました', err);
+          if(rankingRequestId !== currentToken) return;
+          const fallback = shuffle(available).slice(0, desiredCount);
+          state.questions = fallback;
+          state.stageMeta = fallback.map(() => null);
+          state.index = 0;
+          state.attempt = 0;
+          state.sessionId = createSessionId();
+          renderQuestion();
+        });
     }
 
     function setDifficulty(level){
@@ -612,6 +965,7 @@
         const btnNext = $('#btn-next');
         if(btnCheck) btnCheck.disabled = true;
         if(btnNext) btnNext.disabled = true;
+        updateStageIndicators(null);
         return;
       }
       const q = state.questions[state.index];
@@ -623,6 +977,8 @@
       if(questionEl){
         questionEl.textContent = q.prompt || q.question || '';
       }
+      const stageMeta = Array.isArray(state.stageMeta) ? state.stageMeta[state.index] : null;
+      updateStageIndicators(stageMeta);
       buildInputs(q);
       state.inputs.forEach(input => { input.value = ''; });
       $('#feedback').textContent = '';
@@ -780,16 +1136,7 @@
         state.sessionId = createSessionId();
       }
       const questionDifficulty = normalizeDifficulty(question && question.difficulty);
-      const effectiveUser = (() => {
-        const sanitized = sanitizeUserName(state.user);
-        if(!sanitized){
-          return 'guest';
-        }
-        if(sanitized.toLowerCase() === 'math'){
-          return 'guest';
-        }
-        return sanitized;
-      })();
+      const effectiveUser = getEffectiveUserName(state.user);
       const record = {
         subject: SUBJECT,
         user: effectiveUser,

@@ -248,3 +248,24 @@ def get_question_state(
     if not isinstance(state, dict):
         return None
     return state
+
+
+def get_question_states(
+    store: Dict[str, Any], user: str, qids: Iterable[Any]
+) -> Dict[str, Dict[str, Any]]:
+    """Return a mapping of question id -> state for the provided ids."""
+
+    user_key = _normalize_user(user)
+    user_bucket = store.get(user_key)
+    if not isinstance(user_bucket, dict):
+        return {}
+
+    states: Dict[str, Dict[str, Any]] = {}
+    for raw_qid in qids:
+        qid_key = _normalize_qid(raw_qid)
+        if qid_key is None:
+            continue
+        state = user_bucket.get(qid_key)
+        if isinstance(state, dict):
+            states[qid_key] = state
+    return states
