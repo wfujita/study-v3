@@ -9,6 +9,7 @@
     main{max-width:760px;margin:0 auto;padding:24px;}
     h1{margin-top:0;}
     .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;margin-bottom:16px;}
+    .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
     button{background:#2563eb;border:1px solid #2563eb;border-radius:10px;color:#fff;padding:10px 18px;font-size:16px;cursor:pointer;}
     button:disabled{opacity:.5;cursor:not-allowed;}
     input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;font-size:16px;}
@@ -29,6 +30,7 @@
     .status-success{color:#4ade80;}
     .status-error{color:#f87171;}
     .field-note{font-size:14px;color:#94a3b8;margin:0;}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9999px;background:#1e293b;border:1px solid #334155;color:#cbd5e1;font-size:13px;font-weight:600;}
     a.link{color:#93c5fd;text-decoration:none;}
     a.link:hover{text-decoration:underline;}
   </style>
@@ -36,8 +38,17 @@
 <body>
   <main>
     <div class="card" id="setup-card">
-      <h1>数学演習モード</h1>
+      <div class="card-header">
+        <h1 style="margin:0">数学演習モード</h1>
+        <div id="user-pill" class="pill">👤 ゲスト</div>
+      </div>
       <p class="muted">出題レベルを選んで問題に挑戦し、表示された解答欄に入力してから採点してください。複数の欄が表示された場合はそれぞれの欄に1つずつ値を入力してください。</p>
+      <div class="field-stack">
+        <label class="field-label" for="learner-name">学習者名</label>
+        <input id="learner-name" type="text" placeholder="taro" autocomplete="off" autocapitalize="off" list="user-suggestions" />
+        <datalist id="user-suggestions"></datalist>
+        <p class="field-note">入力した名前が提出記録に保存されます。空欄のままの場合はゲストとして記録されます。</p>
+      </div>
       <div class="field-stack">
         <label class="field-label" for="difficulty-select">出題レベル</label>
         <select id="difficulty-select">
@@ -84,6 +95,8 @@
     const SUBJECT = 'math';
     const QUESTIONS_URL = "/data/math/questions.json";
     const RESULT_ENDPOINT = '/api/results';
+    const REMEMBER_USER_KEY = 'quiz:lastUser';
+    const USER_SUGGEST_KEY = 'quiz:userList';
     const state = {
       allQuestions: [],
       questions: [],
@@ -96,12 +109,110 @@
       difficulty: 'normal',
       questionCount: '1',
       started: false,
+      user: 'guest',
     };
 
     const MIN_QUESTION_COUNT = 1;
     const MAX_QUESTION_COUNT = 3;
 
     function $(sel){ return document.querySelector(sel); }
+
+    function sanitizeUserName(value){
+      if(value == null) return '';
+      return String(value).trim().replace(/\s+/g, ' ').slice(0, 60);
+    }
+
+    function displayUserName(value){
+      const sanitized = sanitizeUserName(value);
+      if(!sanitized || sanitized.toLowerCase() === 'guest' || sanitized.toLowerCase() === 'math'){
+        return 'ゲスト';
+      }
+      return sanitized;
+    }
+
+    function updateUserPill(userValue){
+      if(!userPill) return;
+      userPill.textContent = `👤 ${displayUserName(userValue)}`;
+    }
+
+    function getStoredUserList(){
+      try{
+        const raw = localStorage.getItem(USER_SUGGEST_KEY) || '[]';
+        const parsed = JSON.parse(raw);
+        if(Array.isArray(parsed)){
+          return parsed
+            .map(name => sanitizeUserName(name))
+            .filter(name => !!name);
+        }
+      }catch(err){
+        // ignore storage errors
+      }
+      return [];
+    }
+
+    function writeStoredUserList(list){
+      try{
+        const limited = list.slice(0, 20);
+        localStorage.setItem(USER_SUGGEST_KEY, JSON.stringify(limited));
+      }catch(err){
+        // ignore storage errors
+      }
+    }
+
+    function populateUserSuggestions(){
+      const datalist = document.getElementById('user-suggestions');
+      if(!datalist) return;
+      const list = getStoredUserList();
+      datalist.innerHTML = '';
+      list.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function rememberUserName(name){
+      const trimmed = sanitizeUserName(name);
+      if(!trimmed) return;
+      const list = getStoredUserList();
+      const existingIndex = list.indexOf(trimmed);
+      if(existingIndex !== -1){
+        list.splice(existingIndex, 1);
+      }
+      list.unshift(trimmed);
+      writeStoredUserList(list);
+    }
+
+    function setUser(raw, { remember = false } = {}){
+      const sanitized = sanitizeUserName(raw);
+      state.user = sanitized || 'guest';
+      if(learnerInput){
+        learnerInput.value = sanitized;
+      }
+      updateUserPill(state.user);
+      if(remember){
+        try{
+          localStorage.setItem(REMEMBER_USER_KEY, sanitized);
+        }catch(err){
+          // ignore storage errors
+        }
+        if(sanitized){
+          rememberUserName(sanitized);
+        }
+        populateUserSuggestions();
+      }
+    }
+
+    function initializeUser(){
+      let stored = '';
+      try{
+        stored = localStorage.getItem(REMEMBER_USER_KEY) || '';
+      }catch(err){
+        stored = '';
+      }
+      setUser(stored, { remember: false });
+      populateUserSuggestions();
+    }
 
     const difficultySelect = $('#difficulty-select');
     const difficultyBadge = $('#difficulty-badge');
@@ -114,6 +225,22 @@
     const saveStatusEl = $('#save-status');
     const changeSettingsButton = $('#btn-change-settings');
     const questionCountSelect = $('#question-count-select');
+    const learnerInput = $('#learner-name');
+    const userPill = $('#user-pill');
+
+    initializeUser();
+
+    if(learnerInput){
+      const applyUserInput = () => setUser(learnerInput.value, { remember: true });
+      learnerInput.addEventListener('change', applyUserInput);
+      learnerInput.addEventListener('blur', applyUserInput);
+      learnerInput.addEventListener('keydown', ev => {
+        if(ev.key === 'Enter'){
+          ev.preventDefault();
+          applyUserInput();
+        }
+      });
+    }
 
     function setSaveStatus(message, status = 'muted'){
       if(!saveStatusEl) return;
@@ -596,6 +723,11 @@
         ev.preventDefault();
         if(startButton.disabled) return;
         if(!state.allQuestions.length) return;
+        if(learnerInput){
+          setUser(learnerInput.value, { remember: true });
+        } else {
+          setUser(state.user, { remember: false });
+        }
         state.started = true;
         if(setupCard) setupCard.style.display = 'none';
         setDifficulty(state.difficulty);
@@ -648,9 +780,19 @@
         state.sessionId = createSessionId();
       }
       const questionDifficulty = normalizeDifficulty(question && question.difficulty);
+      const effectiveUser = (() => {
+        const sanitized = sanitizeUserName(state.user);
+        if(!sanitized){
+          return 'guest';
+        }
+        if(sanitized.toLowerCase() === 'math'){
+          return 'guest';
+        }
+        return sanitized;
+      })();
       const record = {
         subject: SUBJECT,
-        user: 'math',
+        user: effectiveUser,
         mode: 'math-drill',
         sessionId: state.sessionId,
         attempt: state.attempt,

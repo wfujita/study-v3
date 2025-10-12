@@ -166,12 +166,28 @@ def _is_math_record(record: dict) -> bool:
     return isinstance(answered, list) and bool(answered)
 
 
+def _normalize_math_user(value: str) -> str:
+    if not value:
+        return "guest"
+    try:
+        text = str(value).strip()
+    except Exception:
+        return "guest"
+    if not text:
+        return "guest"
+    lowered = text.lower()
+    if lowered in {"math", "guest"}:
+        return "guest"
+    return text
+
+
 @app.get("/api/math/accuracy")
 def math_accuracy():
     """数学演習モードの正答率を返す。"""
 
     subject = normalize_subject(request.args.get("subject") or "math")
-    user_filter = (request.args.get("user") or "").strip()
+    raw_user_filter = (request.args.get("user") or "").strip()
+    user_filter = _normalize_math_user(raw_user_filter) if raw_user_filter else ""
 
     results = iter_results(subject)
 
@@ -183,7 +199,7 @@ def math_accuracy():
     for record in results:
         if not _is_math_record(record):
             continue
-        user = record.get("user") or "guest"
+        user = _normalize_math_user(record.get("user"))
         if user_filter and user != user_filter:
             continue
         answered_list = record.get("answered") or []
@@ -265,6 +281,7 @@ def math_results():
             continue
         answered_list = record.get("answered") or []
         first = answered_list[0] if answered_list else {}
+        user_name = _normalize_math_user(record.get("user"))
         items.append(
             {
                 "sessionId": record.get("sessionId"),
@@ -274,7 +291,7 @@ def math_results():
                 "correct": (
                     bool(first.get("correct")) if isinstance(first, dict) else False
                 ),
-                "user": record.get("user") or "math",
+                "user": user_name,
                 "difficulty": record.get("difficulty")
                 or (first.get("difficulty") if isinstance(first, dict) else None)
                 or "normal",
