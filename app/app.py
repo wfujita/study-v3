@@ -570,7 +570,8 @@ def math_dashboard():
     return jsonify(payload)
 
 
-def _default_stat_payload(qid: str) -> dict:
+def _default_stat_payload(qid: str, subject: str) -> dict:
+    default_stage = stage_tracker.get_stage_config(subject).default_stage
     return {
         "id": qid,
         "answered": 0,
@@ -578,13 +579,14 @@ def _default_stat_payload(qid: str) -> dict:
         "streak": 0,
         "lastWrongAt": None,
         "lastCorrectAt": None,
-        "stage": "F",
+        "stage": default_stage,
         "nextDueAt": None,
     }
 
 
-def _state_to_payload(qid: str, state: Optional[dict]) -> dict:
-    payload = _default_stat_payload(qid)
+def _state_to_payload(qid: str, state: Optional[dict], subject: str) -> dict:
+    payload = _default_stat_payload(qid, subject)
+    default_stage = payload["stage"]
     if not state:
         return payload
     payload.update(
@@ -594,7 +596,7 @@ def _state_to_payload(qid: str, state: Optional[dict]) -> dict:
             "streak": int(state.get("streak") or 0),
             "lastWrongAt": state.get("lastWrongAt"),
             "lastCorrectAt": state.get("lastCorrectAt"),
-            "stage": state.get("stage") or "F",
+            "stage": state.get("stage") or default_stage,
             "nextDueAt": state.get("nextDueAt"),
         }
     )
@@ -633,7 +635,9 @@ def question_stats_bulk():
             store = stage_tracker.rebuild_store(runtime_dir, cached_results)
             state_map.update(stage_tracker.get_question_states(store, user, missing))
 
-    results = [_state_to_payload(qid, state_map.get(qid)) for qid in normalized_ids]
+    results = [
+        _state_to_payload(qid, state_map.get(qid), subject) for qid in normalized_ids
+    ]
     return jsonify({"results": results})
 
 
@@ -643,7 +647,10 @@ def question_stat():
     qid = request.args.get("id") or ""
     subject = normalize_subject(request.args.get("subject"))
     if not user or not qid:
-        return jsonify({"answered": 0, "correct": 0, "streak": 0, "stage": "F"})
+        default_stage = stage_tracker.get_stage_config(subject).default_stage
+        return jsonify(
+            {"answered": 0, "correct": 0, "streak": 0, "stage": default_stage}
+        )
 
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)
@@ -657,7 +664,7 @@ def question_stat():
             state = stage_tracker.get_question_state(store, user, qid)
 
     if state is not None:
-        payload = _state_to_payload(str(qid), state)
+        payload = _state_to_payload(str(qid), state, subject)
         payload.pop("id", None)
         return jsonify(payload)
 
@@ -715,7 +722,7 @@ def question_stat():
         else:
             break
 
-    payload = _state_to_payload(str(qid), None)
+    payload = _state_to_payload(str(qid), None, subject)
     payload.update(
         {
             "answered": total,

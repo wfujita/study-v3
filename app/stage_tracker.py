@@ -1,11 +1,19 @@
 import json
 import os
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-STAGE_SEQUENCE = ("F", "E", "D", "C", "B", "A")
 
-NEXT_STAGE_RULES: Dict[str, Dict[str, Any]] = {
+@dataclass(frozen=True)
+class StageConfig:
+    sequence: Tuple[str, ...]
+    default_stage: str
+    reset_stage: str
+    rules: Dict[str, Dict[str, Any]]
+
+
+DEFAULT_STAGE_RULES: Dict[str, Dict[str, Any]] = {
     "F": {"next": "E", "gap_days": None, "min_streak": 3},
     "E": {"next": "D", "gap_days": 2},
     "D": {"next": "C", "gap_days": 3},
@@ -14,10 +22,61 @@ NEXT_STAGE_RULES: Dict[str, Dict[str, Any]] = {
     "A": {},
 }
 
+MATH_STAGE_RULES: Dict[str, Dict[str, Any]] = {
+    "E": {"next": "D", "gap_days": None},
+    "D": {"next": "C", "gap_days": 3},
+    "C": {"next": "B", "gap_days": 7},
+    "B": {"next": "A", "gap_days": 30},
+    "A": {},
+}
 
-def _default_question_state() -> Dict[str, Any]:
+DEFAULT_STAGE_CONFIG = StageConfig(
+    sequence=("F", "E", "D", "C", "B", "A"),
+    default_stage="F",
+    reset_stage="F",
+    rules=DEFAULT_STAGE_RULES,
+)
+
+MATH_STAGE_CONFIG = StageConfig(
+    sequence=("E", "D", "C", "B", "A"),
+    default_stage="E",
+    reset_stage="E",
+    rules=MATH_STAGE_RULES,
+)
+
+_STAGE_CONFIGS: Dict[str, StageConfig] = {
+    "math": MATH_STAGE_CONFIG,
+}
+
+STAGE_SEQUENCE = DEFAULT_STAGE_CONFIG.sequence
+
+
+def _normalize_subject(value: Optional[str]) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip().lower()
+    cleaned = "".join(ch for ch in text if ch.isalnum() or ch in ("-", "_"))
+    return cleaned
+
+
+def get_stage_config(subject: Optional[str] = None) -> StageConfig:
+    key = _normalize_subject(subject)
+    return _STAGE_CONFIGS.get(key, DEFAULT_STAGE_CONFIG)
+
+
+def _config_from_record(record: Dict[str, Any]) -> StageConfig:
+    subject = record.get("subject")
+    config = get_stage_config(subject)
+    if config is DEFAULT_STAGE_CONFIG:
+        mode = (record.get("mode") or "").strip().lower()
+        if mode == "math-drill":
+            return MATH_STAGE_CONFIG
+    return config
+
+
+def _default_question_state(config: StageConfig) -> Dict[str, Any]:
     return {
-        "stage": "F",
+        "stage": config.default_stage,
         "streak": 0,
         "answered": 0,
         "correct": 0,
@@ -58,8 +117,10 @@ def _to_iso(dt: Optional[datetime]) -> Optional[str]:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def _compute_next_due(stage: str, reference: Optional[datetime]) -> Optional[str]:
-    rules = NEXT_STAGE_RULES.get(stage, {})
+def _compute_next_due(
+    stage: str, reference: Optional[datetime], config: StageConfig
+) -> Optional[str]:
+    rules = config.rules.get(stage, {})
     gap_days = rules.get("gap_days")
     if not reference or gap_days in (None, 0):
         return None
@@ -70,32 +131,53 @@ def _compute_next_due(stage: str, reference: Optional[datetime]) -> Optional[str
     return _to_iso(reference + delta)
 
 
-def _apply_correct(state: Dict[str, Any], attempt_dt: datetime) -> None:
+def _apply_correct(
+    state: Dict[str, Any], attempt_dt: datetime, config: StageConfig
+) -> None:
     prev_last_correct = _parse_iso(state.get("lastCorrectAt"))
     state["streak"] = int(state.get("streak") or 0) + 1
 
-    stage = state.get("stage") or "F"
-    stage_rules = NEXT_STAGE_RULES.get(stage, {})
+    stage = state.get("stage") or config.default_stage
+    if stage == "F" and config is not DEFAULT_STAGE_CONFIG:
+        stage = config.default_stage
+    stage_rules = config.rules.get(stage, {})
 
-    if stage == "F":
+    if stage == "F" and config is DEFAULT_STAGE_CONFIG:
         min_streak = stage_rules.get("min_streak") or 0
         if state["streak"] >= min_streak and min_streak > 0:
             stage = stage_rules.get("next", stage)
     else:
         gap_days_req = stage_rules.get("gap_days")
         next_stage = stage_rules.get("next")
-        if next_stage and gap_days_req is not None and prev_last_correct is not None:
-            gap = (attempt_dt - prev_last_correct).total_seconds() / 86400.0
-            if gap >= float(gap_days_req):
+        if next_stage:
+            if gap_days_req is None:
                 stage = next_stage
+            elif prev_last_correct is None:
+                try:
+                    if float(gap_days_req) <= 0:
+                        stage = next_stage
+                except Exception:
+                    pass
+            else:
+                gap = (attempt_dt - prev_last_correct).total_seconds() / 86400.0
+                try:
+                    if gap >= float(gap_days_req):
+                        stage = next_stage
+                except Exception:
+                    pass
 
-    state["stage"] = stage if stage in STAGE_SEQUENCE else "F"
+    if stage not in config.sequence and stage != "F":
+        stage = config.default_stage
+
+    state["stage"] = stage
     state["lastCorrectAt"] = _to_iso(attempt_dt)
-    state["nextDueAt"] = _compute_next_due(state["stage"], attempt_dt)
+    state["nextDueAt"] = _compute_next_due(state["stage"], attempt_dt, config)
 
 
-def _apply_wrong(state: Dict[str, Any], attempt_dt: datetime) -> None:
-    state["stage"] = "F"
+def _apply_wrong(
+    state: Dict[str, Any], attempt_dt: datetime, config: StageConfig
+) -> None:
+    state["stage"] = config.reset_stage
     state["streak"] = 0
     state["lastWrongAt"] = _to_iso(attempt_dt)
     state["nextDueAt"] = None
@@ -105,6 +187,7 @@ def _apply_attempt(
     state: Dict[str, Any],
     attempt_dt: Optional[datetime],
     is_correct: bool,
+    config: StageConfig,
 ) -> bool:
     if not attempt_dt:
         return False
@@ -113,9 +196,9 @@ def _apply_attempt(
     state["answered"] = int(state.get("answered") or 0) + 1
     if is_correct:
         state["correct"] = int(state.get("correct") or 0) + 1
-        _apply_correct(state, attempt_dt)
+        _apply_correct(state, attempt_dt, config)
     else:
-        _apply_wrong(state, attempt_dt)
+        _apply_wrong(state, attempt_dt, config)
     state["lastAttemptAt"] = _to_iso(attempt_dt)
     state["updatedAt"] = state["lastAttemptAt"]
 
@@ -149,7 +232,9 @@ def save_store(runtime_dir: str, store: Dict[str, Dict[str, Dict[str, Any]]]) ->
     os.replace(tmp_path, path)
 
 
-def _ensure_state(store: Dict[str, Any], user: str, qid: str) -> Dict[str, Any]:
+def _ensure_state(
+    store: Dict[str, Any], user: str, qid: str, config: StageConfig
+) -> Dict[str, Any]:
     user_key = _normalize_user(user)
     qid_key = _normalize_qid(qid)
     if qid_key is None:
@@ -157,7 +242,7 @@ def _ensure_state(store: Dict[str, Any], user: str, qid: str) -> Dict[str, Any]:
     user_bucket = store.setdefault(user_key, {})
     state = user_bucket.get(qid_key)
     if not isinstance(state, dict):
-        state = _default_question_state()
+        state = _default_question_state(config)
         user_bucket[qid_key] = state
     return state
 
@@ -195,16 +280,17 @@ def _iter_session_attempts(
 def apply_session(store: Dict[str, Any], record: Dict[str, Any]) -> bool:
     user = _normalize_user(record.get("user"))
     changed = False
+    config = _config_from_record(record)
     for attempt_dt, payload in _iter_session_attempts(record):
         qid = _normalize_qid(payload.get("id"))
         if qid is None:
             continue
         try:
-            state = _ensure_state(store, user, qid)
+            state = _ensure_state(store, user, qid, config)
         except ValueError:
             continue
         ok = bool(payload.get("correct"))
-        changed |= _apply_attempt(state, attempt_dt, ok)
+        changed |= _apply_attempt(state, attempt_dt, ok, config)
     return changed
 
 
