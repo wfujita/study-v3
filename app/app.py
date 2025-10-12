@@ -648,7 +648,9 @@ def question_stat():
     subject = normalize_subject(request.args.get("subject"))
     if not user or not qid:
         default_stage = stage_tracker.get_stage_config(subject).default_stage
-        return jsonify({"answered": 0, "correct": 0, "streak": 0, "stage": default_stage})
+        return jsonify(
+            {"answered": 0, "correct": 0, "streak": 0, "stage": default_stage}
+        )
 
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)

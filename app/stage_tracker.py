@@ -174,7 +174,9 @@ def _apply_correct(
     state["nextDueAt"] = _compute_next_due(state["stage"], attempt_dt, config)
 
 
-def _apply_wrong(state: Dict[str, Any], attempt_dt: datetime, config: StageConfig) -> None:
+def _apply_wrong(
+    state: Dict[str, Any], attempt_dt: datetime, config: StageConfig
+) -> None:
     state["stage"] = config.reset_stage
     state["streak"] = 0
     state["lastWrongAt"] = _to_iso(attempt_dt)
