@@ -2170,6 +2170,156 @@
       ],
       "tip": "5W1H の \"what\" は物事の内容（何を）を尋ねる疑問詞。",
       "level": "Lv1"
+    },
+    {
+      "id": "v052",
+      "unit": "疑問詞",
+      "jp": "誰が",
+      "en": "Who",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ"
+        },
+        {
+          "text": "どこで"
+        },
+        {
+          "text": "誰が",
+          "correct": true
+        },
+        {
+          "text": "何を"
+        },
+        {
+          "text": "なぜ"
+        },
+        {
+          "text": "どのように"
+        }
+      ],
+      "tip": "5W1H の \"who\" は行為者や人物（誰が）を尋ねる疑問詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v053",
+      "unit": "疑問詞",
+      "jp": "いつ",
+      "en": "When",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ",
+          "correct": true
+        },
+        {
+          "text": "どこで"
+        },
+        {
+          "text": "誰が"
+        },
+        {
+          "text": "何を"
+        },
+        {
+          "text": "なぜ"
+        },
+        {
+          "text": "どのように"
+        }
+      ],
+      "tip": "5W1H の \"when\" は時間（いつ）を尋ねる疑問詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v054",
+      "unit": "疑問詞",
+      "jp": "どこで",
+      "en": "Where",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ"
+        },
+        {
+          "text": "どこで",
+          "correct": true
+        },
+        {
+          "text": "誰が"
+        },
+        {
+          "text": "何を"
+        },
+        {
+          "text": "なぜ"
+        },
+        {
+          "text": "どのように"
+        }
+      ],
+      "tip": "5W1H の \"where\" は場所（どこで）を尋ねる疑問詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v055",
+      "unit": "疑問詞",
+      "jp": "なぜ",
+      "en": "Why",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ"
+        },
+        {
+          "text": "どこで"
+        },
+        {
+          "text": "誰が"
+        },
+        {
+          "text": "何を"
+        },
+        {
+          "text": "なぜ",
+          "correct": true
+        },
+        {
+          "text": "どのように"
+        }
+      ],
+      "tip": "5W1H の \"why\" は理由（なぜ）を尋ねる疑問詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v056",
+      "unit": "疑問詞",
+      "jp": "どのように",
+      "en": "How",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ"
+        },
+        {
+          "text": "どこで"
+        },
+        {
+          "text": "誰が"
+        },
+        {
+          "text": "何を"
+        },
+        {
+          "text": "なぜ"
+        },
+        {
+          "text": "どのように",
+          "correct": true
+        }
+      ],
+      "tip": "5W1H の \"how\" は方法（どのように）を尋ねる疑問詞。",
+      "level": "Lv1"
     }
   ]
 }
