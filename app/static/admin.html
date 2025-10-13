@@ -139,7 +139,7 @@
     <section class="card">
       <h3 style="margin:0 0 8px">よく間違える問題（TOP10）</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">ステージ</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -257,11 +257,13 @@
       data.topMissed.slice(0,10).forEach(q=>{
         const tr=document.createElement('tr');
         const acc = q.answered? Math.round((q.answered-q.wrong)/q.answered*100):0;
+        const stageCell = q.stage ? `<span class="badge">${q.stage}</span>` : '<span class="muted">--</span>';
         tr.innerHTML = `<td class="center">${fmt(q.wrong)}</td>
                         <td>${q.id||''}</td>
                         <td>${q.jp||''}</td>
                         <td>${q.en||''}</td>
                         <td>${q.unit||''}</td>
+                        <td class="center">${stageCell}</td>
                         <td class="center ng">${fmt(q.wrong)} / ${fmt(q.answered)}</td>
                         <td class="center">${acc}%</td>`;
         top.appendChild(tr);
