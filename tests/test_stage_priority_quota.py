@@ -15,7 +15,9 @@ def run_node(code: str) -> str:
 
 
 def test_determine_stage_priority_quota_cases():
-    script = Path(__file__).resolve().parent.parent / "app" / "static" / "stage_priority.js"
+    script = (
+        Path(__file__).resolve().parent.parent / "app" / "static" / "stage_priority.js"
+    )
     assert script.exists(), "stage_priority.js should exist"
     node_code = """
     const mod = require('./app/static/stage_priority.js');
@@ -34,5 +36,7 @@ def test_determine_stage_priority_quota_cases():
 
 
 def test_index_uses_priority_quota():
-    html = (Path(__file__).resolve().parent.parent / "app" / "static" / "index.html").read_text(encoding="utf-8")
+    html = (
+        Path(__file__).resolve().parent.parent / "app" / "static" / "index.html"
+    ).read_text(encoding="utf-8")
     assert "determineStagePriorityQuota(n, stageFPool.length)" in html
