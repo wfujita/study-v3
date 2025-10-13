@@ -107,7 +107,22 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "unit": q.get("unit"),
                 "type": "reorder",
             }
-    for v in data.get("vocab") or []:
+    vocab_input = []
+    vocab_choice = []
+    if isinstance(data.get("vocabInput"), list):
+        vocab_input.extend(data["vocabInput"])
+    if isinstance(data.get("vocabChoice"), list):
+        vocab_choice.extend(data["vocabChoice"])
+    legacy_vocab = data.get("vocab")
+    if isinstance(legacy_vocab, list):
+        for entry in legacy_vocab:
+            choices = entry.get("choices")
+            if isinstance(choices, list) and len(choices) > 0:
+                vocab_choice.append(entry)
+            else:
+                vocab_input.append(entry)
+
+    for v in vocab_input:
         qid = v.get("id")
         if qid:
             qmap[qid] = {
@@ -116,6 +131,16 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "en": v.get("en"),
                 "unit": v.get("unit"),
                 "type": "vocab",
+            }
+    for v in vocab_choice:
+        qid = v.get("id")
+        if qid:
+            qmap[qid] = {
+                "id": qid,
+                "jp": v.get("jp"),
+                "en": v.get("en"),
+                "unit": v.get("unit"),
+                "type": "vocab-choice",
             }
     for w in data.get("rewrite") or []:
         qid = w.get("id")
@@ -1016,6 +1041,8 @@ def admin_summary():
             for a in ans_all:
                 qm = qmap.get(a.get("id")) or {}
                 atype = a.get("type") or qm.get("type") or ""
+                if qtype == "vocab" and atype == "vocab-choice":
+                    atype = "vocab"
                 if atype == qtype:
                     filtered.append(a)
             ans = filtered

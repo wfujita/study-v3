@@ -198,7 +198,8 @@
 
     /********** 問題ロード **********/
     let BANK_REORDER = [];
-    let BANK_VOCAB = [];
+    let BANK_VOCAB_INPUT = [];
+    let BANK_VOCAB_CHOICE = [];
     let BANK_REWRITE = [];
 
     const toAnswerList = (value)=>{
@@ -341,9 +342,9 @@
       if(type==='reorder'){
         base.chunks = item.chunks;
         base.wrong = item.wrong||[];
-      } else if(type==='vocab'){
+      } else if(type==='vocab' || type==='vocab-choice'){
         base.pos = item.pos||'';
-        if(Array.isArray(item.choices)){
+        if(type==='vocab-choice' && Array.isArray(item.choices)){
           const normalized = [];
           item.choices.forEach(choice=>{
             if(choice==null) return;
@@ -374,13 +375,24 @@
       return base;
     };
     async function ensureQuestions(){
-      if (BANK_REORDER.length || BANK_VOCAB.length){ renderUnitFilterOptions(); return; }
+      if (BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
+      const rawVocabInput = Array.isArray(data.vocabInput)
+        ? data.vocabInput
+        : Array.isArray(data.vocab)
+          ? data.vocab.filter(item=>!(Array.isArray(item.choices) && item.choices.length>0))
+          : [];
+      const rawVocabChoice = Array.isArray(data.vocabChoice)
+        ? data.vocabChoice
+        : Array.isArray(data.vocab)
+          ? data.vocab.filter(item=>Array.isArray(item.choices) && item.choices.length>0)
+          : [];
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
-      BANK_VOCAB   = (data.vocab||[]).map(v=>buildQuestion(v, 'vocab'));
+      BANK_VOCAB_INPUT = rawVocabInput.map(v=>buildQuestion(v, 'vocab'));
+      BANK_VOCAB_CHOICE = rawVocabChoice.map(v=>buildQuestion(v, 'vocab-choice'));
       BANK_REWRITE = (data.rewrite||[]).map(w=>buildQuestion(w, 'rewrite'));
       renderUnitFilterOptions();
     }
@@ -564,7 +576,8 @@
     /********** デッキ取得 **********/
     function deckByType(type){
       if(type==='reorder') return BANK_REORDER;
-      if(type==='vocab' || type==='vocab-choice') return BANK_VOCAB;
+      if(type==='vocab') return BANK_VOCAB_INPUT;
+      if(type==='vocab-choice') return BANK_VOCAB_CHOICE;
       if(type==='rewrite') return BANK_REWRITE;
       return [];
     }
@@ -1312,7 +1325,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }
@@ -1342,7 +1355,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }

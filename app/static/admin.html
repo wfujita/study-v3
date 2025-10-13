@@ -315,7 +315,7 @@
                         <td class="center">${dueText}</td>
                         <td class="center">${fmt(q.streak||0)}</td>
                         <td class="center">${acc}%</td>`;
-        if(q.type==='vocab') qVocab.appendChild(tr);
+        if(q.type==='vocab' || q.type==='vocab-choice') qVocab.appendChild(tr);
         else if(q.type==='rewrite') qRewrite.appendChild(tr);
         else qReorder.appendChild(tr);
       });
