@@ -2320,6 +2320,366 @@
       ],
       "tip": "5W1H の \"how\" は方法（どのように）を尋ねる疑問詞。",
       "level": "Lv1"
+    },
+    {
+      "id": "v057",
+      "unit": "疑問詞-応用",
+      "jp": "誰の",
+      "en": "Whose",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どちら／どの〜"
+        },
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "いくら／どれくらい（量・値段）"
+        },
+        {
+          "text": "誰の",
+          "correct": true
+        },
+        {
+          "text": "〜はどんな感じ？"
+        }
+      ],
+      "tip": "所有者をたずねる疑問詞。例: \"Whose book is this?\"（これは誰の本ですか？）。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v058",
+      "unit": "疑問詞-応用",
+      "jp": "どちら／どの〜",
+      "en": "Which",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どちら／どの〜",
+          "correct": true
+        },
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "何時"
+        },
+        {
+          "text": "いくつ（数）"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "～はどう？（提案）"
+        }
+      ],
+      "tip": "選択肢の中から一つを選ぶ疑問詞。例: \"Which color do you like?\"（どの色が好き？）。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v059",
+      "unit": "疑問詞-応用",
+      "jp": "どんな種類の",
+      "en": "What kind of",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どんな種類の",
+          "correct": true
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "何歳"
+        },
+        {
+          "text": "誰の"
+        }
+      ],
+      "tip": "対象の種類やタイプをたずねる表現。例: \"What kind of music do you like?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v060",
+      "unit": "疑問詞-応用",
+      "jp": "いくつ（数）",
+      "en": "How many",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いくつ（数）",
+          "correct": true
+        },
+        {
+          "text": "いくら／どれくらい（量・値段）"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "何時"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "～はどう？（提案）"
+        }
+      ],
+      "tip": "個数や人数など数をたずねる表現。例: \"How many pens do you have?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v061",
+      "unit": "疑問詞-応用",
+      "jp": "いくら／どれくらい（量・値段）",
+      "en": "How much",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いくら／どれくらい（量・値段）",
+          "correct": true
+        },
+        {
+          "text": "いくつ（数）"
+        },
+        {
+          "text": "何歳"
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        }
+      ],
+      "tip": "量や値段をたずねる表現。例: \"How much water do you need?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v062",
+      "unit": "疑問詞-応用",
+      "jp": "何歳",
+      "en": "How old",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "何歳",
+          "correct": true
+        },
+        {
+          "text": "何時"
+        },
+        {
+          "text": "いくつ（数）"
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "～はどう？（提案）"
+        }
+      ],
+      "tip": "年齢をたずねる表現。例: \"How old are you?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v063",
+      "unit": "疑問詞-応用",
+      "jp": "どのくらいの長さ／期間",
+      "en": "How long",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どのくらいの長さ／期間",
+          "correct": true
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "～はどう？（提案）"
+        },
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "いくら／どれくらい（量・値段）"
+        }
+      ],
+      "tip": "時間や長さをたずねる表現。例: \"How long is this movie?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v064",
+      "unit": "疑問詞-応用",
+      "jp": "どのくらい遠い",
+      "en": "How far",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どのくらい遠い",
+          "correct": true
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "いくら／どれくらい（量・値段）"
+        },
+        {
+          "text": "何時"
+        },
+        {
+          "text": "誰の"
+        }
+      ],
+      "tip": "距離をたずねる表現。例: \"How far is it from here to Tokyo?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v065",
+      "unit": "疑問詞-応用",
+      "jp": "どのくらいの頻度で",
+      "en": "How often",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どのくらいの頻度で",
+          "correct": true
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "何歳"
+        },
+        {
+          "text": "どのくらいの長さ／期間"
+        },
+        {
+          "text": "～はどう？（提案）"
+        }
+      ],
+      "tip": "物事の頻度をたずねる表現。例: \"How often do you study English?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v066",
+      "unit": "疑問詞-応用",
+      "jp": "～はどう？（提案）",
+      "en": "How about ~?",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "～はどう？（提案）",
+          "correct": true
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "いくつ（数）"
+        },
+        {
+          "text": "何時"
+        }
+      ],
+      "tip": "提案するときに使う表現。例: \"How about pizza for lunch?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v067",
+      "unit": "疑問詞-応用",
+      "jp": "何時",
+      "en": "What time",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "何時",
+          "correct": true
+        },
+        {
+          "text": "何歳"
+        },
+        {
+          "text": "いくつ（数）"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "～はどう？（提案）"
+        }
+      ],
+      "tip": "時刻をたずねる表現。例: \"What time do you get up?\"。",
+      "level": "Lv2"
+    },
+    {
+      "id": "v068",
+      "unit": "疑問詞-応用",
+      "jp": "〜はどんな感じ？",
+      "en": "What's ... like?",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "どんな種類の"
+        },
+        {
+          "text": "〜はどんな感じ？",
+          "correct": true
+        },
+        {
+          "text": "どのくらい遠い"
+        },
+        {
+          "text": "どのくらいの頻度で"
+        },
+        {
+          "text": "何歳"
+        },
+        {
+          "text": "誰の"
+        }
+      ],
+      "tip": "対象の様子や性質をたずねる表現。例: \"What's your school like?\"。",
+      "level": "Lv2"
     }
   ]
 }
