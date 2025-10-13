@@ -132,7 +132,7 @@
     <section class="card">
       <h3 style="margin:0 0 8px">最近の解答（最大100件）</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">ランク</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">ランク</th><th class="center">ステージ</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -276,9 +276,12 @@
         const at = r.at || r.endedAt;
         const dateText = at? new Date(at).toLocaleString(): '―';
         const rankText = (r && typeof r.rank === 'string') ? r.rank : (r && r.rank ? String(r.rank) : '');
+        const stageText = (r && typeof r.stage === 'string') ? r.stage : (r && r.stage ? String(r.stage) : '');
+        const stageBadge = stageText ? `<span class="badge">${stageText}</span>` : '<span class="muted">--</span>';
         tr.innerHTML = `<td>${dateText}</td>`+
                        `<td>${r.id||''}</td>`+
                        `<td class="center">${rankText||''}</td>`+
+                       `<td class="center">${stageBadge}</td>`+
                        `<td class="center ${ok?'ok':'ng'}">${mark}</td>`+
                        `<td>${r.userAnswer||''}</td>`+
                        `<td>${r.en||''}</td>`+

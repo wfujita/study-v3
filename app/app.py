@@ -1047,6 +1047,20 @@ def admin_summary():
                 "userAnswer": a.get("userAnswer"),
                 "at": at_str,
             }
+            stage_state = None
+            if isinstance(stage_store, dict):
+                try:
+                    stage_state = stage_tracker.get_question_state(
+                        stage_store, r.get("user"), qid
+                    )
+                except Exception:
+                    stage_state = None
+            if stage_state:
+                item["stage"] = stage_state.get("stage")
+                item["nextDueAt"] = stage_state.get("nextDueAt")
+            else:
+                item["stage"] = None
+                item["nextDueAt"] = None
             rank_value = attempt_rank_map.get(id(a))
             if rank_value is not None:
                 item["rank"] = rank_value
