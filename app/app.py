@@ -1187,6 +1187,7 @@ def admin_summary():
         by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True
     )
 
+
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
@@ -1200,6 +1201,25 @@ def admin_summary():
             state = stage_tracker.get_question_state(
                 stage_store, normalized_user, item.get("id")
             )
+            if state:
+                item["stage"] = state.get("stage")
+                item["nextDueAt"] = state.get("nextDueAt")
+            else:
+                item["stage"] = None
+                item["nextDueAt"] = None
+
+        for item in top_missed:
+            qid_value = item.get("id")
+            if not qid_value or qid_value == "(no-id)":
+                item["stage"] = None
+                item["nextDueAt"] = None
+                continue
+            try:
+                state = stage_tracker.get_question_state(
+                    stage_store, normalized_user, qid_value
+                )
+            except Exception:
+                state = None
             if state:
                 item["stage"] = state.get("stage")
                 item["nextDueAt"] = state.get("nextDueAt")
@@ -1244,6 +1264,9 @@ def admin_summary():
             stage_buckets[stage_name] = bucket_items
     else:
         for item in question_stats:
+            item["stage"] = None
+            item["nextDueAt"] = None
+        for item in top_missed:
             item["stage"] = None
             item["nextDueAt"] = None
 
