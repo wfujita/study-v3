@@ -181,6 +181,7 @@
     </section>
   </main>
 
+  <script src="stage_priority.js"></script>
   <script>
     /********** 設定 **********/
     const SUBJECT = 'english';
@@ -813,7 +814,13 @@
         const order = [];
         const chosen = new Set();
 
+        const stagePriorityQuota = typeof determineStagePriorityQuota === 'function'
+          ? determineStagePriorityQuota(n, stageFPool.length)
+          : Math.max(0, n - Math.min(stageFPool.length, n));
+        let stagePriorityPicked = 0;
+
         for(const stage of STAGE_PRIORITY){
+          if(stagePriorityPicked >= stagePriorityQuota) break;
           const arr = dueByStage.get(stage) || [];
           arr.sort((a,b)=>{
             const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : -Infinity;
@@ -823,9 +830,11 @@
           });
           for(const entry of arr){
             if(order.length >= n) break;
+            if(stagePriorityPicked >= stagePriorityQuota) break;
             if(chosen.has(entry.idx)) continue;
             order.push({ idx:entry.idx, bucket:`Stage ${entry.stage}`, streak:entry.streak });
             chosen.add(entry.idx);
+            stagePriorityPicked += 1;
           }
           if(order.length >= n) break;
         }
