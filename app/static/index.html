@@ -415,6 +415,7 @@
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
       choiceSelection: null,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
+      fallbackStageOverrides: new Map(), // 補充問題のステージ上書き（問題キー -> ステージ）
     };
 
     const $ = s=>document.querySelector(s);
@@ -668,6 +669,8 @@
     async function buildOrderFromBank(){
       const baseDeck = deck({ includeExtras: false });
       state.fallbackExtras = [];
+      state.fallbackStageOverrides = new Map();
+      const fallbackStageOverrides = state.fallbackStageOverrides;
       const desired = state.totalPerSet;
       const deckArrBase = baseDeck.slice();
 
@@ -736,6 +739,11 @@
         }
 
         state.fallbackExtras = extras;
+        extras.forEach(q=>{
+          const key = toKey(q);
+          if(!key) return;
+          fallbackStageOverrides.set(key, 'F');
+        });
       }
 
       const deckArr = deck({ includeExtras: true });
@@ -774,10 +782,16 @@
             continue;
           }
 
-          const stage = normalizeStage(s.stage);
+          const qKey = toKey(question);
+          const hasFallbackOverride = qKey && fallbackStageOverrides.has(qKey);
+          let stage = normalizeStage(s.stage);
+          if(hasFallbackOverride){
+            stage = fallbackStageOverrides.get(qKey);
+          }
           const rawStreak = Number(s.streak);
-          const streak = Number.isFinite(rawStreak) ? rawStreak : 0;
-          const nextDue = parseIsoDate(s.nextDueAt);
+          const baseStreak = Number.isFinite(rawStreak) ? rawStreak : 0;
+          const streak = hasFallbackOverride ? 0 : baseStreak;
+          const nextDue = hasFallbackOverride ? null : parseIsoDate(s.nextDueAt);
           const payload = { idx:i, stage, streak, nextDue, rand:Math.random() };
           pushLevelCandidate(levelIdx, payload);
 
