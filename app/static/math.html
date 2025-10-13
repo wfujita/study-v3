@@ -794,7 +794,7 @@
       if(questionStagePill){
         if(meta && typeof meta.stage === 'string' && meta.stage){
           questionStagePill.style.display = '';
-          questionStagePill.textContent = `ランク: ${meta.stage}`;
+          questionStagePill.textContent = `ステージ: ${meta.stage}`;
         } else {
           questionStagePill.style.display = 'none';
           questionStagePill.textContent = '';
@@ -933,7 +933,7 @@
           renderQuestion();
         })
         .catch(err => {
-          console.warn('数学のランク計算に失敗しました', err);
+          console.warn('数学のステージ計算に失敗しました', err);
           if(rankingRequestId !== currentToken) return;
           const fallback = shuffle(available).slice(0, desiredCount);
           state.questions = fallback;
