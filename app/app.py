@@ -938,6 +938,27 @@ def admin_summary():
     if not stage_store and res:
         stage_store = stage_tracker.rebuild_store(runtime_dir, res)
 
+    def _type_matches_filter(value: Optional[str]) -> bool:
+        if qtype in (None, "", "all"):
+            return True
+        normalized = (value or "").strip() or ""
+        if normalized == "vocab-choice":
+            normalized = "vocab"
+        return normalized == qtype
+
+    def _stage_item_matches(qid: Optional[str], meta: Dict[str, Any]) -> bool:
+        if unit and (meta.get("unit") or "") != unit:
+            return False
+        if not _type_matches_filter(meta.get("type")):
+            return False
+        if qtext:
+            haystack = " ".join(
+                str(x or "") for x in [qid, meta.get("jp"), meta.get("en")]
+            ).lower()
+            if qtext not in haystack:
+                return False
+        return True
+
     def compute_attempt_rank_map(records):
         required_attrs = (
             "_iter_session_attempts",
@@ -1268,6 +1289,8 @@ def admin_summary():
                 if state_stage != stage_name:
                     continue
                 meta = qmap.get(qid) or {}
+                if not _stage_item_matches(qid, meta):
+                    continue
                 bucket_items.append(
                     {
                         "id": qid,
