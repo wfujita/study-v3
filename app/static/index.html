@@ -73,7 +73,7 @@
     <section class="card" id="setup">
       <div class="row">
         <label class="row" style="gap:6px"><span class="muted">学習者名</span><input id="learner" type="text" placeholder="taro" autocomplete="off" autocapitalize="off" list="user-suggestions" /></label><datalist id="user-suggestions"></datalist>
-        <label class="row" style="gap:6px"><span class="muted">1セットの出題数</span><input id="count" type="number" min="3" max="20" value="5" style="width:80px"/></label>
+        <label class="row" style="gap:6px"><span class="muted">1セットの出題数</span><input id="count" type="number" min="3" max="20" value="7" style="width:80px"/></label>
         <label class="row" style="gap:6px"><span class="muted">出題タイプ</span>
           <select id="qtype">
             <option value="reorder">並べ替え（文法）</option>
@@ -107,7 +107,7 @@
     <!-- クイズ（共通ヘッダ） -->
     <section class="card" id="quiz" style="display:none">
       <div class="row">
-          <span class="pill" id="status">Q 1/5</span>
+          <span class="pill" id="status">Q 1/7</span>
           <span class="pill">正解: <b id="stat-correct">0</b></span>
           <span class="pill">誤答: <b id="stat-wrong">0</b></span>
           <span class="pill" id="stat-streak">連続正解: --</span>
@@ -355,7 +355,7 @@
       qType:'reorder',
       unitFilter:'',
       levelMax: DEFAULT_LEVEL,
-      totalPerSet:5, order:[], setIndex:0,
+      totalPerSet:7, order:[], setIndex:0,
       qIndex:0, correct:0, wrong:0,
       startedAt:null, seconds:0, timerId:null,
       answered:[],   // サーバ送信用（通常モード）
@@ -1122,7 +1122,7 @@
       try{
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
-        state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
+        state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
         const levelSel=document.getElementById('level-filter');
@@ -1152,7 +1152,7 @@
       try{
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
-        state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||5,10)));
+        state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
         const levelSel=document.getElementById('level-filter');
