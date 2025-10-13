@@ -414,6 +414,7 @@
       weakWindowDays:7,      // 過去◯日を対象
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
       choiceSelection: null,
+      fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
     };
 
     const $ = s=>document.querySelector(s);
@@ -581,15 +582,25 @@
       if(type==='rewrite') return BANK_REWRITE;
       return [];
     }
-    function deck(){
+    function deck(options){
+      const opts = options || {};
+      const includeExtras = opts.includeExtras !== false;
       const all = deckByType(state.qType);
       if(state.mode==='review') return all;
       const maxLevelIdx = levelIndex(state.levelMax);
-      const byLevel = all.filter(q=> levelIndex(q.level) <= maxLevelIdx);
+      let filtered = all.filter(q=> levelIndex(q.level) <= maxLevelIdx);
       const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
       const unit = shouldFilterByUnit ? (state.unitFilter || '') : '';
-      if(!unit) return byLevel;
-      return byLevel.filter(q=> normalizeUnit(q.unit) === unit);
+      if(unit){
+        filtered = filtered.filter(q=> normalizeUnit(q.unit) === unit);
+      }
+      if(!includeExtras) return filtered;
+      const extras = Array.isArray(state.fallbackExtras) ? state.fallbackExtras : [];
+      if(!extras.length) return filtered;
+      if(!unit) return filtered.concat(extras);
+      const extrasForUnit = extras.filter(q=> normalizeUnit(q.unit) === unit);
+      if(!extrasForUnit.length) return filtered;
+      return filtered.concat(extrasForUnit);
     }
 
     const STAGE_PRIORITY = ['A','B','C','D','E'];
@@ -655,8 +666,80 @@
 
     /********** セット準備 **********/
     async function buildOrderFromBank(){
-      const deckArr = deck();
-      const n = Math.min(state.totalPerSet, deckArr.length);
+      const baseDeck = deck({ includeExtras: false });
+      state.fallbackExtras = [];
+      const desired = state.totalPerSet;
+      const deckArrBase = baseDeck.slice();
+
+      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+      const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
+      const maxLevelIdx = levelIndex(state.levelMax);
+
+      const allDeck = deckByType(state.qType);
+
+      const toKey = (item)=>{
+        if(!item) return '';
+        try{
+          return qKeyOf(item);
+        }catch(_err){
+          if(item.id != null) return `id:${item.id}`;
+          const en = item.en || '';
+          const jp = item.jp || '';
+          return `${en}__${jp}`;
+        }
+      };
+      const toLegacyKey = (item)=>{
+        if(!item) return '';
+        if(item.id != null) return `id:${item.id}`;
+        const en = item.en || '';
+        const jp = item.jp || '';
+        return `${en}__${jp}`;
+      };
+
+      const seenKeys = new Set(deckArrBase.map(q=>toKey(q)).filter(Boolean));
+
+      if(desired > deckArrBase.length){
+        const wrongSet = new Set();
+        (getWrongQueue() || []).forEach(item=>{
+          if(!item) return;
+          if(item.key) wrongSet.add(item.key);
+          const primary = toKey(item);
+          if(primary) wrongSet.add(primary);
+          const legacy = toLegacyKey(item);
+          if(legacy) wrongSet.add(legacy);
+        });
+        const extras = [];
+        const pickFromLevel = (levelIdx)=>{
+          const candidates = allDeck.filter(q=> levelIndex(q.level) === levelIdx);
+          const filteredCandidates = unitFilter
+            ? candidates.filter(q=> normalizeUnit(q.unit) === unitFilter)
+            : candidates;
+          const prioritized = [];
+          const others = [];
+          for(const q of filteredCandidates){
+            const key = toKey(q);
+            if(!key) continue;
+            if(seenKeys.has(key)) continue;
+            seenKeys.add(key);
+            const legacyKey = toLegacyKey(q);
+            if(wrongSet.has(key) || (legacyKey && wrongSet.has(legacyKey))) prioritized.push(q);
+            else others.push(q);
+          }
+          const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
+          const othersShuffled = others.length ? shuffle(others) : [];
+          extras.push(...prioritizedShuffled, ...othersShuffled);
+        };
+
+        for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
+          pickFromLevel(levelIdx);
+          if(deckArrBase.length + extras.length >= desired) break;
+        }
+
+        state.fallbackExtras = extras;
+      }
+
+      const deckArr = deck({ includeExtras: true });
+      const n = Math.min(desired, deckArr.length);
 
         const dueByStage = new Map(STAGE_PRIORITY.map(stage=>[stage, []]));
         const stageFPool = [];
@@ -877,14 +960,9 @@
 
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
+      state.fallbackExtras = [];
       const fullDeck = deckByType(state.qType);
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
-      const filteredDeck = deck();
-      if(state.mode==='normal' && !filteredDeck.length){
-        alert('選択したレベル／ユニットの条件に合う問題がありません。条件を見直してください。');
-        show('setup');
-        return;
-      }
       state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
       if(state.mode==='review'){
@@ -897,6 +975,11 @@
         state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
       }else{
         state.order = await buildOrderFromBank();
+        if(!state.order.length){
+          alert('選択したレベル／ユニットの条件に合う問題がありません。条件を見直してください。');
+          show('setup');
+          return;
+        }
       }
       show('quiz'); startTimer(); renderQuestion();
     }
