@@ -23,6 +23,11 @@
     .kbd{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px solid #334155; background:#0b1220; border-radius:6px; padding:2px 6px; color:#cbd5e1 }
     .target{ min-height:52px; padding:8px; background:#0b1220; border:2px dashed var(--accent); border-radius:12px; display:flex; gap:8px; flex-wrap:wrap }
     .bank{ display:flex; flex-wrap:wrap; gap:8px }
+    .choice-grid{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:10px }
+    .choice-option{ border:1px solid #334155; background:#0b1220; border-radius:12px; padding:12px; text-align:left; cursor:pointer; transition:.15s; min-height:52px; font-size:15px; line-height:1.4 }
+    .choice-option:hover{ transform:translateY(-1px) }
+    .choice-option.selected{ border-color:var(--accent); background:rgba(59,130,246,.2); box-shadow:0 0 0 1px var(--accent) inset }
+    .choice-option:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
     .chip{ background:#0b1220; border:1px solid #334155; border-radius:999px; padding:8px 12px; cursor:pointer; transition:.15s; user-select:none; min-height:44px }
     .chip:hover{ transform:translateY(-1px) }
     .chip.used{ opacity:.45; cursor:default }
@@ -79,6 +84,7 @@
             <option value="reorder">並べ替え（文法）</option>
             <option value="rewrite">書き換え（指定の形に）</option>
             <option value="vocab" selected>単語（意味→スペル）</option>
+            <option value="vocab-choice">単語（英語→意味 選択式）</option>
           </select>
         </label>
         <label class="row" style="gap:6px"><span class="muted">レベル</span>
@@ -100,6 +106,7 @@
         並べ替え: <span class="kbd">1-9</span> で選択、<span class="kbd">Backspace</span> で戻す、<span class="kbd">Enter</span> で採点/次へ。<br>
         書き換え: 指示に従って英文を入力（句読点も忘れずに）。<br>
         単語: 入力欄にスペルを入力（英字・大文字小文字は不問）。
+        単語（選択式）: 表示される英単語に合う日本語の意味を選択。
         <br>レベルの目安: Lv1＝中学一年生、Lv2＝中学二年生、Lv3＝中学三年生。
       </div>
     </section>
@@ -131,6 +138,12 @@
           <button id="btn-clear-vocab">🧹 クリア</button>
         </div>
         <div class="muted" id="vocab-tip" style="margin-top:6px"></div>
+      </div>
+
+      <!-- 単語選択UI -->
+      <div id="ui-vocab-choice" style="display:none; margin-top:10px">
+        <div class="muted" id="vocab-choice-tip" style="margin-bottom:6px"></div>
+        <div id="vocab-choice-options" class="choice-grid" role="radiogroup" aria-label="日本語の意味を選択"></div>
       </div>
 
       <!-- 書き換えUI -->
@@ -185,7 +198,8 @@
 
     /********** 問題ロード **********/
     let BANK_REORDER = [];
-    let BANK_VOCAB = [];
+    let BANK_VOCAB_INPUT = [];
+    let BANK_VOCAB_CHOICE = [];
     let BANK_REWRITE = [];
 
     const toAnswerList = (value)=>{
@@ -328,8 +342,31 @@
       if(type==='reorder'){
         base.chunks = item.chunks;
         base.wrong = item.wrong||[];
-      } else if(type==='vocab'){
+      } else if(type==='vocab' || type==='vocab-choice'){
         base.pos = item.pos||'';
+        if(type==='vocab-choice' && Array.isArray(item.choices)){
+          const normalized = [];
+          item.choices.forEach(choice=>{
+            if(choice==null) return;
+            if(typeof choice === 'string'){
+              const text = choice.trim();
+              if(!text) return;
+              normalized.push({ text, correct: false });
+              return;
+            }
+            if(typeof choice === 'object'){
+              const rawText = typeof choice.text === 'string'
+                ? choice.text
+                : (typeof choice.value === 'string' ? choice.value : '');
+              const text = rawText.trim();
+              if(!text) return;
+              normalized.push({ text, correct: choice.correct === true });
+            }
+          });
+          if(normalized.length){
+            base.choices = normalized;
+          }
+        }
       } else if(type==='rewrite'){
         base.source = item.source || '';
         base.task = item.task || '';
@@ -338,13 +375,24 @@
       return base;
     };
     async function ensureQuestions(){
-      if (BANK_REORDER.length || BANK_VOCAB.length){ renderUnitFilterOptions(); return; }
+      if (BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
+      const rawVocabInput = Array.isArray(data.vocabInput)
+        ? data.vocabInput
+        : Array.isArray(data.vocab)
+          ? data.vocab.filter(item=>!(Array.isArray(item.choices) && item.choices.length>0))
+          : [];
+      const rawVocabChoice = Array.isArray(data.vocabChoice)
+        ? data.vocabChoice
+        : Array.isArray(data.vocab)
+          ? data.vocab.filter(item=>Array.isArray(item.choices) && item.choices.length>0)
+          : [];
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
-      BANK_VOCAB   = (data.vocab||[]).map(v=>buildQuestion(v, 'vocab'));
+      BANK_VOCAB_INPUT = rawVocabInput.map(v=>buildQuestion(v, 'vocab'));
+      BANK_VOCAB_CHOICE = rawVocabChoice.map(v=>buildQuestion(v, 'vocab-choice'));
       BANK_REWRITE = (data.rewrite||[]).map(w=>buildQuestion(w, 'rewrite'));
       renderUnitFilterOptions();
     }
@@ -365,6 +413,7 @@
       reviewStrategy:'all', // 'all' | 'recent'
       weakWindowDays:7,      // 過去◯日を対象
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
+      choiceSelection: null,
     };
 
     const $ = s=>document.querySelector(s);
@@ -403,7 +452,7 @@
       if(!customDeck || !customDeck.length){ alert('このセットの間違いはありません。'); return; }
 
       // セット初期化
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
 
       // レビュー用デッキに流し込む（既存ロジック流用）
@@ -527,7 +576,8 @@
     /********** デッキ取得 **********/
     function deckByType(type){
       if(type==='reorder') return BANK_REORDER;
-      if(type==='vocab') return BANK_VOCAB;
+      if(type==='vocab') return BANK_VOCAB_INPUT;
+      if(type==='vocab-choice') return BANK_VOCAB_CHOICE;
       if(type==='rewrite') return BANK_REWRITE;
       return [];
     }
@@ -819,7 +869,7 @@
         show('setup');
         return;
       }
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
       if(state.mode==='review'){
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
@@ -847,17 +897,42 @@
     function startTimer(){ state.startedAt=Date.now(); if(state.timerId) clearInterval(state.timerId); state.timerId=setInterval(()=>{ const sec=Math.floor((Date.now()-state.startedAt)/1000); $('#timer').textContent=`⏱ ${fmtTime(sec)}`; }, 250); }
     function stopTimer(){ if(state.timerId){ clearInterval(state.timerId); state.timerId=null; } }
 
+    function updateChoiceButtons(){
+      const options = $$('#vocab-choice-options .choice-option');
+      const selectedValue = state.choiceSelection || '';
+      options.forEach(btn=>{
+        const value = btn.getAttribute('data-value') || '';
+        const isSelected = value === selectedValue;
+        const indexAttr = parseInt(btn.getAttribute('data-index') || '1', 10) - 1;
+        btn.classList.toggle('selected', isSelected);
+        btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+        btn.tabIndex = (isSelected || (!selectedValue && indexAttr === 0)) ? 0 : -1;
+      });
+    }
+
+    function selectChoice(value){
+      if(state.choiceSelection === value){
+        state.choiceSelection = null;
+      } else {
+        state.choiceSelection = value;
+      }
+      updateChoiceButtons();
+      updateNextState();
+    }
+
     function renderQuestion(){
       const entry = state.order[state.qIndex];
       const q = getCurrentQuestion();
       updateQuestionStat(q, entry.bucket);
       state.graded = false;
+      state.choiceSelection = null;
       $('#status').textContent = `Q ${state.qIndex+1}/${state.order.length}${state.mode==='review'?'（復習）':''}`;
       $('#explain').textContent='';
 
       if(state.qType==='reorder'){
         $('#ui-reorder').style.display='block';
         $('#ui-vocab').style.display='none';
+        $('#ui-vocab-choice').style.display='none';
         $('#ui-rewrite').style.display='none';
         const basePrompt = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
         $('#prompt').innerHTML = basePrompt;
@@ -881,15 +956,111 @@
       } else if(state.qType==='vocab'){
         $('#ui-reorder').style.display='none';
         $('#ui-vocab').style.display='block';
+        $('#ui-vocab-choice').style.display='none';
         $('#ui-rewrite').style.display='none';
         $('#prompt').innerHTML = `意味: <b>${q.jp}</b>`;
         $('#vocab-tip').innerHTML = '';
         $('#btn-hint').disabled = !q.tip;
         const inp = $('#vocab-input'); inp.value=''; inp.focus();
         $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
+      } else if(state.qType==='vocab-choice'){
+        $('#ui-reorder').style.display='none';
+        $('#ui-vocab').style.display='none';
+        $('#ui-vocab-choice').style.display='block';
+        $('#ui-rewrite').style.display='none';
+        const word = q.en || '<span class="muted">英単語を確認しましょう</span>';
+        const pos = q.pos ? `<span class="muted">（${q.pos}）</span>` : '';
+        $('#prompt').innerHTML = `英単語: <b>${word}</b> ${pos}`;
+        $('#vocab-choice-tip').textContent = '';
+        $('#btn-hint').disabled = !q.tip;
+        const optionsEl = $('#vocab-choice-options');
+        optionsEl.innerHTML='';
+        const options = [];
+        const seen = new Set();
+        let hasCorrect = false;
+        const correctText = typeof q.jp === 'string' ? q.jp.trim() : '';
+        const pushOption = (text, isCorrect=false)=>{
+          const trimmed = typeof text === 'string' ? text.trim() : '';
+          if(!trimmed || seen.has(trimmed)) return;
+          options.push({ text: trimmed, correct: !!isCorrect });
+          seen.add(trimmed);
+          if(isCorrect) hasCorrect = true;
+        };
+        const useCustomChoices = Array.isArray(q.choices) && q.choices.length>0;
+        if(useCustomChoices){
+          q.choices.forEach(choice=>{
+            if(choice==null) return;
+            if(typeof choice === 'string'){
+              const isCorrect = !!(correctText && choice.trim() === correctText);
+              pushOption(choice, isCorrect);
+              return;
+            }
+            if(typeof choice === 'object'){
+              const rawText = typeof choice.text === 'string'
+                ? choice.text
+                : (typeof choice.value === 'string' ? choice.value : '');
+              const isCorrect = choice.correct === true || (!!correctText && rawText && rawText.trim() === correctText);
+              pushOption(rawText, isCorrect);
+            }
+          });
+        } else if(correctText){
+          pushOption(correctText, true);
+        }
+        const pools = [
+          deck().filter(item=> item && item.jp && item.id !== q.id),
+          deckByType('vocab-choice').filter(item=> item && item.jp && item.id !== q.id),
+        ];
+        const fillFromPools = targetCount=>{
+          for(const source of pools){
+            const shuffled = shuffle(source);
+            for(const candidate of shuffled){
+              if(options.length >= targetCount) break;
+              const text = typeof candidate.jp === 'string' ? candidate.jp.trim() : '';
+              if(!text) continue;
+              const isCorrect = !!(correctText && text === correctText);
+              pushOption(text, isCorrect);
+            }
+            if(options.length >= targetCount) break;
+          }
+        };
+        if(useCustomChoices){
+          if(!hasCorrect && correctText){
+            pushOption(correctText, true);
+          }
+          if(options.length < 2){
+            fillFromPools(Math.max(options.length+1, 4));
+          }
+        } else {
+          fillFromPools(4);
+        }
+        if(!hasCorrect && correctText){
+          pushOption(correctText, true);
+        }
+        if(options.length < 2 && correctText){
+          pushOption(correctText, true);
+        }
+        const finalOptions = shuffle(options);
+        finalOptions.forEach((opt, idx)=>{
+          const btn = document.createElement('button');
+          btn.type='button';
+          btn.className='choice-option';
+          btn.setAttribute('data-value', opt.text);
+          btn.setAttribute('data-index', String(idx+1));
+          btn.setAttribute('role', 'radio');
+          btn.setAttribute('aria-checked', 'false');
+          btn.tabIndex = idx === 0 ? 0 : -1;
+          btn.textContent = `${idx+1}. ${opt.text}`;
+          btn.onclick=()=>selectChoice(opt.text);
+          optionsEl.appendChild(btn);
+        });
+        updateChoiceButtons();
+        const firstOption = $('#vocab-choice-options .choice-option');
+        if(firstOption){ firstOption.focus(); }
+        $('#btn-next').disabled = true;
       } else if(state.qType==='rewrite'){
         $('#ui-reorder').style.display='none';
         $('#ui-vocab').style.display='none';
+        $('#ui-vocab-choice').style.display='none';
         $('#ui-rewrite').style.display='block';
         const instruction = q.jp || '<span class="muted">指示に従って英文を書き換えましょう</span>';
         $('#prompt').innerHTML = instruction;
@@ -914,6 +1085,8 @@
         $('#prompt').innerHTML = `${base}<br><span class="muted">ヒント: ${q.tip}</span>`;
       } else if(state.qType==='vocab'){
         $('#vocab-tip').innerHTML = `ヒント: ${q.tip}`;
+      } else if(state.qType==='vocab-choice'){
+        $('#vocab-choice-tip').textContent = `ヒント: ${q.tip}`;
       } else if(state.qType==='rewrite'){
         $('#rewrite-tip').innerHTML = `ヒント: ${q.tip}`;
       }
@@ -926,6 +1099,12 @@
         $$('#target .chip').forEach(n=>n.remove());
         $$('#bank .chip').forEach(n=>n.classList.remove('used'));
         updateNextState();
+      } else if(state.qType==='vocab-choice'){
+        state.choiceSelection = null;
+        updateChoiceButtons();
+        const firstOption = $('#vocab-choice-options .choice-option');
+        if(firstOption){ firstOption.focus(); }
+        updateNextState();
       } else {
         const inp = typedInputElement();
         if(inp){ inp.value=''; inp.focus(); }
@@ -937,6 +1116,9 @@
       if(state.qType==='reorder'){
         return [...$('#target').children].map(x=>x.textContent).join(' ');
       }
+      if(state.qType==='vocab-choice'){
+        return state.choiceSelection || '';
+      }
       const inp = typedInputElement();
       return inp? (inp.value||'') : '';
     }
@@ -947,6 +1129,10 @@
       if(state.qType==='reorder'){
         const hasAnswer = $$('#target .chip').length > 0;
         btnCheck.disabled = state.graded || !hasAnswer;
+        btnNext.disabled = state.graded ? false : true;
+      } else if(state.qType==='vocab-choice'){
+        const hasSelection = !!(state.choiceSelection && state.choiceSelection.trim());
+        btnCheck.disabled = state.graded || !hasSelection;
         btnNext.disabled = state.graded ? false : true;
       } else {
         const inp = typedInputElement();
@@ -976,7 +1162,9 @@
       if(state.graded) return; // 二重加算防止
       const q = getCurrentQuestion();
 
-      const answerList = (Array.isArray(q.answers) && q.answers.length) ? q.answers : [q.en];
+      const answerList = state.qType==='vocab-choice'
+        ? ((q.jp ? [q.jp] : []).filter(Boolean))
+        : ((Array.isArray(q.answers) && q.answers.length) ? q.answers : [q.en]);
       let ans, correct;
       if(state.qType==='reorder'){
         const keepPunc = true; // 並び替えでは文末記号を保持する
@@ -986,6 +1174,10 @@
         const normalizedAnsLower = typeof normalizedAns === 'string' ? normalizedAns.toLowerCase() : normalizedAns;
         const normalizedAnswersLower = normalizedAnswers.map(a=>typeof a === 'string' ? a.toLowerCase() : a);
         correct = normalizedAnswersLower.includes(normalizedAnsLower);
+      } else if(state.qType==='vocab-choice'){
+        ans = normalizeSpaces(currentAnswer());
+        const normalizedCorrect = answerList.map(a=>normalizeSpaces(a));
+        correct = normalizedCorrect.includes(ans);
       } else if(state.qType==='rewrite'){
         const keepPunc = true;
         const normalizedAns = normalizeEndPunc(normalizeSpaces(currentAnswer()), keepPunc);
@@ -1133,7 +1325,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }
@@ -1163,7 +1355,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }
@@ -1249,6 +1441,13 @@
       if(state.qType==='reorder'){
         if(e.key>='1' && e.key<='9'){ const idx=parseInt(e.key,10)-1; const chips=$$('#bank .chip'); const chip=chips[idx]; if(chip) placeChip(chip); }
         else if(e.key==='Backspace'){ e.preventDefault(); undo(); }
+      } else if(state.qType==='vocab-choice'){
+        if(e.key>='1' && e.key<='9'){
+          const idx=parseInt(e.key,10)-1;
+          const options=$$('#vocab-choice-options .choice-option');
+          const target=options[idx];
+          if(target){ target.click(); }
+        }
       }
       if(e.key==='Enter'){
         e.preventDefault();

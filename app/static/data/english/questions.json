@@ -1,8 +1,8 @@
 {
   "meta": {
-    "version": 2,
+    "version": 3,
     "lang": "ja-en",
-    "note": "並べ替え(questions)＋単語(vocab) を同居"
+    "note": "並べ替え(questions)＋単語入力(vocabInput)＋単語選択(vocabChoice)"
   },
   "questions": [
     {
@@ -1688,7 +1688,7 @@
       "level": "Lv1"
     }
   ],
-  "vocab": [
+  "vocabInput": [
     {
       "id": "v001",
       "unit": "動詞-基本",
@@ -2137,6 +2137,38 @@
       "en": "worry",
       "pos": "verb",
       "tip": "",
+      "level": "Lv1"
+    }
+  ],
+  "vocabChoice": [
+    {
+      "id": "v051",
+      "unit": "疑問詞",
+      "jp": "何を",
+      "en": "What",
+      "pos": "interrogative",
+      "choices": [
+        {
+          "text": "いつ"
+        },
+        {
+          "text": "どこで"
+        },
+        {
+          "text": "誰が"
+        },
+        {
+          "text": "何を",
+          "correct": true
+        },
+        {
+          "text": "なぜ"
+        },
+        {
+          "text": "どのように"
+        }
+      ],
+      "tip": "5W1H の \"what\" は物事の内容（何を）を尋ねる疑問詞。",
       "level": "Lv1"
     }
   ]
