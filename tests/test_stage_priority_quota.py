@@ -17,14 +17,14 @@ def run_node(code: str) -> str:
 def test_determine_stage_priority_quota_cases():
     script = Path(__file__).resolve().parent.parent / "app" / "static" / "stage_priority.js"
     assert script.exists(), "stage_priority.js should exist"
-    node_code = f"""
+    node_code = """
     const mod = require('./app/static/stage_priority.js');
     const fn = mod.determineStagePriorityQuota;
     const cases = [
-      {{ total: 7, stageF: 5 }},
-      {{ total: 7, stageF: 10 }},
-      {{ total: 7, stageF: 0 }},
-      {{ total: 5, stageF: 2 }},
+      { total: 7, stageF: 5 },
+      { total: 7, stageF: 10 },
+      { total: 7, stageF: 0 },
+      { total: 5, stageF: 2 },
     ];
     const results = cases.map(c => fn(c.total, c.stageF));
     process.stdout.write(JSON.stringify(results));
