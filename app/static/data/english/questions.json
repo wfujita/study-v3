@@ -2138,6 +2138,23 @@
       "pos": "verb",
       "tip": "",
       "level": "Lv1"
+    },
+    {
+      "id": "v051",
+      "unit": "疑問詞",
+      "jp": "何を",
+      "en": "What",
+      "pos": "interrogative",
+      "choices": [
+        { "text": "いつ" },
+        { "text": "どこで" },
+        { "text": "誰が" },
+        { "text": "何を", "correct": true },
+        { "text": "なぜ" },
+        { "text": "どのように" }
+      ],
+      "tip": "5W1H の \"what\" は物事の内容（何を）を尋ねる疑問詞。",
+      "level": "Lv1"
     }
   ]
 }

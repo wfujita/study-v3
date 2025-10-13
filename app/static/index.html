@@ -343,6 +343,29 @@
         base.wrong = item.wrong||[];
       } else if(type==='vocab'){
         base.pos = item.pos||'';
+        if(Array.isArray(item.choices)){
+          const normalized = [];
+          item.choices.forEach(choice=>{
+            if(choice==null) return;
+            if(typeof choice === 'string'){
+              const text = choice.trim();
+              if(!text) return;
+              normalized.push({ text, correct: false });
+              return;
+            }
+            if(typeof choice === 'object'){
+              const rawText = typeof choice.text === 'string'
+                ? choice.text
+                : (typeof choice.value === 'string' ? choice.value : '');
+              const text = rawText.trim();
+              if(!text) return;
+              normalized.push({ text, correct: choice.correct === true });
+            }
+          });
+          if(normalized.length){
+            base.choices = normalized;
+          }
+        }
       } else if(type==='rewrite'){
         base.source = item.source || '';
         base.task = item.task || '';
@@ -940,25 +963,68 @@
         const optionsEl = $('#vocab-choice-options');
         optionsEl.innerHTML='';
         const options = [];
+        const seen = new Set();
+        let hasCorrect = false;
         const correctText = typeof q.jp === 'string' ? q.jp.trim() : '';
-        if(correctText){
-          options.push({ text: correctText, correct: true });
+        const pushOption = (text, isCorrect=false)=>{
+          const trimmed = typeof text === 'string' ? text.trim() : '';
+          if(!trimmed || seen.has(trimmed)) return;
+          options.push({ text: trimmed, correct: !!isCorrect });
+          seen.add(trimmed);
+          if(isCorrect) hasCorrect = true;
+        };
+        const useCustomChoices = Array.isArray(q.choices) && q.choices.length>0;
+        if(useCustomChoices){
+          q.choices.forEach(choice=>{
+            if(choice==null) return;
+            if(typeof choice === 'string'){
+              const isCorrect = !!(correctText && choice.trim() === correctText);
+              pushOption(choice, isCorrect);
+              return;
+            }
+            if(typeof choice === 'object'){
+              const rawText = typeof choice.text === 'string'
+                ? choice.text
+                : (typeof choice.value === 'string' ? choice.value : '');
+              const isCorrect = choice.correct === true || (!!correctText && rawText && rawText.trim() === correctText);
+              pushOption(rawText, isCorrect);
+            }
+          });
+        } else if(correctText){
+          pushOption(correctText, true);
         }
         const pools = [
           deck().filter(item=> item && item.jp && item.id !== q.id),
           deckByType('vocab-choice').filter(item=> item && item.jp && item.id !== q.id),
         ];
-        const seen = new Set(options.map(opt=>opt.text));
-        for(const source of pools){
-          const shuffled = shuffle(source);
-          for(const candidate of shuffled){
-            if(options.length >= 4) break;
-            const text = typeof candidate.jp === 'string' ? candidate.jp.trim() : '';
-            if(!text || seen.has(text)) continue;
-            options.push({ text, correct: false });
-            seen.add(text);
+        const fillFromPools = targetCount=>{
+          for(const source of pools){
+            const shuffled = shuffle(source);
+            for(const candidate of shuffled){
+              if(options.length >= targetCount) break;
+              const text = typeof candidate.jp === 'string' ? candidate.jp.trim() : '';
+              if(!text) continue;
+              const isCorrect = !!(correctText && text === correctText);
+              pushOption(text, isCorrect);
+            }
+            if(options.length >= targetCount) break;
           }
-          if(options.length >= 4) break;
+        };
+        if(useCustomChoices){
+          if(!hasCorrect && correctText){
+            pushOption(correctText, true);
+          }
+          if(options.length < 2){
+            fillFromPools(Math.max(options.length+1, 4));
+          }
+        } else {
+          fillFromPools(4);
+        }
+        if(!hasCorrect && correctText){
+          pushOption(correctText, true);
+        }
+        if(options.length < 2 && correctText){
+          pushOption(correctText, true);
         }
         const finalOptions = shuffle(options);
         finalOptions.forEach((opt, idx)=>{
