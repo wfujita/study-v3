@@ -39,6 +39,7 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
     data = res.get_json()
     assert all(q["type"] == "vocab" for q in data["questionStats"])
     assert all(r["unit"] == "動詞-基本" for r in data["recentAnswers"])
+    assert all("stage" in r for r in data["recentAnswers"])
     assert [u["unit"] for u in data["byUnit"]] == ["動詞-基本"]
 
     res2 = client.get("/api/admin/summary", query_string={"show": "reorder"})
@@ -46,6 +47,7 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
     data2 = res2.get_json()
     assert all(q["type"] == "reorder" for q in data2["questionStats"])
     assert all(r["unit"] == "present-simple" for r in data2["recentAnswers"])
+    assert all("stage" in r for r in data2["recentAnswers"])
     assert [u["unit"] for u in data2["byUnit"]] == ["present-simple"]
 
     sys.modules.pop("app.app", None)
