@@ -1187,7 +1187,6 @@ def admin_summary():
         by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True
     )
 
-
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
