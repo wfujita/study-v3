@@ -951,7 +951,6 @@
                 const bucketLabel = levelLabel ? `Lv優先 (${levelLabel})` : 'Lv優先';
                 order.push({ idx:entry.idx, bucket:bucketLabel, streak:entry.streak });
                 chosen.add(entry.idx);
-                break;
               }
               if(order.length >= n || chosen.size === deckArr.length) break;
             }
