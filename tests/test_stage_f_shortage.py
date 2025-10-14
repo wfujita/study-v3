@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
 
+
 def run_node(code: str) -> str:
     result = subprocess.run(
         ["node", "-e", code],
@@ -12,6 +13,7 @@ def run_node(code: str) -> str:
         cwd=Path(__file__).resolve().parent.parent,
     )
     return result.stdout.strip()
+
 
 def execute_build_order(
     deck_data: List[Dict[str, Any]],
@@ -170,6 +172,7 @@ def execute_build_order(
     output = run_node(node_code)
     return json.loads(output)
 
+
 def test_stage_f_shortage_promotes_higher_level_items():
     deck = [
         {
@@ -257,6 +260,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
     ]
     assert len(stage_f_ids) == 2
     assert all(item["bucket"] == "Stage F" for item in stage_f_ids)
+
 
 def test_waiting_fallback_extras_are_replaced_by_additional_levels():
     deck = [
@@ -362,6 +366,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
     assert used_ids.count("8") == 1
     assert used_ids.count("9") == 1
 
+
 def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
     deck = [
         {
@@ -455,8 +460,11 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         item.get("id"): item.get("bucket") for item in result["orderWithIds"]
     }
     assert ids_with_buckets.get("8") == "Stage D"
-    stage_f_count = sum(1 for bucket in ids_with_buckets.values() if bucket == "Stage F")
+    stage_f_count = sum(
+        1 for bucket in ids_with_buckets.values() if bucket == "Stage F"
+    )
     assert stage_f_count == 6
+
 
 def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used():
     deck = [
