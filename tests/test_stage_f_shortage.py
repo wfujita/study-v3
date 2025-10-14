@@ -178,6 +178,8 @@ def test_stage_f_shortage_promotes_higher_level_items():
     overrides = dict(data["overrides"])
     assert overrides.get("id:6") == "F"
     assert overrides.get("id:7") == "F"
-    stage_f_ids = [item for item in data["orderWithIds"] if item.get("id") in {"6", "7"}]
+    stage_f_ids = [
+        item for item in data["orderWithIds"] if item.get("id") in {"6", "7"}
+    ]
     assert len(stage_f_ids) == 2
     assert all(item["bucket"] == "Stage F" for item in stage_f_ids)
