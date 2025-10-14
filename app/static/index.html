@@ -613,7 +613,6 @@
       : ((typeof globalThis !== 'undefined' && globalThis.__stagePriority)
         ? globalThis.__stagePriority
         : {});
-
     const shouldPrioritizeStagePromotion = typeof stagePriorityApi.shouldPrioritizeStagePromotion === 'function'
       ? stagePriorityApi.shouldPrioritizeStagePromotion
       : (stage, nextDue, nowMs) => {
@@ -867,7 +866,6 @@
           }
           const payload = { idx:i, stage, actualStage, streak, nextDue, rand:Math.random() };
           pushLevelCandidate(levelIdx, payload);
-
           if(willPromote){
             const arr = dueByStage.get(actualStage);
             if(arr){
@@ -888,9 +886,24 @@
         const order = [];
         const chosen = new Set();
 
-        const stagePriorityQuota = typeof determineStagePriorityQuota === 'function'
-          ? determineStagePriorityQuota(n, stageFPool.length)
-          : Math.max(0, n - Math.min(stageFPool.length, n));
+        const dueCandidateCount = STAGE_PRIORITY.reduce((acc, stage)=>{
+          const arr = dueByStage.get(stage);
+          return acc + (Array.isArray(arr) ? arr.length : 0);
+        }, 0);
+        const effectiveStageFCount = Math.max(0, stageFPool.length - dueCandidateCount);
+        const baseStagePriorityQuota = typeof determineStagePriorityQuota === 'function'
+          ? determineStagePriorityQuota(n, effectiveStageFCount)
+          : Math.max(0, n - Math.min(effectiveStageFCount, n));
+        let stagePriorityQuota = baseStagePriorityQuota;
+        if(stagePriorityQuota < n && dueCandidateCount > 0){
+          const minimumQuota = Math.min(
+            n,
+            Math.max(1, Math.min(dueCandidateCount, Math.ceil(n / 3)))
+          );
+          if(stagePriorityQuota < minimumQuota){
+            stagePriorityQuota = minimumQuota;
+          }
+        }
         let stagePriorityPicked = 0;
         const lv2Index = LEVEL_ORDER.indexOf('Lv2');
         const normalizeRank = (stage)=>{

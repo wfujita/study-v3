@@ -8,8 +8,12 @@
   }
 
   function toValidDate(value){
-    if(value instanceof Date){
-      return Number.isNaN(value.getTime()) ? null : value;
+    const isDateObject =
+      value instanceof Date ||
+      (value && typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
+    if(isDateObject){
+      const timeValue = typeof value.getTime === 'function' ? value.getTime() : NaN;
+      return Number.isNaN(timeValue) ? null : new Date(timeValue);
     }
     if(typeof value === 'number'){
       if(!Number.isFinite(value)){
