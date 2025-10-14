@@ -181,6 +181,7 @@
     </section>
   </main>
 
+  <script src="fallback_extras.js"></script>
   <script src="stage_priority.js"></script>
   <script>
     /********** 設定 **********/
@@ -674,6 +675,31 @@
       const fallbackStageOverrides = state.fallbackStageOverrides;
       const desired = state.totalPerSet;
       const deckArrBase = baseDeck.slice();
+      const baseDeckCount = deckArrBase.length;
+      const appendFallbackExtras = (typeof window !== 'undefined'
+        && window
+        && window.__quizFallbackExtras
+        && typeof window.__quizFallbackExtras.appendFallbackExtras === 'function')
+          ? window.__quizFallbackExtras.appendFallbackExtras
+          : (extrasArr, prioritizedList, othersList, totalNeeded, baseCountValue)=>{
+              if(!Array.isArray(extrasArr)) return extrasArr;
+              const total = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
+              if(total === 0) return extrasArr;
+              const base = Number.isFinite(baseCountValue)
+                ? Math.min(Math.max(0, Math.floor(baseCountValue)), total)
+                : 0;
+              const limit = Math.max(0, total - base);
+              if(limit === 0) return extrasArr;
+              const pushLimited = (list)=>{
+                if(!Array.isArray(list) || !list.length) return;
+                const remaining = limit - extrasArr.length;
+                if(remaining <= 0) return;
+                extrasArr.push(...list.slice(0, remaining));
+              };
+              pushLimited(prioritizedList);
+              pushLimited(othersList);
+              return extrasArr;
+            };
 
       const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
       const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
@@ -702,7 +728,7 @@
 
       const seenKeys = new Set(deckArrBase.map(q=>toKey(q)).filter(Boolean));
 
-      if(desired > deckArrBase.length){
+      if(desired > baseDeckCount){
         const wrongSet = new Set();
         (getWrongQueue() || []).forEach(item=>{
           if(!item) return;
@@ -731,12 +757,12 @@
           }
           const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
           const othersShuffled = others.length ? shuffle(others) : [];
-          extras.push(...prioritizedShuffled, ...othersShuffled);
+          appendFallbackExtras(extras, prioritizedShuffled, othersShuffled, desired, baseDeckCount);
         };
 
         for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
           pickFromLevel(levelIdx);
-          if(deckArrBase.length + extras.length >= desired) break;
+          if(baseDeckCount + extras.length >= desired) break;
         }
 
         state.fallbackExtras = extras;
