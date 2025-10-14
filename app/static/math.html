@@ -694,6 +694,7 @@
       const stageFPool = [];
       const waitingPool = [];
       const metaByIndex = new Map();
+      const skipIndexes = new Set();
 
       entries.forEach((entry, idx) => {
         const stat = stats[idx];
@@ -721,7 +722,17 @@
           meta.accuracy = formatAccuracy(meta.correct, meta.answered);
           meta.nextDueAt = nextDueRaw;
 
-          if(willStageUpOnSuccess(stage, nextDue, nowMs)){
+          const isTrackedStage = STAGE_PRIORITY.includes(stage);
+          const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
+          const isWaiting = isTrackedStage && nextDueMs != null && nextDueMs > nowMs;
+          const willPromote = willStageUpOnSuccess(stage, nextDue, nowMs);
+          if(isWaiting){
+            skipIndexes.add(entry.idx);
+            metaByIndex.set(entry.idx, meta);
+            return;
+          }
+
+          if(willPromote){
             const bucket = dueByStage.get(stage);
             if(bucket){
               bucket.push({ entry, meta, nextDue, rand: Math.random() });
@@ -787,6 +798,7 @@
 
       entries.forEach(entry => {
         if(chosen.has(entry.idx)) return;
+        if(skipIndexes.has(entry.idx)) return;
         const meta = metaByIndex.get(entry.idx) || {
           stage: DEFAULT_STAGE,
           answered: 0,

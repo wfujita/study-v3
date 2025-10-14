@@ -794,11 +794,12 @@
       }
 
       const deckArr = deck({ includeExtras: true });
-      const n = Math.min(desired, deckArr.length);
+      const targetCount = Math.min(desired, deckArr.length);
 
         const dueByStage = new Map(STAGE_PRIORITY.map(stage=>[stage, []]));
         const stageFPool = [];
         const levelBuckets = new Map();
+        let eligibleCount = 0;
 
         const entries = deckArr.map((q, idx)=>({
           idx,
@@ -826,6 +827,7 @@
           if(!s || typeof s !== 'object'){
             stageFPool.push({idx:i, streak:0});
             pushLevelCandidate(levelIdx, { idx:i, stage:'F', streak:0, nextDue:null, rand:Math.random() });
+            eligibleCount += 1;
             continue;
           }
 
@@ -839,10 +841,18 @@
           const baseStreak = Number.isFinite(rawStreak) ? rawStreak : 0;
           const streak = hasFallbackOverride ? 0 : baseStreak;
           const nextDue = hasFallbackOverride ? null : parseIsoDate(s.nextDueAt);
+          const isTrackedStage = STAGE_PRIORITY.includes(stage);
+          const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
+          const isWaiting = isTrackedStage && nextDueMs != null && nextDueMs > now;
+          const willPromote = willStageUpOnSuccess(stage, nextDue, now);
+          if(isWaiting){
+            continue;
+          }
           const payload = { idx:i, stage, streak, nextDue, rand:Math.random() };
           pushLevelCandidate(levelIdx, payload);
+          eligibleCount += 1;
 
-          if(willStageUpOnSuccess(stage, nextDue, now)){
+          if(willPromote){
             const arr = dueByStage.get(stage);
             if(arr){
               arr.push(payload);
@@ -856,6 +866,8 @@
             stageFPool.push({ idx:i, streak });
           }
         }
+
+        const n = Math.min(targetCount, eligibleCount);
 
         const order = [];
         const chosen = new Set();
