@@ -689,112 +689,127 @@
 
     /********** セット準備 **********/
     async function buildOrderFromBank(){
-      const baseDeck = deck({ includeExtras: false });
-      state.fallbackExtras = [];
-      state.fallbackStageOverrides = new Map();
-      const fallbackStageOverrides = state.fallbackStageOverrides;
-      const desired = state.totalPerSet;
-      const deckArrBase = baseDeck.slice();
-      const baseDeckCount = deckArrBase.length;
-      const appendFallbackExtras = (typeof window !== 'undefined'
-        && window
-        && window.__quizFallbackExtras
-        && typeof window.__quizFallbackExtras.appendFallbackExtras === 'function')
-          ? window.__quizFallbackExtras.appendFallbackExtras
-          : (extrasArr, prioritizedList, othersList, totalNeeded, baseCountValue)=>{
-              if(!Array.isArray(extrasArr)) return extrasArr;
-              const total = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
-              if(total === 0) return extrasArr;
-              const base = Number.isFinite(baseCountValue)
-                ? Math.min(Math.max(0, Math.floor(baseCountValue)), total)
-                : 0;
-              const limit = Math.max(0, total - base);
-              if(limit === 0) return extrasArr;
-              const pushLimited = (list)=>{
-                if(!Array.isArray(list) || !list.length) return;
-                const remaining = limit - extrasArr.length;
-                if(remaining <= 0) return;
-                extrasArr.push(...list.slice(0, remaining));
+      const blockedFallbackKeys = new Set();
+      const MAX_ATTEMPTS = 4;
+      let forcedExtraDeficit = 0;
+      let lastOrder = [];
+
+      for(let attempt=0; attempt<MAX_ATTEMPTS; attempt++){
+        const baseDeck = deck({ includeExtras: false });
+        state.fallbackExtras = [];
+        state.fallbackStageOverrides = new Map();
+        const fallbackStageOverrides = state.fallbackStageOverrides;
+        const desired = state.totalPerSet;
+        const deckArrBase = baseDeck.slice();
+        const baseDeckCount = deckArrBase.length;
+        const appendFallbackExtras = (typeof window !== 'undefined'
+          && window
+          && window.__quizFallbackExtras
+          && typeof window.__quizFallbackExtras.appendFallbackExtras === 'function')
+            ? window.__quizFallbackExtras.appendFallbackExtras
+            : (extrasArr, prioritizedList, othersList, totalNeeded, baseCountValue)=>{
+                if(!Array.isArray(extrasArr)) return extrasArr;
+                const total = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
+                if(total === 0) return extrasArr;
+                const base = Number.isFinite(baseCountValue)
+                  ? Math.min(Math.max(0, Math.floor(baseCountValue)), total)
+                  : 0;
+                const limit = Math.max(0, total - base);
+                if(limit === 0) return extrasArr;
+                const pushLimited = (list)=>{
+                  if(!Array.isArray(list) || !list.length) return;
+                  const remaining = limit - extrasArr.length;
+                  if(remaining <= 0) return;
+                  extrasArr.push(...list.slice(0, remaining));
+                };
+                pushLimited(prioritizedList);
+                pushLimited(othersList);
+                return extrasArr;
               };
-              pushLimited(prioritizedList);
-              pushLimited(othersList);
-              return extrasArr;
-            };
 
-      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
-      const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
-      const maxLevelIdx = levelIndex(state.levelMax);
+        const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+        const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
+        const maxLevelIdx = levelIndex(state.levelMax);
 
-      const allDeck = deckByType(state.qType);
+        const allDeck = deckByType(state.qType);
 
-      const toKey = (item)=>{
-        if(!item) return '';
-        try{
-          return qKeyOf(item);
-        }catch(_err){
+        const toKey = (item)=>{
+          if(!item) return '';
+          try{
+            return qKeyOf(item);
+          }catch(_err){
+            if(item.id != null) return `id:${item.id}`;
+            const en = item.en || '';
+            const jp = item.jp || '';
+            return `${en}__${jp}`;
+          }
+        };
+        const toLegacyKey = (item)=>{
+          if(!item) return '';
           if(item.id != null) return `id:${item.id}`;
           const en = item.en || '';
           const jp = item.jp || '';
           return `${en}__${jp}`;
-        }
-      };
-      const toLegacyKey = (item)=>{
-        if(!item) return '';
-        if(item.id != null) return `id:${item.id}`;
-        const en = item.en || '';
-        const jp = item.jp || '';
-        return `${en}__${jp}`;
-      };
-
-      const seenKeys = new Set(deckArrBase.map(q=>toKey(q)).filter(Boolean));
-
-      if(desired > baseDeckCount){
-        const wrongSet = new Set();
-        (getWrongQueue() || []).forEach(item=>{
-          if(!item) return;
-          if(item.key) wrongSet.add(item.key);
-          const primary = toKey(item);
-          if(primary) wrongSet.add(primary);
-          const legacy = toLegacyKey(item);
-          if(legacy) wrongSet.add(legacy);
-        });
-        const extras = [];
-        const pickFromLevel = (levelIdx)=>{
-          const candidates = allDeck.filter(q=> levelIndex(q.level) === levelIdx);
-          const filteredCandidates = unitFilter
-            ? candidates.filter(q=> normalizeUnit(q.unit) === unitFilter)
-            : candidates;
-          const prioritized = [];
-          const others = [];
-          for(const q of filteredCandidates){
-            const key = toKey(q);
-            if(!key) continue;
-            if(seenKeys.has(key)) continue;
-            seenKeys.add(key);
-            const legacyKey = toLegacyKey(q);
-            if(wrongSet.has(key) || (legacyKey && wrongSet.has(legacyKey))) prioritized.push(q);
-            else others.push(q);
-          }
-          const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
-          const othersShuffled = others.length ? shuffle(others) : [];
-          appendFallbackExtras(extras, prioritizedShuffled, othersShuffled, desired, baseDeckCount);
         };
 
-        for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
-          pickFromLevel(levelIdx);
-          if(baseDeckCount + extras.length >= desired) break;
+        const seenKeys = new Set(deckArrBase.map(q=>toKey(q)).filter(Boolean));
+        blockedFallbackKeys.forEach(key=>{
+          if(key) seenKeys.add(key);
+        });
+
+        const baseShortage = Math.max(0, desired - baseDeckCount);
+        const extrasLimit = baseShortage + Math.max(0, forcedExtraDeficit);
+
+        if(extrasLimit > 0){
+          const wrongSet = new Set();
+          (getWrongQueue() || []).forEach(item=>{
+            if(!item) return;
+            if(item.key) wrongSet.add(item.key);
+            const primary = toKey(item);
+            if(primary) wrongSet.add(primary);
+            const legacy = toLegacyKey(item);
+            if(legacy) wrongSet.add(legacy);
+          });
+          const extras = [];
+          const pickFromLevel = (levelIdx)=>{
+            const candidates = allDeck.filter(q=> levelIndex(q.level) === levelIdx);
+            const filteredCandidates = unitFilter
+              ? candidates.filter(q=> normalizeUnit(q.unit) === unitFilter)
+              : candidates;
+            const prioritized = [];
+            const others = [];
+            for(const q of filteredCandidates){
+              const key = toKey(q);
+              if(!key) continue;
+              if(seenKeys.has(key)) continue;
+              seenKeys.add(key);
+              const legacyKey = toLegacyKey(q);
+              if(wrongSet.has(key) || (legacyKey && wrongSet.has(legacyKey))) prioritized.push(q);
+              else others.push(q);
+            }
+            const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
+            const othersShuffled = others.length ? shuffle(others) : [];
+            const desiredTotalForExtras = baseDeckCount + extrasLimit;
+            appendFallbackExtras(extras, prioritizedShuffled, othersShuffled, desiredTotalForExtras, baseDeckCount);
+          };
+
+          for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
+            pickFromLevel(levelIdx);
+            if(baseDeckCount + extras.length >= baseDeckCount + extrasLimit) break;
+          }
+
+          state.fallbackExtras = extras;
+          extras.forEach(q=>{
+            const key = toKey(q);
+            if(!key) return;
+            fallbackStageOverrides.set(key, 'F');
+          });
         }
 
-        state.fallbackExtras = extras;
-        extras.forEach(q=>{
-          const key = toKey(q);
-          if(!key) return;
-          fallbackStageOverrides.set(key, 'F');
-        });
-      }
+        const currentExtraKeys = new Set((state.fallbackExtras || []).map(item=>toKey(item)).filter(Boolean));
 
-      const deckArr = deck({ includeExtras: true });
-      const targetCount = Math.min(desired, deckArr.length);
+        const deckArr = deck({ includeExtras: true });
+        const targetCount = Math.min(desired, deckArr.length);
 
         const dueByStage = new Map(STAGE_PRIORITY.map(stage=>[stage, []]));
         const stageFPool = [];
@@ -845,6 +860,9 @@
           const isWaiting = isTrackedStageForWait && nextDueMs != null && nextDueMs > now;
           const willPromote = !overrideStage && willStageUpOnSuccess(actualStage, nextDue, now);
           if(isWaiting){
+            if(qKey && currentExtraKeys.has(qKey)){
+              blockedFallbackKeys.add(qKey);
+            }
             continue;
           }
           const payload = { idx:i, stage, actualStage, streak, nextDue, rand:Math.random() };
@@ -957,8 +975,21 @@
           }
         }
 
+        lastOrder = order;
+
+        if(order.length < targetCount){
+          const shortage = targetCount - order.length;
+          if(shortage > 0 && attempt < MAX_ATTEMPTS - 1){
+            forcedExtraDeficit = Math.max(0, forcedExtraDeficit) + shortage;
+            continue;
+          }
+        }
+
         return order;
       }
+
+      return lastOrder;
+    }
 
 
 
