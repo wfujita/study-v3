@@ -39,7 +39,7 @@ def test_index_uses_priority_quota():
     html = (
         Path(__file__).resolve().parent.parent / "app" / "static" / "index.html"
     ).read_text(encoding="utf-8")
-    assert "determineStagePriorityQuota(n, stageFPool.length)" in html
+    assert "determineStagePriorityQuota(n, effectiveStageFCount)" in html
 
 
 def test_stage_promotion_helper_respects_due_dates():

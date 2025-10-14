@@ -367,6 +367,105 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
     assert used_ids.count("9") == 1
 
 
+def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
+    deck = [
+        {
+            "id": "1",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en1",
+            "jp": "jp1",
+            "answers": ["en1"],
+        },
+        {
+            "id": "2",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en2",
+            "jp": "jp2",
+            "answers": ["en2"],
+        },
+        {
+            "id": "3",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en3",
+            "jp": "jp3",
+            "answers": ["en3"],
+        },
+        {
+            "id": "4",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en4",
+            "jp": "jp4",
+            "answers": ["en4"],
+        },
+        {
+            "id": "5",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en5",
+            "jp": "jp5",
+            "answers": ["en5"],
+        },
+        {
+            "id": "6",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en6",
+            "jp": "jp6",
+            "answers": ["en6"],
+        },
+        {
+            "id": "7",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en7",
+            "jp": "jp7",
+            "answers": ["en7"],
+        },
+        {
+            "id": "8",
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en8",
+            "jp": "jp8",
+            "answers": ["en8"],
+        },
+    ]
+    stats = {
+        "1": {"stage": "F", "streak": 1, "nextDueAt": None},
+        "2": {"stage": "F", "streak": 2, "nextDueAt": None},
+        "3": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "4": {"stage": "F", "streak": 1, "nextDueAt": None},
+        "5": {"stage": "F", "streak": 3, "nextDueAt": None},
+        "6": {"stage": "F", "streak": 2, "nextDueAt": None},
+        "7": {"stage": "F", "streak": 1, "nextDueAt": None},
+        "8": {"stage": "D", "streak": 4, "nextDueAt": "2000-01-01T00:00:00.000Z"},
+    }
+
+    result = execute_build_order(deck, stats, math_random=0.44444)
+
+    assert result["orderLength"] == 7
+    ids_with_buckets = {
+        item.get("id"): item.get("bucket") for item in result["orderWithIds"]
+    }
+    assert ids_with_buckets.get("8") == "Stage D"
+    stage_f_count = sum(
+        1 for bucket in ids_with_buckets.values() if bucket == "Stage F"
+    )
+    assert stage_f_count == 6
+
+
 def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used():
     deck = [
         {
