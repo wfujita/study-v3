@@ -892,6 +892,12 @@
           ? determineStagePriorityQuota(n, stageFPool.length)
           : Math.max(0, n - Math.min(stageFPool.length, n));
         let stagePriorityPicked = 0;
+        const lv2Index = LEVEL_ORDER.indexOf('Lv2');
+        const normalizeRank = (stage)=>{
+          if(stage === 'F') return -1;
+          const idx = STAGE_PRIORITY.indexOf(stage);
+          return idx === -1 ? STAGE_PRIORITY.length : idx;
+        };
 
         for(const stage of STAGE_PRIORITY){
           if(stagePriorityPicked >= stagePriorityQuota) break;
@@ -913,23 +919,11 @@
           if(order.length >= n) break;
         }
 
-        const shuffledF = shuffle(stageFPool);
-        for(const entry of shuffledF){
-          if(order.length >= n) break;
-          if(chosen.has(entry.idx)) continue;
-          order.push({ idx:entry.idx, bucket:'Stage F', streak:entry.streak });
-          chosen.add(entry.idx);
-        }
-
+        const stageFTopUps = [];
         if(order.length < n){
-          const lv2Index = LEVEL_ORDER.indexOf('Lv2');
-          const normalizeRank = (stage)=>{
-            if(stage === 'F') return -1;
-            const idx = STAGE_PRIORITY.indexOf(stage);
-            return idx === -1 ? STAGE_PRIORITY.length : idx;
-          };
-
-          if(lv2Index !== -1){
+          let stageFSlotsRemaining = Math.max(0, n - order.length);
+          if(stageFSlotsRemaining > stageFPool.length && lv2Index !== -1){
+            let stageFNeeded = stageFSlotsRemaining - stageFPool.length;
             const levelCandidates = (levelBuckets.get(lv2Index) || []).slice().sort((a,b)=>{
               const rankDiff = normalizeRank(a.stage) - normalizeRank(b.stage);
               if(rankDiff !== 0) return rankDiff;
@@ -939,39 +933,48 @@
               return a.rand - b.rand;
             });
             for(const entry of levelCandidates){
-              if(order.length >= n) break;
+              if(stageFNeeded <= 0) break;
               if(chosen.has(entry.idx)) continue;
               const question = deckArr[entry.idx];
               const key = toKey(question);
               if(key) fallbackStageOverrides.set(key, 'F');
-              order.push({ idx:entry.idx, bucket:'Stage F', streak:entry.streak });
-              chosen.add(entry.idx);
+              stageFTopUps.push({ idx:entry.idx, streak:entry.streak });
+              stageFNeeded -= 1;
             }
           }
-          if(order.length < n){
-            const levelRanks = Array.from(levelBuckets.keys())
-              .filter(idx=>Number.isFinite(idx))
-              .sort((a,b)=>b-a);
-            for(const levelIdx of levelRanks){
-              if(levelIdx === lv2Index) continue;
-              const levelCandidates = (levelBuckets.get(levelIdx) || []).slice().sort((a,b)=>{
-                const rankDiff = normalizeRank(a.stage) - normalizeRank(b.stage);
-                if(rankDiff !== 0) return rankDiff;
-                const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
-                const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
-                if(aDue !== bDue) return aDue - bDue;
-                return a.rand - b.rand;
-              });
-              const levelLabel = LEVEL_ORDER[levelIdx] || '';
-              for(const entry of levelCandidates){
-                if(order.length >= n) break;
-                if(chosen.has(entry.idx)) continue;
-                const bucketLabel = levelLabel ? `Lv優先 (${levelLabel})` : 'Lv優先';
-                order.push({ idx:entry.idx, bucket:bucketLabel, streak:entry.streak });
-                chosen.add(entry.idx);
-              }
-              if(order.length >= n || chosen.size === deckArr.length) break;
+        }
+
+        const shuffledF = shuffle(stageFPool.concat(stageFTopUps));
+        for(const entry of shuffledF){
+          if(order.length >= n) break;
+          if(chosen.has(entry.idx)) continue;
+          order.push({ idx:entry.idx, bucket:'Stage F', streak:entry.streak });
+          chosen.add(entry.idx);
+        }
+
+        if(order.length < n){
+          const levelRanks = Array.from(levelBuckets.keys())
+            .filter(idx=>Number.isFinite(idx))
+            .sort((a,b)=>b-a);
+          for(const levelIdx of levelRanks){
+            if(levelIdx === lv2Index) continue;
+            const levelCandidates = (levelBuckets.get(levelIdx) || []).slice().sort((a,b)=>{
+              const rankDiff = normalizeRank(a.stage) - normalizeRank(b.stage);
+              if(rankDiff !== 0) return rankDiff;
+              const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
+              const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
+              if(aDue !== bDue) return aDue - bDue;
+              return a.rand - b.rand;
+            });
+            const levelLabel = LEVEL_ORDER[levelIdx] || '';
+            for(const entry of levelCandidates){
+              if(order.length >= n) break;
+              if(chosen.has(entry.idx)) continue;
+              const bucketLabel = levelLabel ? `Lv優先 (${levelLabel})` : 'Lv優先';
+              order.push({ idx:entry.idx, bucket:bucketLabel, streak:entry.streak });
+              chosen.add(entry.idx);
             }
+            if(order.length >= n || chosen.size === deckArr.length) break;
           }
         }
 
