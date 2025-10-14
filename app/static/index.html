@@ -833,27 +833,28 @@
 
           const qKey = toKey(question);
           const hasFallbackOverride = qKey && fallbackStageOverrides.has(qKey);
-          let stage = normalizeStage(s.stage);
-          if(hasFallbackOverride){
-            stage = fallbackStageOverrides.get(qKey);
-          }
+          const actualStage = normalizeStage(s.stage);
+          const overrideStage = hasFallbackOverride
+            ? normalizeStage(fallbackStageOverrides.get(qKey))
+            : null;
+          const stage = overrideStage || actualStage;
           const rawStreak = Number(s.streak);
           const baseStreak = Number.isFinite(rawStreak) ? rawStreak : 0;
           const streak = hasFallbackOverride ? 0 : baseStreak;
-          const nextDue = hasFallbackOverride ? null : parseIsoDate(s.nextDueAt);
-          const isTrackedStage = STAGE_PRIORITY.includes(stage);
+          const nextDue = parseIsoDate(s.nextDueAt);
           const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
-          const isWaiting = isTrackedStage && nextDueMs != null && nextDueMs > now;
-          const willPromote = willStageUpOnSuccess(stage, nextDue, now);
+          const isTrackedStageForWait = STAGE_PRIORITY.includes(actualStage);
+          const isWaiting = isTrackedStageForWait && nextDueMs != null && nextDueMs > now;
+          const willPromote = !overrideStage && willStageUpOnSuccess(actualStage, nextDue, now);
           if(isWaiting){
             continue;
           }
-          const payload = { idx:i, stage, streak, nextDue, rand:Math.random() };
+          const payload = { idx:i, stage, actualStage, streak, nextDue, rand:Math.random() };
           pushLevelCandidate(levelIdx, payload);
           eligibleCount += 1;
 
           if(willPromote){
-            const arr = dueByStage.get(stage);
+            const arr = dueByStage.get(actualStage);
             if(arr){
               arr.push(payload);
               continue;
@@ -1031,10 +1032,35 @@
       list.sort((a,b)=> (a.acc - b.acc) || (b.attempts - a.attempts) || (new Date(b.lastAt)-new Date(a.lastAt)) );
       return list;
     }
-    function buildOrderWeak(windowDays=7){
+    async function buildOrderWeak(windowDays=7){
       const stats = weakCandidates(windowDays);
       if(stats.length===0) return [];
-      const pick = stats.slice(0, Math.min(state.totalPerSet, stats.length)).map(s=>s.q);
+
+      const entries = stats.map((item, idx)=>({
+        idx,
+        id: item && item.q && item.q.id != null ? String(item.q.id) : null,
+      }));
+
+      let filtered = stats.slice();
+      const trimmedUser = (state.user || '').trim();
+      const hasIds = entries.some(entry => entry.id);
+      if(trimmedUser && hasIds){
+        const stageStats = await fetchStatsForEntries(entries, trimmedUser);
+        const nowMs = Date.now();
+        filtered = stats.filter((item, idx)=>{
+          const stat = stageStats[idx];
+          if(!stat || typeof stat !== 'object') return true;
+          const stage = normalizeStage(stat.stage);
+          const nextDue = parseIsoDate(stat.nextDueAt);
+          const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
+          const isTrackedStage = STAGE_PRIORITY.includes(stage);
+          return !(isTrackedStage && nextDueMs != null && nextDueMs > nowMs);
+        });
+      }
+
+      if(filtered.length===0) return [];
+
+      const pick = filtered.slice(0, Math.min(state.totalPerSet, filtered.length)).map(s=>s.q);
       window.__WEAK_DECK__ = pick;
       return pick.map((_,i)=>i);
     }
@@ -1051,7 +1077,7 @@
         if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
         state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
       }else if(state.mode==='weak'){
-        const ord = buildOrderWeak(state.weakWindowDays||7);
+        const ord = await buildOrderWeak(state.weakWindowDays||7);
         if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
         state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
       }else{
