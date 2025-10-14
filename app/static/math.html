@@ -96,6 +96,7 @@
     <div class="card" id="loading">読み込み中…</div>
     <div class="card" id="error" style="display:none;color:#ef4444"></div>
   </main>
+  <script src="stage_priority.js"></script>
   <script>
     const SUBJECT = 'math';
     const QUESTIONS_URL = "/data/math/questions.json";
@@ -123,6 +124,26 @@
     const STAGE_PRIORITY = ['A','B','C','D','E'];
     const DEFAULT_STAGE = STAGE_PRIORITY[STAGE_PRIORITY.length - 1] || 'E';
 
+    const stagePriorityApi = (typeof window !== 'undefined' && window.__stagePriority)
+      ? window.__stagePriority
+      : ((typeof globalThis !== 'undefined' && globalThis.__stagePriority)
+        ? globalThis.__stagePriority
+        : {});
+
+    const shouldPrioritizeStagePromotion = typeof stagePriorityApi.shouldPrioritizeStagePromotion === 'function'
+      ? stagePriorityApi.shouldPrioritizeStagePromotion
+      : (stage, nextDue, nowMs) => {
+          const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
+          if(!STAGE_PRIORITY.includes(normalizedStage) || normalizedStage === 'A'){
+            return false;
+          }
+          if(!(nextDue instanceof Date)){
+            return false;
+          }
+          const effectiveNow = Number.isFinite(nowMs) ? nowMs : Date.now();
+          return nextDue.getTime() <= effectiveNow;
+        };
+
     const shuffle = arr => Array.isArray(arr)
       ? arr.map(value => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
@@ -143,10 +164,10 @@
     }
 
     function willStageUpOnSuccess(stage, nextDue, nowMs){
-      if(!STAGE_PRIORITY.includes(stage)) return false;
-      if(stage === 'A') return false;
-      if(!(nextDue instanceof Date)) return true;
-      return nextDue.getTime() <= nowMs;
+      const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
+      const effectiveNow = Number.isFinite(nowMs) ? nowMs : Date.now();
+      const nextDueValue = nextDue instanceof Date ? nextDue : null;
+      return !!shouldPrioritizeStagePromotion(normalizedStage, nextDueValue, effectiveNow);
     }
 
     function formatAccuracy(correct, answered){

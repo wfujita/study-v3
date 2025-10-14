@@ -608,6 +608,26 @@
 
     const STAGE_PRIORITY = ['A','B','C','D','E'];
 
+    const stagePriorityApi = (typeof window !== 'undefined' && window.__stagePriority)
+      ? window.__stagePriority
+      : ((typeof globalThis !== 'undefined' && globalThis.__stagePriority)
+        ? globalThis.__stagePriority
+        : {});
+
+    const shouldPrioritizeStagePromotion = typeof stagePriorityApi.shouldPrioritizeStagePromotion === 'function'
+      ? stagePriorityApi.shouldPrioritizeStagePromotion
+      : (stage, nextDue, nowMs) => {
+          const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
+          if(!STAGE_PRIORITY.includes(normalizedStage) || normalizedStage === 'A'){
+            return false;
+          }
+          if(!(nextDue instanceof Date)){
+            return false;
+          }
+          const effectiveNow = Number.isFinite(nowMs) ? nowMs : Date.now();
+          return nextDue.getTime() <= effectiveNow;
+        };
+
     function parseIsoDate(value){
       if(!value) return null;
       const date = new Date(value);
@@ -622,10 +642,10 @@
     }
 
     function willStageUpOnSuccess(stage, nextDue, now){
-      if(!STAGE_PRIORITY.includes(stage)) return false;
-      if(stage === 'A') return false;
-      if(!(nextDue instanceof Date)) return true;
-      return nextDue.getTime() <= now;
+      const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
+      const effectiveNow = Number.isFinite(now) ? now : Date.now();
+      const nextDueValue = nextDue instanceof Date ? nextDue : null;
+      return !!shouldPrioritizeStagePromotion(normalizedStage, nextDueValue, effectiveNow);
     }
 
     async function fetchStatsForEntries(entries, user){
