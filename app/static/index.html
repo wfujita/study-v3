@@ -862,8 +862,21 @@
             }
             const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
             const othersShuffled = others.length ? shuffle(others) : [];
+            const applyStageFPriorityOrdering = (list)=>{
+              if(!Array.isArray(list) || !list.length) return list;
+              const preferred = [];
+              const rest = [];
+              for(const item of list){
+                const key = toKey(item);
+                if(key && stageFHistory.has(key)) preferred.push(item);
+                else rest.push(item);
+              }
+              return preferred.concat(rest);
+            };
+            const prioritizedOrdered = applyStageFPriorityOrdering(prioritizedShuffled);
+            const othersOrdered = applyStageFPriorityOrdering(othersShuffled);
             const desiredTotalForExtras = baseDeckCount + extrasLimit;
-            appendFallbackExtras(extras, prioritizedShuffled, othersShuffled, desiredTotalForExtras, baseDeckCount);
+            appendFallbackExtras(extras, prioritizedOrdered, othersOrdered, desiredTotalForExtras, baseDeckCount);
           };
 
           for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
@@ -1023,20 +1036,54 @@
               if(aDue !== bDue) return aDue - bDue;
               return a.rand - b.rand;
             });
+            const prioritized = [];
+            const general = [];
             for(const entry of levelCandidates){
-              if(stageFNeeded <= 0) break;
-              if(chosen.has(entry.idx)) continue;
               const question = deckArr[entry.idx];
+              const key = toKey(question);
+              if(key && stageFHistory.has(key)){
+                prioritized.push({ entry, question });
+              }else{
+                general.push({ entry, question });
+              }
+            }
+            const promoteCandidate = (entry, question)=>{
+              if(stageFNeeded <= 0) return;
+              if(chosen.has(entry.idx)) return;
               const key = toKey(question);
               if(key) fallbackStageOverrides.set(key, 'F');
               stageByIndex.set(entry.idx, 'F');
               stageFTopUps.push({ idx:entry.idx, streak:entry.streak });
               stageFNeeded -= 1;
+            };
+            for(const candidate of prioritized){
+              promoteCandidate(candidate.entry, candidate.question);
+              if(stageFNeeded <= 0) break;
+            }
+            if(stageFNeeded > 0){
+              for(const candidate of general){
+                promoteCandidate(candidate.entry, candidate.question);
+                if(stageFNeeded <= 0) break;
+              }
             }
           }
         }
 
-        const shuffledF = shuffle(stageFPool.concat(stageFTopUps));
+        const prioritizeStageFPool = (list)=>{
+          if(!Array.isArray(list) || !list.length) return [];
+          const preferred = [];
+          const others = [];
+          for(const entry of list){
+            const question = deckArr[entry.idx];
+            const key = toKey(question);
+            if(key && stageFHistory.has(key)) preferred.push(entry);
+            else others.push(entry);
+          }
+          const shuffledPreferred = preferred.length ? shuffle(preferred) : [];
+          const shuffledOthers = others.length ? shuffle(others) : [];
+          return shuffledPreferred.concat(shuffledOthers);
+        };
+        const shuffledF = prioritizeStageFPool(stageFPool.concat(stageFTopUps));
         for(const entry of shuffledF){
           if(order.length >= n) break;
           if(chosen.has(entry.idx)) continue;
