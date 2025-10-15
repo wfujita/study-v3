@@ -461,6 +461,60 @@ def test_stage_f_pool_prefers_previously_seen_questions():
     assert "id:s3" in result["stageFHistory"]
 
 
+def test_stage_f_completion_fetches_higher_level_questions():
+    deck = [
+        {
+            "id": str(i),
+            "type": "vocab",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": f"en-{i}",
+            "jp": f"jp-{i}",
+            "answers": [f"en-{i}"],
+        }
+        for i in range(1, 8)
+    ] + [
+        {
+            "id": "8",
+            "type": "vocab",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "en-8",
+            "jp": "jp-8",
+            "answers": ["en-8"],
+        },
+        {
+            "id": "9",
+            "type": "vocab",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "en-9",
+            "jp": "jp-9",
+            "answers": ["en-9"],
+        },
+    ]
+
+    stats = {
+        str(i): {"stage": "E", "streak": 2, "nextDueAt": None} for i in range(1, 8)
+    }
+    stats.update(
+        {
+            "8": {"stage": "F", "streak": 0, "nextDueAt": None},
+            "9": {"stage": "F", "streak": 0, "nextDueAt": None},
+        }
+    )
+
+    result = execute_build_order(deck, stats, stage_f_history=[])
+
+    stage_f_ids = {
+        item.get("id")
+        for item in result["orderWithIds"]
+        if item.get("bucket") == "Stage F"
+    }
+    assert stage_f_ids & {"8", "9"}
+    assert set(result["extrasIds"]) & {"8", "9"}
+
+
 def test_stage_f_history_records_promoted_questions():
     deck = [
         {
