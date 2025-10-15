@@ -385,8 +385,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
     stage_f_ids = [
         item.get("id")
         for item in result["orderWithIds"]
-        if item.get("bucket") == "Stage F"
-        and item.get("id") in {"v052", "v053", "x1"}
+        if item.get("bucket") == "Stage F" and item.get("id") in {"v052", "v053", "x1"}
     ]
     assert len(stage_f_ids) == 2
     assert set(stage_f_ids) == {"v052", "v053"}
@@ -423,7 +422,9 @@ def test_stage_f_pool_prefers_previously_seen_questions():
             "answers": ["en-s3"],
         },
     ]
-    stats = {item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck}
+    stats = {
+        item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck
+    }
 
     result = execute_build_order(
         deck,
@@ -481,7 +482,9 @@ def test_stage_f_history_records_promoted_questions():
             "answers": ["en-extra2"],
         },
     ]
-    stats = {item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck}
+    stats = {
+        item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck
+    }
 
     result = execute_build_order(
         deck,
