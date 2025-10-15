@@ -38,19 +38,16 @@ def execute_build_order(
             f"        determineStagePriorityQuota = () => {force_stage_priority_quota};\n"
             "      }\n"
         )
-    stage_history_snippet = (
-        "      localStorage.setItem('quiz:tester:stageF:english', "
-        f"JSON.stringify({stage_f_history_json}));\n"
-        if stage_f_history is not None
-        else ""
-    )
     node_code = f"""
     const fs = require('fs');
     const path = require('path');
     const vm = require('vm');
+    const {{ URL }} = require('url');
 
     const deckData = {deck_json};
     const statsMapInit = {stats_json};
+    const stageFHistoryInit = {stage_f_history_json};
+    const wrongQueueStore = new Map();
 
     class Element {{
       constructor(id){{
@@ -123,6 +120,35 @@ def execute_build_order(
         }});
         return {{ ok: true, json: async ()=>({{ results }}) }};
       }}
+      if(typeof url === 'string' && url.startsWith('/api/stats/stage-f')){{
+        const list = Array.isArray(stageFHistoryInit) ? stageFHistoryInit : [];
+        return {{ ok: true, json: async ()=>({{ keys: list }}) }};
+      }}
+      if(typeof url === 'string' && url.startsWith('/api/wrong-queue')){{
+        const method = (options.method || 'GET').toUpperCase();
+        if(method === 'POST'){{
+          const body = JSON.parse(options.body || '{{}}');
+          const user = (body.user || '').trim() || 'guest';
+          const qType = (body.qType || '').trim() || '';
+          const key = `${{user}}::${{qType}}`;
+          const items = Array.isArray(body.items) ? body.items : [];
+          wrongQueueStore.set(key, items);
+          return {{ ok: true, json: async ()=>({{ ok: true }}) }};
+        }}
+        const parsed = new URL(url, 'https://example.invalid');
+        const user = (parsed.searchParams.get('user') || '').trim() || 'guest';
+        const qType = (parsed.searchParams.get('qType') || '').trim() || '';
+        const key = `${{user}}::${{qType}}`;
+        const items = wrongQueueStore.get(key) || [];
+        return {{ ok: true, json: async ()=>({{ items }}) }};
+      }}
+      if(typeof url === 'string' && url.startsWith('/api/history')){{
+        const method = (options.method || 'GET').toUpperCase();
+        if(method === 'POST'){{
+          return {{ ok: true, json: async ()=>({{ ok: true }}) }};
+        }}
+        return {{ ok: true, json: async ()=>({{ history: [] }}) }};
+      }}
       return {{ ok: true, json: async ()=>({{}}) }};
     }};
 
@@ -170,7 +196,6 @@ def execute_build_order(
       state.fallbackStageOverrides = new Map();
       state.user = "tester";
 {override_snippet}
-{stage_history_snippet}
     `, context);
 
     (async ()=>{{
@@ -180,14 +205,7 @@ def execute_build_order(
       const extrasIds = vm.runInContext('state.fallbackExtras.map(q => q.id)', context);
       const overrides = vm.runInContext('Array.from(state.fallbackStageOverrides.entries())', context);
       const deckSnapshot = vm.runInContext('deck({{ includeExtras: true }})', context);
-      const stageFHistoryRaw = vm.runInContext('localStorage.getItem("quiz:tester:stageF:english")', context);
-      let stageFHistoryParsed;
-      try{{
-        stageFHistoryParsed = stageFHistoryRaw ? JSON.parse(stageFHistoryRaw) : [];
-        if(!Array.isArray(stageFHistoryParsed)) stageFHistoryParsed = [];
-      }}catch(_err){{
-        stageFHistoryParsed = [];
-      }}
+      const stageFHistoryParsed = vm.runInContext('Array.from(getStageFHistory())', context);
       const orderWithIds = order.map(entry => {{
         const question = deckSnapshot[entry.idx];
         return {{ id: question ? question.id : undefined, bucket: entry.bucket }};

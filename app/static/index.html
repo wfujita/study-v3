@@ -507,68 +507,80 @@
       writeRememberedUnitMap(map);
     }
 
-    function stageFStorageKey(){
+    function stageFCacheKey(){
       const user = (state.user || '').trim() || 'guest';
-      return `quiz:${user}:stageF:${SUBJECT}`;
+      return `${user}::${SUBJECT}`;
     }
 
-    let cachedStageFKey = null;
-    let cachedStageFSet = null;
+    let stageFCache = { key: null, set: new Set(), pending: null, fetched: false };
 
     function getStageFHistory(){
-      const key = stageFStorageKey();
-      if(cachedStageFKey === key && cachedStageFSet instanceof Set){
-        return cachedStageFSet;
+      const key = stageFCacheKey();
+      if(stageFCache.key !== key){
+        stageFCache = { key, set: new Set(), pending: null, fetched: false };
       }
-      let parsed = [];
-      try{
-        const raw = localStorage.getItem(key);
-        if(raw){
-          const data = JSON.parse(raw);
-          if(Array.isArray(data)){
-            parsed = data
-              .map(v => (typeof v === 'string' ? v.trim() : ''))
-              .filter(v => v);
-          }
-        }
-      }catch(_err){
-        parsed = [];
+      if(!(stageFCache.set instanceof Set)){
+        stageFCache.set = new Set();
       }
-      const set = new Set(parsed);
-      cachedStageFKey = key;
-      cachedStageFSet = set;
-      return set;
+      return stageFCache.set;
     }
 
-    function saveStageFHistory(set){
-      const key = stageFStorageKey();
-      try{
-        localStorage.setItem(key, JSON.stringify(Array.from(set)));
-      }catch(_err){
-        // ignore write errors
+    async function refreshStageFHistory(force=false){
+      const key = stageFCacheKey();
+      if(stageFCache.key !== key){
+        stageFCache = { key, set: new Set(), pending: null, fetched: false };
       }
-      cachedStageFKey = key;
-      cachedStageFSet = new Set(set);
+      if(stageFCache.fetched && !force){
+        return stageFCache.set;
+      }
+      if(stageFCache.pending && !force){
+        return stageFCache.pending;
+      }
+      const trimmedUser = (state.user || '').trim();
+      if(!trimmedUser){
+        stageFCache.set = new Set();
+        stageFCache.fetched = true;
+        return stageFCache.set;
+      }
+      const promise = (async ()=>{
+        try{
+          const url = `/api/stats/stage-f?user=${encodeURIComponent(trimmedUser)}&subject=${encodeURIComponent(SUBJECT)}`;
+          const res = await fetch(url, { cache: 'no-store' });
+          if(res.ok){
+            const data = await res.json();
+            const keys = Array.isArray(data.keys) ? data.keys : [];
+            const set = new Set();
+            keys.forEach(v=>{ if(typeof v === 'string' && v){ set.add(v); } });
+            stageFCache.set = set;
+          }else{
+            stageFCache.set = new Set();
+          }
+        }catch(err){
+          console.warn('ステージF履歴の取得に失敗しました', err);
+          stageFCache.set = new Set();
+        }finally{
+          stageFCache.pending = null;
+          stageFCache.fetched = true;
+        }
+        return stageFCache.set;
+      })();
+      stageFCache.pending = promise;
+      return promise;
     }
 
     function rememberStageFKeys(keys){
       if(!Array.isArray(keys) || keys.length === 0) return;
       const set = getStageFHistory();
-      let changed = false;
       keys.forEach(key => {
-        if(typeof key === 'string' && key && !set.has(key)){
+        if(typeof key === 'string' && key){
           set.add(key);
-          changed = true;
         }
       });
-      if(changed){
-        saveStageFHistory(set);
-      }
+      stageFCache.fetched = true;
     }
 
     function clearStageFHistoryCache(){
-      cachedStageFKey = null;
-      cachedStageFSet = null;
+      stageFCache = { key: null, set: new Set(), pending: null, fetched: false };
     }
 
     function isEligibleByLevel(question, maxLevelIdx, stageFSet){
@@ -619,6 +631,8 @@
       if(unitSel){ unitSel.value = state.unitFilter || ''; }
       state.endpoint=DEFAULT_ENDPOINT;
       clearStageFHistoryCache();
+      clearWrongQueueCache();
+      refreshStageFHistory().catch(()=>{});
       populateUserSuggestions();
     }
     function rememberSettings(){
@@ -637,12 +651,137 @@
     }
 
     /********** ストレージ（ローカル） **********/
-    const storeKey=(u)=>`quiz:${u}`;
-    const wrongKey=(u,t)=>`quiz:${u}:wrong:${t}`;
-    function getHistory(){ const raw=JSON.parse(localStorage.getItem(storeKey(state.user))||'{}'); return raw.history||[]; }
-    function pushHistory(session){ const raw=JSON.parse(localStorage.getItem(storeKey(state.user))||'{}'); raw.history=raw.history||[]; raw.history.unshift(session); localStorage.setItem(storeKey(state.user), JSON.stringify(raw)); }
-    function getWrongQueue(){ return JSON.parse(localStorage.getItem(wrongKey(state.user, state.qType))||'[]'); }
-    function setWrongQueue(list){ localStorage.setItem(wrongKey(state.user, state.qType), JSON.stringify(list.slice(0,150))); }
+    async function getHistory(){
+      const trimmedUser = (state.user || '').trim();
+      if(!trimmedUser){
+        return [];
+      }
+      try{
+        const url = `/api/history?user=${encodeURIComponent(trimmedUser)}&subject=${encodeURIComponent(SUBJECT)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if(!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data.history) ? data.history : [];
+      }catch(err){
+        console.warn('学習履歴の取得に失敗しました', err);
+        return [];
+      }
+    }
+
+    async function pushHistory(session){
+      const trimmedUser = (state.user || '').trim();
+      if(!trimmedUser || !session || typeof session !== 'object'){ return; }
+      try{
+        await fetch('/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: trimmedUser,
+            subject: SUBJECT,
+            session,
+          }),
+        });
+      }catch(err){
+        console.warn('学習履歴の保存に失敗しました', err);
+      }
+    }
+
+    function wrongQueueCacheKey(){
+      const user = (state.user || '').trim() || 'guest';
+      const qType = (state.qType || '').trim() || 'reorder';
+      return `${user}::${qType}::${SUBJECT}`;
+    }
+
+    let wrongQueueCache = { key: null, list: [], pending: null, fetched: false };
+
+    function ensureWrongQueueCache(){
+      const key = wrongQueueCacheKey();
+      if(wrongQueueCache.key !== key){
+        wrongQueueCache = { key, list: [], pending: null, fetched: false };
+      }
+      if(!Array.isArray(wrongQueueCache.list)){
+        wrongQueueCache.list = [];
+      }
+      return wrongQueueCache.list;
+    }
+
+    function getWrongQueue(){
+      return ensureWrongQueueCache();
+    }
+
+    async function refreshWrongQueue(force=false){
+      const key = wrongQueueCacheKey();
+      if(wrongQueueCache.key !== key){
+        wrongQueueCache = { key, list: [], pending: null, fetched: false };
+      }
+      if(wrongQueueCache.fetched && !force){
+        return wrongQueueCache.list;
+      }
+      if(wrongQueueCache.pending && !force){
+        return wrongQueueCache.pending;
+      }
+      const trimmedUser = (state.user || '').trim();
+      if(!trimmedUser){
+        wrongQueueCache.list = [];
+        wrongQueueCache.fetched = true;
+        return wrongQueueCache.list;
+      }
+      const qType = state.qType || '';
+      const promise = (async ()=>{
+        try{
+          const url = `/api/wrong-queue?user=${encodeURIComponent(trimmedUser)}&qType=${encodeURIComponent(qType)}&subject=${encodeURIComponent(SUBJECT)}`;
+          const res = await fetch(url, { cache: 'no-store' });
+          if(res.ok){
+            const data = await res.json();
+            const arr = Array.isArray(data.items) ? data.items : [];
+            wrongQueueCache.list = arr.filter(item => item && typeof item === 'object').slice(0, 150);
+          }else{
+            wrongQueueCache.list = [];
+          }
+        }catch(err){
+          console.warn('誤答キューの取得に失敗しました', err);
+          wrongQueueCache.list = [];
+        }finally{
+          wrongQueueCache.pending = null;
+          wrongQueueCache.fetched = true;
+        }
+        return wrongQueueCache.list;
+      })();
+      wrongQueueCache.pending = promise;
+      return promise;
+    }
+
+    async function persistWrongQueue(){
+      const trimmedUser = (state.user || '').trim();
+      if(!trimmedUser){
+        return;
+      }
+      try{
+        await fetch('/api/wrong-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: trimmedUser,
+            qType: state.qType,
+            subject: SUBJECT,
+            items: getWrongQueue(),
+          }),
+        });
+      }catch(err){
+        console.warn('誤答キューの保存に失敗しました', err);
+      }
+    }
+
+    function setWrongQueue(list){
+      ensureWrongQueueCache();
+      wrongQueueCache.list = Array.isArray(list) ? list.slice(0, 150) : [];
+      wrongQueueCache.fetched = true;
+      persistWrongQueue();
+    }
+
+    function clearWrongQueueCache(){
+      wrongQueueCache = { key: null, list: [], pending: null, fetched: false };
+    }
     function addWrongLocal(item){ const q=getWrongQueue(); const key=item.id?`id:${item.id}`:`${item.en}__${item.jp}`; if(!q.some(x=>x.key===key)){ q.unshift({...item, key}); setWrongQueue(q); } }
     function removeFromWrongIfMatched(rec){ const q=getWrongQueue(); const key=rec.id?`id:${rec.id}`:null; let idx=-1; if(key){ idx=q.findIndex(x=>x.key===key); } if(idx===-1){ idx=q.findIndex(x=>x.en===rec.en && x.jp===rec.jp); } if(idx>-1){ q.splice(idx,1); setWrongQueue(q); } }
 
@@ -765,6 +904,9 @@
       const MAX_ATTEMPTS = 4;
       let forcedExtraDeficit = 0;
       let lastOrder = [];
+
+      await refreshStageFHistory();
+      await refreshWrongQueue();
 
       for(let attempt=0; attempt<MAX_ATTEMPTS; attempt++){
         const baseDeck = deck({ includeExtras: false });
@@ -1728,6 +1870,7 @@
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
         clearStageFHistoryCache();
+        clearWrongQueueCache();
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
@@ -1754,6 +1897,7 @@
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
         clearStageFHistoryCache();
+        clearWrongQueueCache();
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
@@ -1774,6 +1918,9 @@
       const v=(e.target.value||'').trim(); if(!v) return;
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
       clearStageFHistoryCache();
+      clearWrongQueueCache();
+      refreshStageFHistory().catch(()=>{});
+      refreshWrongQueue().catch(()=>{});
       rememberSettings();
     });
     document.getElementById('unit-filter').addEventListener('change', (e)=>{
@@ -1784,6 +1931,8 @@
     document.getElementById('qtype').addEventListener('change', async (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
       state.qType=v;
+      clearWrongQueueCache();
+      refreshWrongQueue().catch(()=>{});
       state.unitFilter = getRememberedUnitFilter(state.qType);
       try{
         await ensureQuestions();
