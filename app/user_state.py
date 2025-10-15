@@ -50,7 +50,9 @@ def get_history(runtime_dir: str, user: str) -> List[Dict[str, Any]]:
     return []
 
 
-def append_history(runtime_dir: str, user: str, session: Dict[str, Any], limit: int = 100) -> None:
+def append_history(
+    runtime_dir: str, user: str, session: Dict[str, Any], limit: int = 100
+) -> None:
     state = _load_state(runtime_dir)
     bucket = _ensure_user_bucket(state, user)
     history = bucket.get("history")
@@ -75,7 +77,13 @@ def get_wrong_queue(runtime_dir: str, user: str, qtype: str) -> List[Dict[str, A
     return []
 
 
-def set_wrong_queue(runtime_dir: str, user: str, qtype: str, items: List[Dict[str, Any]], limit: int = 150) -> None:
+def set_wrong_queue(
+    runtime_dir: str,
+    user: str,
+    qtype: str,
+    items: List[Dict[str, Any]],
+    limit: int = 150,
+) -> None:
     state = _load_state(runtime_dir)
     bucket = _ensure_user_bucket(state, user)
     wrong_all = bucket.get("wrongQueue")

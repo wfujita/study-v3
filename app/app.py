@@ -135,9 +135,7 @@ def append_history():
     session = payload.get("session")
     if not isinstance(session, dict):
         session = {
-            k: v
-            for k, v in payload.items()
-            if k not in {"user", "subject", "session"}
+            k: v for k, v in payload.items() if k not in {"user", "subject", "session"}
         }
     normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
     if not isinstance(session, dict):
@@ -167,10 +165,7 @@ def set_wrong_queue():
     payload = request.get_json(silent=True) or {}
     user = (payload.get("user") or request.args.get("user") or "").strip()
     qtype = (
-        payload.get("qType")
-        or payload.get("qtype")
-        or request.args.get("qType")
-        or ""
+        payload.get("qType") or payload.get("qtype") or request.args.get("qType") or ""
     ).strip()
     subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
     items = payload.get("items")
