@@ -903,6 +903,7 @@
       const blockedFallbackKeys = new Set();
       const MAX_ATTEMPTS = 4;
       let forcedExtraDeficit = 0;
+      let forcedStagePromotionAttempted = false;
       let lastOrder = [];
 
       await refreshStageFHistory();
@@ -1111,6 +1112,17 @@
             stageFPool.push({ idx:i, streak });
           }else if(!STAGE_PRIORITY.includes(stage)){
             stageFPool.push({ idx:i, streak });
+          }
+        }
+
+        const stageFShortage = stageFPool.length === 0;
+        if(stageFShortage && !forcedStagePromotionAttempted && attempt < MAX_ATTEMPTS - 1){
+          const hasHigherLevelCandidates = allDeck.some(q=> levelIndex(q.level) > maxLevelIdx);
+          if(hasHigherLevelCandidates){
+            forcedStagePromotionAttempted = true;
+            const desiredExtras = Number.isFinite(desired) ? Math.max(1, Math.floor(desired)) : 1;
+            forcedExtraDeficit = Math.max(forcedExtraDeficit, desiredExtras);
+            continue;
           }
         }
 
