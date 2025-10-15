@@ -5,6 +5,7 @@ import os
 import json
 
 import app.stage_tracker as stage_tracker
+import app.user_state as user_state
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -79,6 +80,107 @@ def save_results():
         app.logger.exception("failed to update stage cache for subject=%s", subject)
 
     return jsonify({"ok": True}), 201
+
+
+@app.get("/api/stats/stage-f")
+def stage_f_history():
+    user = (request.args.get("user") or "").strip()
+    subject = normalize_subject(request.args.get("subject"))
+    runtime_dir = subject_runtime_dir(subject)
+
+    if not user:
+        return jsonify({"keys": []})
+
+    store = stage_tracker.load_store(runtime_dir)
+    if not store:
+        cached_results = iter_results(subject)
+        if cached_results:
+            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
+
+    keys = []
+    user_bucket = {}
+    if isinstance(store, dict):
+        normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
+        bucket = store.get(normalized_user)
+        if isinstance(bucket, dict):
+            user_bucket = bucket
+
+    for qid, state in user_bucket.items():
+        if not isinstance(state, dict):
+            continue
+        stage_value = (state.get("stage") or "").strip().upper()
+        if stage_value == "F":
+            keys.append(f"id:{qid}")
+
+    return jsonify({"keys": keys})
+
+
+@app.get("/api/history")
+def get_history():
+    user = (request.args.get("user") or "").strip()
+    subject = normalize_subject(request.args.get("subject"))
+    runtime_dir = subject_runtime_dir(subject)
+
+    history = user_state.get_history(runtime_dir, user)
+    return jsonify({"history": history})
+
+
+@app.post("/api/history")
+def append_history():
+    payload = request.get_json(silent=True) or {}
+    user = (payload.get("user") or request.args.get("user") or "").strip()
+    subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
+    runtime_dir = subject_runtime_dir(subject)
+
+    session = payload.get("session")
+    if not isinstance(session, dict):
+        session = {
+            k: v
+            for k, v in payload.items()
+            if k not in {"user", "subject", "session"}
+        }
+    normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
+    if not isinstance(session, dict):
+        return jsonify({"ok": False, "error": "session payload required"}), 400
+
+    session = dict(session)
+    session.setdefault("user", normalized_user)
+    session.setdefault("subject", subject)
+
+    user_state.append_history(runtime_dir, normalized_user, session)
+    return jsonify({"ok": True})
+
+
+@app.get("/api/wrong-queue")
+def get_wrong_queue():
+    user = (request.args.get("user") or "").strip()
+    qtype = (request.args.get("qType") or request.args.get("qtype") or "").strip()
+    subject = normalize_subject(request.args.get("subject"))
+    runtime_dir = subject_runtime_dir(subject)
+
+    items = user_state.get_wrong_queue(runtime_dir, user, qtype)
+    return jsonify({"items": items})
+
+
+@app.post("/api/wrong-queue")
+def set_wrong_queue():
+    payload = request.get_json(silent=True) or {}
+    user = (payload.get("user") or request.args.get("user") or "").strip()
+    qtype = (
+        payload.get("qType")
+        or payload.get("qtype")
+        or request.args.get("qType")
+        or ""
+    ).strip()
+    subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
+    items = payload.get("items")
+    if not isinstance(items, list):
+        items = []
+
+    runtime_dir = subject_runtime_dir(subject)
+    normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
+    user_state.set_wrong_queue(runtime_dir, normalized_user, qtype, items)
+    return jsonify({"ok": True})
 
 
 # ====== 管理ダッシュボード用ユーティリティ ======
