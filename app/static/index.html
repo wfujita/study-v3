@@ -416,7 +416,6 @@
       weakWindowDays:7,      // 過去◯日を対象
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
       choiceSelection: null,
-      vocabChoiceStreak: 0,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
       fallbackStageOverrides: new Map(), // 補充問題のステージ上書き（問題キー -> ステージ）
     };
@@ -462,12 +461,12 @@
       if(!customDeck || !customDeck.length){ alert('このセットの間違いはありません。'); return; }
 
       // セット初期化
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null; state.vocabChoiceStreak = 0;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
 
       // レビュー用デッキに流し込む（既存ロジック流用）
       window.__REVIEW_DECK__ = customDeck.map(q=>({ ...q }));
-      state.order = [...window.__REVIEW_DECK__.keys()].map(i=>({idx:i, bucket:null, streak:0}));
+      state.order = await createOrderEntriesFromIndexes([...window.__REVIEW_DECK__.keys()], window.__REVIEW_DECK__);
       state.mode = 'review';
       // 表示UIを合わせる（並べ替え/単語）
       state.qType = (window.__REVIEW_DECK__[0]?.type) || state.qType;
@@ -1334,6 +1333,42 @@
       return [...window.__REVIEW_DECK__.keys()];
     }
 
+    async function createOrderEntriesFromIndexes(indexes, deckArray, bucketValue=null){
+      if(!Array.isArray(indexes) || indexes.length===0){
+        return [];
+      }
+      const trimmedUser = (state.user || '').trim();
+      const questions = Array.isArray(deckArray) ? deckArray : [];
+      const baseEntries = indexes.map(idx=>{
+        const question = questions[idx];
+        const hasId = question && question.id != null;
+        return {
+          idx,
+          bucket: bucketValue,
+          streak: 0,
+          id: hasId ? String(question.id) : null,
+        };
+      });
+      const hasUser = !!trimmedUser;
+      const hasIds = baseEntries.some(entry=> entry.id);
+      if(hasUser && hasIds){
+        try{
+          const stats = await fetchStatsForEntries(baseEntries, trimmedUser);
+          stats.forEach((stat, i)=>{
+            const entry = baseEntries[i];
+            if(!entry || !stat || typeof stat !== 'object') return;
+            const raw = Number(stat.streak);
+            if(Number.isFinite(raw)){
+              entry.streak = Math.max(0, raw);
+            }
+          });
+        }catch(err){
+          console.warn('問題の連続正解データ取得に失敗しました', err);
+        }
+      }
+      return baseEntries.map(({idx, bucket, streak})=>({ idx, bucket, streak }));
+    }
+
     // === 成績インデックス（ローカル）: 過去データから弱点抽出 ===
     const PERF_KEY = (u)=>`quiz:${u}:perf`;
     function loadPerf(){ return JSON.parse(localStorage.getItem(PERF_KEY(state.user))||'{}'); }
@@ -1437,16 +1472,16 @@
       state.fallbackExtras = [];
       const fullDeck = deckByType(state.qType);
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
-      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null; state.vocabChoiceStreak = 0;
+      state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
       if(state.mode==='review'){
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
         if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
-        state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
+        state.order = await createOrderEntriesFromIndexes(ord, window.__REVIEW_DECK__);
       }else if(state.mode==='weak'){
         const ord = await buildOrderWeak(state.weakWindowDays||7);
         if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
-        state.order = ord.map(i=>({idx:i, bucket:null, streak:0}));
+        state.order = await createOrderEntriesFromIndexes(ord, window.__WEAK_DECK__);
       }else{
         state.order = await buildOrderFromBank();
         if(!state.order.length){
@@ -1460,7 +1495,7 @@
 
     /********** 出題＆UI **********/
     function getCurrentQuestion(){
-      const entry = state.order[state.qIndex];
+      const entry = state.order[state.qIndex] || { idx:0, bucket:null, streak:0 };
       const idx = entry.idx;
       if(state.mode==='review') return window.__REVIEW_DECK__[idx];
       if(state.mode==='weak') return window.__WEAK_DECK__[idx];
@@ -1655,7 +1690,9 @@
         }
         const shuffledOptions = shuffle(options);
         const availableCount = shuffledOptions.length;
-        const streak = Math.max(0, state.vocabChoiceStreak || 0);
+        const rawEntryStreak = entry && entry.streak != null ? Number(entry.streak) : 0;
+        const entryStreak = Number.isFinite(rawEntryStreak) ? rawEntryStreak : 0;
+        const streak = Math.max(0, entryStreak);
         const targetCount = streak + MIN_VOCAB_CHOICE_OPTIONS;
         const desiredCount = Math.max(1, Math.min(availableCount, targetCount));
         let finalOptions = shuffledOptions.slice(0, desiredCount);
@@ -1833,17 +1870,11 @@
 
       if(correct){
         state.correct++; $('#stat-correct').textContent = state.correct;
-        if(state.qType==='vocab-choice'){
-          state.vocabChoiceStreak = (state.vocabChoiceStreak || 0) + 1;
-        }
         const detail = buildFeedbackDetail(q, false);
         $('#explain').innerHTML = `✅ 正解！ <span class="muted">${ans}</span>${detail}`;
         removeFromWrongIfMatched({id:q.id, jp:q.jp, en:q.en});
       } else {
         state.wrong++; $('#stat-wrong').textContent = state.wrong;
-        if(state.qType==='vocab-choice'){
-          state.vocabChoiceStreak = 0;
-        }
         const detail = buildFeedbackDetail(q, true);
         const answersMarkup = formatCorrectAnswers(answerList);
         $('#explain').innerHTML = state.qType==='reorder'
