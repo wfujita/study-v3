@@ -438,6 +438,10 @@
     const normalizeEndPunc = (s, keep=false)=> keep ? s.replace(/\s+([.,!?])/g, "$1") : s.replace(/\s*[.,!?]$/,'');
     const normalizeWord = s=> normalizeSpaces(s).toLowerCase();
     const normalizeUnit = u=> (u===null || u===undefined ? '' : String(u).trim());
+    const normalizePos = pos=> {
+      if(pos===null || pos===undefined) return '';
+      return String(pos).trim().toLowerCase();
+    };
     const HARD_STREAK = 2;
     const nowISO = ()=> new Date().toISOString();
 
@@ -1554,6 +1558,49 @@
           if(isCorrect) hasCorrect = true;
         };
         const useCustomChoices = Array.isArray(q.choices) && q.choices.length>0;
+        const normalizedUnit = normalizeUnit(q.unit);
+        const normalizedPos = normalizePos(q.pos);
+        const fullVocabChoiceDeck = deckByType('vocab-choice').filter(item=> item && item.jp && item.id !== q.id);
+        const activeDeck = deck({ includeExtras:false }).filter(item=> item && item.jp && item.id !== q.id);
+        const sameUnitPool = normalizedUnit
+          ? fullVocabChoiceDeck.filter(item=> normalizeUnit(item.unit) === normalizedUnit)
+          : [];
+        const samePosPool = normalizedPos
+          ? fullVocabChoiceDeck.filter(item=> normalizePos(item.pos) === normalizedPos)
+          : [];
+        const distractorPools = [
+          sameUnitPool,
+          samePosPool,
+          activeDeck,
+          fullVocabChoiceDeck,
+        ].filter(pool=> Array.isArray(pool) && pool.length>0);
+        const gatherWrongTexts = candidate=>{
+          const arr = [];
+          if(!candidate || candidate.id === q.id) return arr;
+          const candidateCorrect = typeof candidate.jp === 'string' ? candidate.jp.trim() : '';
+          if(candidateCorrect && candidateCorrect !== correctText){
+            arr.push(candidateCorrect);
+          }
+          if(Array.isArray(candidate.choices)){
+            candidate.choices.forEach(choice=>{
+              if(choice==null) return;
+              let text='';
+              if(typeof choice === 'string'){ text = choice; }
+              else if(typeof choice === 'object'){
+                if(typeof choice.text === 'string'){ text = choice.text; }
+                else if(typeof choice.value === 'string'){ text = choice.value; }
+              }
+              const trimmed = typeof text === 'string' ? text.trim() : '';
+              if(!trimmed) return;
+              const isMarkedCorrect = typeof choice === 'object' && choice.correct === true;
+              if(isMarkedCorrect) return;
+              if(trimmed === candidateCorrect) return;
+              if(trimmed === correctText) return;
+              arr.push(trimmed);
+            });
+          }
+          return arr;
+        };
         if(useCustomChoices){
           q.choices.forEach(choice=>{
             if(choice==null) return;
@@ -1573,32 +1620,30 @@
         } else if(correctText){
           pushOption(correctText, true);
         }
-        const pools = [
-          deck().filter(item=> item && item.jp && item.id !== q.id),
-          deckByType('vocab-choice').filter(item=> item && item.jp && item.id !== q.id),
-        ];
         const fillFromPools = targetCount=>{
-          for(const source of pools){
-            const shuffled = shuffle(source);
-            for(const candidate of shuffled){
-              if(options.length >= targetCount) break;
-              const text = typeof candidate.jp === 'string' ? candidate.jp.trim() : '';
-              if(!text) continue;
-              const isCorrect = !!(correctText && text === correctText);
-              pushOption(text, isCorrect);
-            }
+          for(const source of distractorPools){
             if(options.length >= targetCount) break;
+            const shuffledCandidates = shuffle(source);
+            for(const candidate of shuffledCandidates){
+              if(options.length >= targetCount) break;
+              const wrongTexts = shuffle(gatherWrongTexts(candidate));
+              for(const wrongText of wrongTexts){
+                if(options.length >= targetCount) break;
+                if(!wrongText || wrongText === correctText) continue;
+                pushOption(wrongText, false);
+              }
+            }
           }
         };
         if(useCustomChoices){
           if(!hasCorrect && correctText){
             pushOption(correctText, true);
           }
-          if(options.length < 2){
-            fillFromPools(Math.max(options.length+1, 4));
-          }
+          const desiredCount = Math.max(options.length, 6);
+          fillFromPools(desiredCount);
         } else {
-          fillFromPools(4);
+          const desiredCount = Math.max(options.length || 0, 5);
+          fillFromPools(desiredCount);
         }
         if(!hasCorrect && correctText){
           pushOption(correctText, true);
