@@ -2076,6 +2076,8 @@
         try{
           state.setIndex++;
           if(state.mode==='review'){ state.mode='normal'; }
+          clearStageFHistoryCache();
+          clearWrongQueueCache();
           await startSet();
         }catch(e){
           alert('次セットを開始できません: '+(e.message||e));
