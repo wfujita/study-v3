@@ -2138,6 +2138,87 @@
       "pos": "verb",
       "tip": "",
       "level": "Lv1"
+    },
+    {
+      "id": "v069",
+      "unit": "形容詞-基本",
+      "jp": "たくさんの",
+      "en": "many",
+      "pos": "adjective",
+      "tip": "数えられる名詞と一緒に使う表現。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v070",
+      "unit": "副詞-基本",
+      "jp": "遠くに",
+      "en": "far",
+      "pos": "adverb",
+      "tip": "距離を表すときによく使う副詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v071",
+      "unit": "副詞-基本",
+      "jp": "よく、しばしば",
+      "en": "often",
+      "pos": "adverb",
+      "tip": "頻度を表す副詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v072",
+      "unit": "前置詞-基本",
+      "jp": "〜について",
+      "en": "about",
+      "pos": "preposition",
+      "tip": "話題や対象を示すときに使う前置詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v073",
+      "unit": "副詞-基本",
+      "jp": "いつも",
+      "en": "always",
+      "pos": "adverb",
+      "tip": "頻度を表す副詞。be 動詞の後ろ、一般動詞の前に置くのが基本。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v074",
+      "unit": "副詞-基本",
+      "jp": "たいてい",
+      "en": "usually",
+      "pos": "adverb",
+      "tip": "ふだんそうであることを表す頻度副詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v075",
+      "unit": "副詞-基本",
+      "jp": "ときどき",
+      "en": "sometimes",
+      "pos": "adverb",
+      "tip": "頻度を表し、文頭や文末に置いて強調することもある。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v076",
+      "unit": "前置詞-基本",
+      "jp": "〜の前に",
+      "en": "before",
+      "pos": "preposition",
+      "tip": "時間や順番を表すときに使う前置詞。",
+      "level": "Lv1"
+    },
+    {
+      "id": "v077",
+      "unit": "前置詞-基本",
+      "jp": "〜の後に",
+      "en": "after",
+      "pos": "preposition",
+      "tip": "出来事や時間の順序が後であることを示す。",
+      "level": "Lv1"
     }
   ],
   "vocabChoice": [
