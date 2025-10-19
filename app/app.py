@@ -78,9 +78,7 @@ def _apply_level_overrides(
     return data
 
 
-def _find_question_record(
-    data: Dict[str, Any], qid: str
-) -> Optional[Dict[str, Any]]:
+def _find_question_record(data: Dict[str, Any], qid: str) -> Optional[Dict[str, Any]]:
     normalized_qid = stage_tracker._normalize_qid(qid)  # type: ignore[attr-defined]
     if normalized_qid is None:
         return None

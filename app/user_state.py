@@ -96,5 +96,3 @@ def set_wrong_queue(
     wrong_all[qtype] = items
     bucket["wrongQueue"] = wrong_all
     _save_state(runtime_dir, state)
-
-
