@@ -355,3 +355,34 @@ def get_question_states(
         if isinstance(state, dict):
             states[qid_key] = state
     return states
+
+
+def remove_question_state(store: Dict[str, Any], user: str, qid: Any) -> bool:
+    """Remove a stored question state for the given user.
+
+    Returns ``True`` when the state existed and was removed."""
+
+    user_key = _normalize_user(user)
+    qid_key = _normalize_qid(qid)
+    if qid_key is None:
+        return False
+    user_bucket = store.get(user_key)
+    if not isinstance(user_bucket, dict):
+        return False
+    if qid_key not in user_bucket:
+        return False
+
+    user_bucket.pop(qid_key, None)
+    if not user_bucket:
+        store.pop(user_key, None)
+    return True
+
+
+def delete_question_state(runtime_dir: str, user: str, qid: Any) -> bool:
+    """Remove a stored question state and persist the change to disk."""
+
+    store = load_store(runtime_dir)
+    removed = remove_question_state(store, user, qid)
+    if removed:
+        save_store(runtime_dir, store)
+    return removed

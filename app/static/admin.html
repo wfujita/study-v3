@@ -27,6 +27,9 @@
     .badge{ padding:2px 8px; border-radius:999px; border:1px solid #334155; font-size:12px }
     .ok{ color:var(--ok) } .ng{ color:var(--warn) }
     select,input{ background:#0b1220; color:#e5e7eb; border:1px solid #334155; border-radius:10px; padding:8px 10px }
+    button{ border:none; border-radius:10px; padding:10px 16px; font-weight:600; cursor:pointer; font-size:14px }
+    button.primary{ background:var(--accent); color:#fff; box-shadow:0 10px 30px rgba(59,130,246,.25); }
+    button[disabled]{ opacity:.6; cursor:not-allowed; }
     .right{ margin-left:auto }
     .center{ text-align:center }
     .stage-grid{ display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
@@ -72,6 +75,13 @@
       h2{ font-size:20px }
       .stage-grid{ grid-template-columns:1fr }
     }
+
+    .form-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end }
+    .field{ display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); min-width:160px }
+    .field input, .field select{ width:100%; font-size:14px }
+    .notice{ margin-top:12px; font-size:13px }
+    .notice.ok{ color:var(--ok) }
+    .notice.ng{ color:var(--warn) }
   </style>
 </head>
 <body>
@@ -107,6 +117,36 @@
         <input id="search" placeholder="問題検索（日本語/英語/ID）" style="min-width:220px" />
         <span class="pill right" id="last-updated">更新: --</span>
       </div>
+    </section>
+
+    <section class="card" id="sec-reset">
+      <h3 style="margin:0 0 8px">学習状況リセット</h3>
+      <p class="muted" style="margin:0 0 12px; font-size:13px">対象のユーザと問題IDを指定してステージ履歴を削除し、必要に応じてレベルを再設定します。</p>
+      <form id="form-reset" class="form-row">
+        <label class="field" style="max-width:220px">
+          <span>ユーザ</span>
+          <select id="reset-user"></select>
+        </label>
+        <label class="field" style="max-width:240px">
+          <span>問題ID</span>
+          <input id="reset-question" list="reset-question-options" placeholder="例: q12" />
+          <datalist id="reset-question-options"></datalist>
+        </label>
+        <label class="field" style="max-width:200px">
+          <span>レベル操作</span>
+          <select id="reset-level-action">
+            <option value="keep">変更しない</option>
+            <option value="set">レベルを設定</option>
+            <option value="clear">レベル上書きを削除</option>
+          </select>
+        </label>
+        <label class="field" id="reset-level-field" style="display:none; max-width:160px">
+          <span>設定するレベル</span>
+          <input id="reset-level" placeholder="例: Lv2 または 2" />
+        </label>
+        <button type="submit" class="primary" id="btn-reset">リセットを実行</button>
+      </form>
+      <div id="reset-result" class="notice muted"></div>
     </section>
 
     <section class="grid cols-3">
@@ -186,6 +226,74 @@
       return await res.json();
     }
 
+    function setResetMessage(text, kind='muted'){
+      const box = $('#reset-result');
+      if(!box) return;
+      box.textContent = text || '';
+      box.className = `notice ${kind}`;
+    }
+
+    function updateResetLevelVisibility(){
+      const action = $('#reset-level-action');
+      const field = $('#reset-level-field');
+      const input = $('#reset-level');
+      if(!action || !field || !input) return;
+      if(action.value === 'set'){
+        field.style.display = '';
+        input.focus();
+      }else{
+        field.style.display = 'none';
+        input.value='';
+      }
+    }
+
+    function syncResetUserFromFilter(){
+      const filter = $('#user');
+      const reset = $('#reset-user');
+      if(!filter || !reset) return;
+      const value = filter.value;
+      if(value && value !== '__all__' && (!reset.value || reset.value === '__all__')){
+        reset.value = value;
+      }
+    }
+
+    function populateResetUsers(users){
+      const reset = $('#reset-user');
+      if(!reset) return;
+      const current = reset.value;
+      reset.innerHTML = '<option value="">（ユーザ選択）</option>';
+      users.forEach(u=>{
+        const opt=document.createElement('option');
+        opt.value=u.user;
+        opt.textContent=`${u.user}`;
+        reset.appendChild(opt);
+      });
+      if(current && users.some(u=>u.user===current)){
+        reset.value=current;
+      }else{
+        syncResetUserFromFilter();
+      }
+    }
+
+    function updateResetQuestionList(questionStats){
+      const list = $('#reset-question-options');
+      if(!list) return;
+      list.innerHTML='';
+      const seen = new Set();
+      questionStats.forEach(q=>{
+        const id = q && q.id ? String(q.id) : '';
+        if(!id || seen.has(id)) return;
+        seen.add(id);
+        const opt = document.createElement('option');
+        const jp = q && q.jp ? q.jp : '';
+        const en = q && q.en ? q.en : '';
+        const label = [id, jp || en].filter(Boolean).join('｜');
+        opt.value = id;
+        opt.textContent = label || id;
+        list.appendChild(opt);
+      });
+    }
+
     async function loadUsers(){
       const users = await getJSON('/api/admin/users');
       const sel = $('#user'); sel.innerHTML='';
@@ -199,6 +307,8 @@
       if (paramUser && userSet.has(paramUser)) defaultUser = paramUser;
       else if (stored && userSet.has(stored))  defaultUser = stored;
       sel.value = defaultUser;
+      populateResetUsers(users);
+      syncResetUserFromFilter();
     }
 
     function renderSummary(data){
@@ -320,6 +430,8 @@
         else qReorder.appendChild(tr);
       });
 
+      updateResetQuestionList(Array.isArray(data.questionStats)? data.questionStats: []);
+
       const stageSec = $('#sec-stages');
       const stageGrid = $('#stage-grid');
       const stageDescriptions = {
@@ -436,12 +548,91 @@
       updateDisplay();
     }
 
+    async function handleResetSubmit(event){
+      event.preventDefault();
+      const userSel = $('#reset-user');
+      const qInput = $('#reset-question');
+      const action = $('#reset-level-action');
+      const levelInput = $('#reset-level');
+      const button = $('#btn-reset');
+      if(!userSel || !qInput || !action || !button){
+        return;
+      }
+      const user = (userSel.value || '').trim();
+      const qid = (qInput.value || '').trim();
+      if(!user){
+        setResetMessage('ユーザを選択してください。', 'ng');
+        return;
+      }
+      if(!qid){
+        setResetMessage('問題IDを入力してください。', 'ng');
+        return;
+      }
+      const payload = { user, id: qid };
+      if(action.value === 'set'){
+        const levelValue = (levelInput && levelInput.value || '').trim();
+        if(!levelValue){
+          setResetMessage('設定するレベルを入力してください。', 'ng');
+          return;
+        }
+        payload.level = levelValue;
+      }else if(action.value === 'clear'){
+        payload.level = '';
+      }
+      const confirmParts = [`ユーザ「${user}」`, `問題ID「${qid}」`];
+      if(action.value === 'set'){
+        confirmParts.push(`レベルを「${payload.level}」に設定`);
+      }else if(action.value === 'clear'){
+        confirmParts.push('レベル上書きを削除');
+      }else{
+        confirmParts.push('レベルは変更しない');
+      }
+      if(!window.confirm(`${confirmParts.join(' / ')} の学習状況をリセットします。よろしいですか？`)){
+        setResetMessage('リセットをキャンセルしました。', 'muted');
+        return;
+      }
+      button.disabled = true;
+      setResetMessage('リセット処理を実行中です…', 'muted');
+      try{
+        const res = await fetch('/api/admin/reset-progress', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ ...payload, subject: SUBJECT })
+        });
+        const data = await res.json().catch(()=>({ ok:false, error:'unexpected response' }));
+        if(!res.ok || !data.ok){
+          throw new Error(data && data.error ? data.error : `HTTP ${res.status}`);
+        }
+        await refresh();
+        const parts = [];
+        parts.push(data.stageRemoved ? 'ステージ履歴を削除しました。' : 'ステージ履歴に変更はありませんでした。');
+        if(action.value === 'set'){
+          parts.push(data.levelChanged ? `レベルを ${data.level||''} に更新しました。` : 'レベルは変更されませんでした。');
+        }else if(action.value === 'clear'){
+          parts.push(data.levelChanged ? 'レベル上書きを削除しました。' : 'レベル上書きはもともと設定されていませんでした。');
+        }
+        setResetMessage(parts.join(' '), 'ok');
+        qInput.value='';
+      }catch(err){
+        console.error(err);
+        setResetMessage(`リセットに失敗しました: ${err.message || err}`, 'ng');
+      }finally{
+        button.disabled = false;
+      }
+    }
+
     async function main(){
       await loadUsers();
       await refresh();
-      $('#user').onchange=refresh; $('#unit').onchange=refresh; $('#mode').onchange=refresh;
-      $('#search').oninput=()=>{ clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
-      $('#show').onchange=refresh;
+      $('#user').onchange=()=>{ setResetMessage(''); setTimeout(syncResetUserFromFilter, 0); refresh(); };
+      $('#unit').onchange=()=>{ setResetMessage(''); refresh(); };
+      $('#mode').onchange=()=>{ setResetMessage(''); refresh(); };
+      $('#search').oninput=()=>{ setResetMessage(''); clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
+      $('#show').onchange=()=>{ setResetMessage(''); refresh(); };
+      const actionSel = $('#reset-level-action');
+      if(actionSel){ actionSel.onchange=updateResetLevelVisibility; updateResetLevelVisibility(); }
+      const form = $('#form-reset');
+      if(form){ form.addEventListener('submit', handleResetSubmit); }
     }
 
     main().catch(e=>{ alert('読み込みに失敗しました: '+e.message); console.error(e); });

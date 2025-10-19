@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import os
 import json
+import re
 
 import app.stage_tracker as stage_tracker
 import app.user_state as user_state
@@ -16,6 +17,8 @@ RUNTIME_DATA_DIR = os.getenv(
 DEFAULT_SUBJECT = "english"
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+
+_MISSING = object()
 
 
 # ===== ヘルパー =====
@@ -1016,6 +1019,87 @@ def admin_users():
         )
     out = sorted(users.values(), key=lambda x: (x["lastAt"] or ""), reverse=True)
     return jsonify(out)
+
+
+def _normalize_level_label(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+
+    match = re.search(r"(\d+)", text)
+    if not match:
+        return None
+    try:
+        number = int(match.group(1))
+    except ValueError:
+        return None
+    if number <= 0:
+        return None
+    return f"Lv{number}"
+
+
+@app.post("/api/admin/reset-progress")
+def admin_reset_progress():
+    payload = request.get_json(silent=True) or {}
+
+    user = (payload.get("user") or request.args.get("user") or "").strip()
+    raw_qid = (
+        payload.get("id")
+        or payload.get("qid")
+        or request.args.get("id")
+        or request.args.get("qid")
+        or ""
+    )
+    raw_qid = str(raw_qid).strip()
+    subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
+
+    if not user or not raw_qid:
+        return (
+            jsonify({"ok": False, "error": "user and id are required"}),
+            400,
+        )
+
+    normalized_qid = stage_tracker._normalize_qid(raw_qid)  # type: ignore[attr-defined]
+    if normalized_qid is None:
+        return jsonify({"ok": False, "error": "invalid question id"}), 400
+
+    level_value = payload.get("level", _MISSING)
+    if level_value is _MISSING:
+        level_value = request.args.get("level", _MISSING)
+
+    normalized_level = None
+    level_changed = False
+    level_requested = level_value is not _MISSING
+    should_remove = False
+    if level_requested:
+        normalized_level = _normalize_level_label(level_value)
+        should_remove = level_value is None or str(level_value).strip() == ""
+        if normalized_level is None and not should_remove:
+            return jsonify({"ok": False, "error": "invalid level"}), 400
+    runtime_dir = subject_runtime_dir(subject)
+    store = stage_tracker.load_store(runtime_dir)
+    stage_removed = stage_tracker.remove_question_state(store, user, raw_qid)
+    if stage_removed:
+        stage_tracker.save_store(runtime_dir, store)
+
+    normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
+
+    if level_requested:
+        target_level = None if should_remove else normalized_level
+        level_changed = user_state.set_level_override(
+            runtime_dir, normalized_user, normalized_qid, target_level
+        )
+
+    return jsonify(
+        {
+            "ok": True,
+            "stageRemoved": stage_removed,
+            "level": normalized_level if level_requested else None,
+            "levelChanged": level_changed,
+        }
+    )
 
 
 @app.get("/api/admin/summary")
