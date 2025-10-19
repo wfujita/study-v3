@@ -422,7 +422,13 @@ def render_vocab_choice_options(
 def build_deck() -> List[Dict[str, Any]]:
     base = {"id": "base", "en": "alpha", "jp": "意味A", "unit": "U1", "level": "Lv1"}
     distractors = [
-        {"id": f"d{i}", "en": f"word{i}", "jp": f"意味{i}", "unit": f"U{(i % 3) + 1}", "level": "Lv1"}
+        {
+            "id": f"d{i}",
+            "en": f"word{i}",
+            "jp": f"意味{i}",
+            "unit": f"U{(i % 3) + 1}",
+            "level": "Lv1",
+        }
         for i in range(1, 8)
     ]
     return [base, *distractors]
