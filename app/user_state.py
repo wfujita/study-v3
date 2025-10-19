@@ -1,7 +1,8 @@
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from .stage_tracker import _normalize_qid as normalize_qid  # type: ignore
 from .stage_tracker import _normalize_user as normalize_user  # type: ignore
 
 
@@ -96,3 +97,52 @@ def set_wrong_queue(
     wrong_all[qtype] = items
     bucket["wrongQueue"] = wrong_all
     _save_state(runtime_dir, state)
+
+
+def set_level_override(
+    runtime_dir: str,
+    user: str,
+    qid: Any,
+    level: Optional[str],
+) -> bool:
+    """Persist a per-question level override for the user.
+
+    When ``level`` is ``None`` the override is removed. Returns ``True``
+    if the underlying state file was modified."""
+
+    qid_key = normalize_qid(qid)
+    if qid_key is None:
+        return False
+
+    state = _load_state(runtime_dir)
+    bucket = _ensure_user_bucket(state, user)
+
+    overrides_raw = bucket.get("levelOverrides")
+    overrides: Dict[str, str]
+    if isinstance(overrides_raw, dict):
+        overrides = overrides_raw
+    else:
+        overrides = {}
+
+    had_overrides_key = isinstance(overrides_raw, dict)
+    changed = False
+
+    if level is None:
+        if qid_key in overrides:
+            overrides.pop(qid_key, None)
+            changed = True
+    else:
+        if overrides.get(qid_key) != level:
+            overrides[qid_key] = level
+            changed = True
+
+    if overrides:
+        bucket["levelOverrides"] = overrides
+    elif had_overrides_key:
+        bucket.pop("levelOverrides", None)
+        if not changed:
+            changed = True
+
+    if changed:
+        _save_state(runtime_dir, state)
+    return changed
