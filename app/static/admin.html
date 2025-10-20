@@ -121,7 +121,7 @@
 
     <section class="card" id="sec-reset">
       <h3 style="margin:0 0 8px">学習状況リセット</h3>
-      <p class="muted" style="margin:0 0 12px; font-size:13px">対象のユーザと問題IDを指定してステージ履歴を削除し、必要に応じてレベルを再設定します。</p>
+      <p class="muted" style="margin:0 0 12px; font-size:13px">対象のユーザと問題IDを指定してステージ履歴を削除します。</p>
       <form id="form-reset" class="form-row">
         <label class="field" style="max-width:220px">
           <span>ユーザ</span>
@@ -132,21 +132,27 @@
           <input id="reset-question" list="reset-question-options" placeholder="例: q12" />
           <datalist id="reset-question-options"></datalist>
         </label>
-        <label class="field" style="max-width:200px">
-          <span>レベル操作</span>
-          <select id="reset-level-action">
-            <option value="keep">変更しない</option>
-            <option value="set">レベルを設定</option>
-            <option value="clear">レベル上書きを削除</option>
-          </select>
-        </label>
-        <label class="field" id="reset-level-field" style="display:none; max-width:160px">
-          <span>設定するレベル</span>
-          <input id="reset-level" placeholder="例: Lv2 または 2" />
-        </label>
         <button type="submit" class="primary" id="btn-reset">リセットを実行</button>
       </form>
       <div id="reset-result" class="notice muted"></div>
+    </section>
+
+    <section class="card" id="sec-level">
+      <h3 style="margin:0 0 8px">問題レベル編集</h3>
+      <p class="muted" style="margin:0 0 12px; font-size:13px">問題IDを指定してレベルを上書きします。空欄のまま「上書きを削除」を押すと元の設定に戻ります。</p>
+      <form id="form-level" class="form-row">
+        <label class="field" style="max-width:240px">
+          <span>問題ID</span>
+          <input id="level-question" list="reset-question-options" placeholder="例: q12" />
+        </label>
+        <label class="field" style="max-width:160px">
+          <span>設定するレベル</span>
+          <input id="level-value" placeholder="例: Lv2 または 2" />
+        </label>
+        <button type="submit" class="primary" id="btn-level-save">レベルを更新</button>
+        <button type="button" id="btn-level-clear">上書きを削除</button>
+      </form>
+      <div id="level-result" class="notice muted"></div>
     </section>
 
     <section class="grid cols-3">
@@ -233,18 +239,11 @@
       box.className = `notice ${kind}`;
     }
 
-    function updateResetLevelVisibility(){
-      const action = $('#reset-level-action');
-      const field = $('#reset-level-field');
-      const input = $('#reset-level');
-      if(!action || !field || !input) return;
-      if(action.value === 'set'){
-        field.style.display = '';
-        input.focus();
-      }else{
-        field.style.display = 'none';
-        input.value='';
-      }
+    function setLevelMessage(text, kind='muted'){
+      const box = $('#level-result');
+      if(!box) return;
+      box.textContent = text || '';
+      box.className = `notice ${kind}`;
     }
 
     function syncResetUserFromFilter(){
@@ -552,10 +551,8 @@
       event.preventDefault();
       const userSel = $('#reset-user');
       const qInput = $('#reset-question');
-      const action = $('#reset-level-action');
-      const levelInput = $('#reset-level');
       const button = $('#btn-reset');
-      if(!userSel || !qInput || !action || !button){
+      if(!userSel || !qInput || !button){
         return;
       }
       const user = (userSel.value || '').trim();
@@ -568,29 +565,11 @@
         setResetMessage('問題IDを入力してください。', 'ng');
         return;
       }
-      const payload = { user, id: qid };
-      if(action.value === 'set'){
-        const levelValue = (levelInput && levelInput.value || '').trim();
-        if(!levelValue){
-          setResetMessage('設定するレベルを入力してください。', 'ng');
-          return;
-        }
-        payload.level = levelValue;
-      }else if(action.value === 'clear'){
-        payload.level = '';
-      }
-      const confirmParts = [`ユーザ「${user}」`, `問題ID「${qid}」`];
-      if(action.value === 'set'){
-        confirmParts.push(`レベルを「${payload.level}」に設定`);
-      }else if(action.value === 'clear'){
-        confirmParts.push('レベル上書きを削除');
-      }else{
-        confirmParts.push('レベルは変更しない');
-      }
-      if(!window.confirm(`${confirmParts.join(' / ')} の学習状況をリセットします。よろしいですか？`)){
+      if(!window.confirm(`ユーザ「${user}」 / 問題ID「${qid}」のステージ履歴を削除します。よろしいですか？`)){
         setResetMessage('リセットをキャンセルしました。', 'muted');
         return;
       }
+      const payload = { user, id: qid };
       button.disabled = true;
       setResetMessage('リセット処理を実行中です…', 'muted');
       try{
@@ -604,14 +583,10 @@
           throw new Error(data && data.error ? data.error : `HTTP ${res.status}`);
         }
         await refresh();
-        const parts = [];
-        parts.push(data.stageRemoved ? 'ステージ履歴を削除しました。' : 'ステージ履歴に変更はありませんでした。');
-        if(action.value === 'set'){
-          parts.push(data.levelChanged ? `レベルを ${data.level||''} に更新しました。` : 'レベルは変更されませんでした。');
-        }else if(action.value === 'clear'){
-          parts.push(data.levelChanged ? 'レベル上書きを削除しました。' : 'レベル上書きはもともと設定されていませんでした。');
-        }
-        setResetMessage(parts.join(' '), 'ok');
+        const msg = data.stageRemoved
+          ? 'ステージ履歴を削除しました。'
+          : '対象のステージ履歴は見つかりませんでした。';
+        setResetMessage(msg, data.stageRemoved ? 'ok' : 'muted');
         qInput.value='';
       }catch(err){
         console.error(err);
@@ -621,18 +596,109 @@
       }
     }
 
+    async function handleLevelSubmit(event){
+      event.preventDefault();
+      const qInput = $('#level-question');
+      const levelInput = $('#level-value');
+      const saveButton = $('#btn-level-save');
+      if(!qInput || !levelInput || !saveButton){
+        return;
+      }
+      const qid = (qInput.value || '').trim();
+      const levelValue = (levelInput.value || '').trim();
+      if(!qid){
+        setLevelMessage('問題IDを入力してください。', 'ng');
+        return;
+      }
+      if(!levelValue){
+        setLevelMessage('設定するレベルを入力してください。', 'ng');
+        return;
+      }
+      if(!window.confirm(`問題ID「${qid}」のレベルを「${levelValue}」に設定します。よろしいですか？`)){
+        setLevelMessage('レベル変更をキャンセルしました。', 'muted');
+        return;
+      }
+      saveButton.disabled = true;
+      setLevelMessage('レベルを更新しています…', 'muted');
+      try{
+        const res = await fetch('/api/admin/question-level', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ id: qid, level: levelValue, subject: SUBJECT })
+        });
+        const data = await res.json().catch(()=>({ ok:false, error:'unexpected response' }));
+        if(!res.ok || !data.ok){
+          throw new Error(data && data.error ? data.error : `HTTP ${res.status}`);
+        }
+        await refresh();
+        const levelText = data.effectiveLevel || levelValue;
+        setLevelMessage(`レベルを ${levelText || ''} に更新しました。`, 'ok');
+      }catch(err){
+        console.error(err);
+        setLevelMessage(`レベルの更新に失敗しました: ${err.message || err}`, 'ng');
+      }finally{
+        saveButton.disabled = false;
+      }
+    }
+
+    async function handleLevelClear(event){
+      event.preventDefault();
+      const qInput = $('#level-question');
+      const levelInput = $('#level-value');
+      const saveButton = $('#btn-level-save');
+      const clearButton = $('#btn-level-clear');
+      if(!qInput || !clearButton){
+        return;
+      }
+      const qid = (qInput.value || '').trim();
+      if(!qid){
+        setLevelMessage('問題IDを入力してください。', 'ng');
+        return;
+      }
+      if(!window.confirm(`問題ID「${qid}」のレベル上書きを削除します。よろしいですか？`)){
+        setLevelMessage('レベル上書きの削除をキャンセルしました。', 'muted');
+        return;
+      }
+      clearButton.disabled = true;
+      if(saveButton) saveButton.disabled = true;
+      setLevelMessage('レベル上書きを削除しています…', 'muted');
+      try{
+        const res = await fetch('/api/admin/question-level', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ id: qid, level: '', subject: SUBJECT })
+        });
+        const data = await res.json().catch(()=>({ ok:false, error:'unexpected response' }));
+        if(!res.ok || !data.ok){
+          throw new Error(data && data.error ? data.error : `HTTP ${res.status}`);
+        }
+        await refresh();
+        const levelText = data.effectiveLevel || '未設定';
+        setLevelMessage(`レベル上書きを削除しました。（現在: ${levelText || '未設定'}）`, 'ok');
+        if(levelInput) levelInput.value = '';
+      }catch(err){
+        console.error(err);
+        setLevelMessage(`レベル上書きの削除に失敗しました: ${err.message || err}`, 'ng');
+      }finally{
+        clearButton.disabled = false;
+        if(saveButton) saveButton.disabled = false;
+      }
+    }
+
     async function main(){
       await loadUsers();
       await refresh();
-      $('#user').onchange=()=>{ setResetMessage(''); setTimeout(syncResetUserFromFilter, 0); refresh(); };
-      $('#unit').onchange=()=>{ setResetMessage(''); refresh(); };
-      $('#mode').onchange=()=>{ setResetMessage(''); refresh(); };
-      $('#search').oninput=()=>{ setResetMessage(''); clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
-      $('#show').onchange=()=>{ setResetMessage(''); refresh(); };
-      const actionSel = $('#reset-level-action');
-      if(actionSel){ actionSel.onchange=updateResetLevelVisibility; updateResetLevelVisibility(); }
-      const form = $('#form-reset');
-      if(form){ form.addEventListener('submit', handleResetSubmit); }
+      $('#user').onchange=()=>{ setResetMessage(''); setLevelMessage(''); setTimeout(syncResetUserFromFilter, 0); refresh(); };
+      $('#unit').onchange=()=>{ setResetMessage(''); setLevelMessage(''); refresh(); };
+      $('#mode').onchange=()=>{ setResetMessage(''); setLevelMessage(''); refresh(); };
+      $('#search').oninput=()=>{ setResetMessage(''); setLevelMessage(''); clearTimeout(window.__t); window.__t=setTimeout(refresh, 400); };
+      $('#show').onchange=()=>{ setResetMessage(''); setLevelMessage(''); refresh(); };
+      const formReset = $('#form-reset');
+      if(formReset){ formReset.addEventListener('submit', handleResetSubmit); }
+      const formLevel = $('#form-level');
+      if(formLevel){ formLevel.addEventListener('submit', handleLevelSubmit); }
+      const clearButton = $('#btn-level-clear');
+      if(clearButton){ clearButton.addEventListener('click', handleLevelClear); }
     }
 
     main().catch(e=>{ alert('読み込みに失敗しました: '+e.message); console.error(e); });

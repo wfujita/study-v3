@@ -5,6 +5,7 @@ import os
 import json
 import re
 
+import app.level_store as level_store
 import app.stage_tracker as stage_tracker
 import app.user_state as user_state
 
@@ -36,6 +37,68 @@ def subject_runtime_dir(subject: str) -> str:
     return os.path.join(RUNTIME_DATA_DIR, normalize_subject(subject))
 
 
+def _questions_file_path(subject: str) -> str:
+    return os.path.join(subject_static_dir(subject), "questions.json")
+
+
+def _load_questions_file(subject: str) -> Optional[Dict[str, Any]]:
+    path = _questions_file_path(subject)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fp:
+            data = json.load(fp)
+    except Exception:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return data
+
+
+def _iter_question_records(data: Dict[str, Any]):
+    keys = ("questions", "reorder", "vocabInput", "vocabChoice", "vocab", "rewrite")
+    for key in keys:
+        items = data.get(key)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if isinstance(item, dict):
+                yield item
+
+
+def _apply_level_overrides(
+    data: Dict[str, Any], overrides: Dict[str, str]
+) -> Dict[str, Any]:
+    if not overrides:
+        return data
+    for item in _iter_question_records(data):
+        qid_norm = stage_tracker._normalize_qid(item.get("id"))  # type: ignore[attr-defined]
+        if qid_norm and qid_norm in overrides:
+            item["level"] = overrides[qid_norm]
+    return data
+
+
+def _find_question_record(data: Dict[str, Any], qid: str) -> Optional[Dict[str, Any]]:
+    normalized_qid = stage_tracker._normalize_qid(qid)  # type: ignore[attr-defined]
+    if normalized_qid is None:
+        return None
+    for item in _iter_question_records(data):
+        qid_norm = stage_tracker._normalize_qid(item.get("id"))  # type: ignore[attr-defined]
+        if qid_norm == normalized_qid:
+            return item
+    return None
+
+
+def _build_questions_response(subject: str):
+    data = _load_questions_file(subject)
+    if data is None:
+        return jsonify({"error": "subject not found"}), 404
+    runtime_dir = subject_runtime_dir(subject)
+    overrides = level_store.load_levels(runtime_dir)
+    payload = _apply_level_overrides(dict(data), overrides) if overrides else data
+    return jsonify(payload)
+
+
 # ===== 静的ページ =====
 @app.get("/")
 def index():
@@ -50,17 +113,13 @@ def admin_page():
 # 出題ファイル（フロントは /data/<subject>/questions.json を参照）
 @app.get("/data/<subject>/questions.json")
 def get_subject_questions(subject):
-    directory = subject_static_dir(subject)
-    path = os.path.join(directory, "questions.json")
-    if not os.path.exists(path):
-        return jsonify({"error": "subject not found"}), 404
-    return send_from_directory(directory, "questions.json")
+    return _build_questions_response(subject)
 
 
 @app.get("/data/questions.json")
 def get_questions():
     # 後方互換用: 既定教科の問題を返す
-    return get_subject_questions(DEFAULT_SUBJECT)
+    return _build_questions_response(DEFAULT_SUBJECT)
 
 
 # ===== 受信（結果保存） =====
@@ -1065,39 +1124,74 @@ def admin_reset_progress():
     if normalized_qid is None:
         return jsonify({"ok": False, "error": "invalid question id"}), 400
 
-    level_value = payload.get("level", _MISSING)
-    if level_value is _MISSING:
-        level_value = request.args.get("level", _MISSING)
-
-    normalized_level = None
-    level_changed = False
-    level_requested = level_value is not _MISSING
-    should_remove = False
-    if level_requested:
-        normalized_level = _normalize_level_label(level_value)
-        should_remove = level_value is None or str(level_value).strip() == ""
-        if normalized_level is None and not should_remove:
-            return jsonify({"ok": False, "error": "invalid level"}), 400
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)
     stage_removed = stage_tracker.remove_question_state(store, user, raw_qid)
     if stage_removed:
         stage_tracker.save_store(runtime_dir, store)
-
-    normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
-
-    if level_requested:
-        target_level = None if should_remove else normalized_level
-        level_changed = user_state.set_level_override(
-            runtime_dir, normalized_user, normalized_qid, target_level
-        )
-
     return jsonify(
         {
             "ok": True,
             "stageRemoved": stage_removed,
-            "level": normalized_level if level_requested else None,
-            "levelChanged": level_changed,
+        }
+    )
+
+
+@app.post("/api/admin/question-level")
+def admin_set_question_level():
+    payload = request.get_json(silent=True) or {}
+
+    raw_qid = (
+        payload.get("id")
+        or payload.get("qid")
+        or request.args.get("id")
+        or request.args.get("qid")
+        or ""
+    )
+    raw_qid = str(raw_qid).strip()
+    subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
+
+    if not raw_qid:
+        return jsonify({"ok": False, "error": "id is required"}), 400
+
+    normalized_qid = stage_tracker._normalize_qid(raw_qid)  # type: ignore[attr-defined]
+    if normalized_qid is None:
+        return jsonify({"ok": False, "error": "invalid question id"}), 400
+
+    level_value = payload.get("level", _MISSING)
+    if level_value is _MISSING:
+        level_value = request.args.get("level", _MISSING)
+
+    if level_value is _MISSING:
+        return jsonify({"ok": False, "error": "level is required"}), 400
+
+    should_clear = level_value is None or str(level_value).strip() == ""
+    normalized_level = None
+    if not should_clear:
+        normalized_level = _normalize_level_label(level_value)
+        if normalized_level is None:
+            return jsonify({"ok": False, "error": "invalid level"}), 400
+
+    data = _load_questions_file(subject)
+    if data is None:
+        return jsonify({"ok": False, "error": "subject not found"}), 404
+
+    record = _find_question_record(data, normalized_qid)
+    if record is None:
+        return jsonify({"ok": False, "error": "question not found"}), 404
+
+    runtime_dir = subject_runtime_dir(subject)
+    changed = level_store.set_level(runtime_dir, normalized_qid, normalized_level)
+
+    effective_level = normalized_level or record.get("level")
+
+    return jsonify(
+        {
+            "ok": True,
+            "level": normalized_level,
+            "effectiveLevel": effective_level,
+            "override": normalized_level is not None,
+            "changed": changed,
         }
     )
 
