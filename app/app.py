@@ -243,18 +243,25 @@ def set_wrong_queue():
 # ====== 管理ダッシュボード用ユーティリティ ======
 def load_questions_map(subject: str = DEFAULT_SUBJECT):
     """
-    static/data/questions.json を読み、id -> {jp,en,unit,type} にまとめる。
+    static/data/questions.json を読み、id -> {jp,en,unit,type,level} にまとめる。
     並べ替え（questions）と単語（vocab）の両方をサポート。
     """
-    qmap = {}
-    path = os.path.join(subject_static_dir(subject), "questions.json")
-    if not os.path.exists(path):
+
+    def _effective_level(qid: Optional[str], base_level: Optional[str]) -> Optional[str]:
+        if not qid:
+            return base_level
+        normalized = stage_tracker._normalize_qid(qid)  # type: ignore[attr-defined]
+        if normalized and normalized in overrides:
+            return overrides[normalized]
+        return base_level
+
+    qmap: Dict[str, Dict[str, Any]] = {}
+    data = _load_questions_file(subject)
+    if data is None:
         return qmap
-    try:
-        with open(path, encoding="utf-8") as fp:
-            data = json.load(fp)
-    except Exception:
-        return qmap
+
+    runtime_dir = subject_runtime_dir(subject)
+    overrides = level_store.load_levels(runtime_dir)
 
     for q in data.get("questions") or []:
         qid = q.get("id")
@@ -265,7 +272,9 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "en": q.get("en"),
                 "unit": q.get("unit"),
                 "type": "reorder",
+                "level": _effective_level(qid, q.get("level")),
             }
+
     vocab_input = []
     vocab_choice = []
     if isinstance(data.get("vocabInput"), list):
@@ -290,6 +299,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "en": v.get("en"),
                 "unit": v.get("unit"),
                 "type": "vocab",
+                "level": _effective_level(qid, v.get("level")),
             }
     for v in vocab_choice:
         qid = v.get("id")
@@ -300,6 +310,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "en": v.get("en"),
                 "unit": v.get("unit"),
                 "type": "vocab-choice",
+                "level": _effective_level(qid, v.get("level")),
             }
     for w in data.get("rewrite") or []:
         qid = w.get("id")
@@ -310,6 +321,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "en": w.get("en"),
                 "unit": w.get("unit"),
                 "type": "rewrite",
+                "level": _effective_level(qid, w.get("level")),
             }
     return qmap
 
@@ -1213,13 +1225,16 @@ def admin_summary():
     if not stage_store and res:
         stage_store = stage_tracker.rebuild_store(runtime_dir, res)
 
+    def _display_type(value: Optional[str]) -> str:
+        normalized = (value or "").strip() or ""
+        if normalized == "vocab-choice":
+            return "vocab"
+        return normalized
+
     def _type_matches_filter(value: Optional[str]) -> bool:
         if qtype in (None, "", "all"):
             return True
-        normalized = (value or "").strip() or ""
-        if normalized == "vocab-choice":
-            normalized = "vocab"
-        return normalized == qtype
+        return _display_type(value) == qtype
 
     def _stage_item_matches(qid: Optional[str], meta: Dict[str, Any]) -> bool:
         if unit and (meta.get("unit") or "") != unit:
@@ -1300,6 +1315,34 @@ def admin_summary():
     sessions = []
     attempts_by_q = {}
 
+    def _init_question_entry(qid: str, meta: Optional[Dict[str, Any]] = None):
+        if qid in question_stat_map:
+            return question_stat_map[qid]
+        meta = meta or {}
+        entry = {
+            "id": qid,
+            "unit": meta.get("unit"),
+            "jp": meta.get("jp"),
+            "en": meta.get("en"),
+            "type": _display_type(meta.get("type")),
+            "level": meta.get("level"),
+            "answered": 0,
+            "correct": 0,
+            "wrong": 0,
+            "lastAt": None,
+            "streak": 0,
+        }
+        question_stat_map[qid] = entry
+        return entry
+
+    question_stat_map: Dict[str, Dict[str, Any]] = {}
+    for qid, meta in qmap.items():
+        if not qid:
+            continue
+        if not _stage_item_matches(qid, meta):
+            continue
+        _init_question_entry(qid, meta)
+
     review_sessions = {}
     for r in res:
         mode_r = r.get("mode") or "normal"
@@ -1365,7 +1408,7 @@ def admin_summary():
                 "unit": (a.get("unit") or qm.get("unit") or ""),
                 "jp": qm.get("jp"),
                 "en": qm.get("en"),
-                "type": (a.get("type") or qm.get("type") or ""),
+                "type": _display_type(a.get("type") or qm.get("type") or ""),
                 "correct": bool(a.get("correct")),
                 "userAnswer": a.get("userAnswer"),
                 "at": at_str,
@@ -1400,6 +1443,34 @@ def admin_summary():
             attempts_by_q.setdefault(qid or "(no-id)", []).append(
                 (at_str or "", bool(a.get("correct")))
             )
+            if qid:
+                base_meta = qmap.get(qid)
+            else:
+                base_meta = None
+            stat_entry = _init_question_entry(qid or "(no-id)", base_meta)
+            if stat_entry.get("unit") is None:
+                stat_entry["unit"] = item.get("unit")
+            if stat_entry.get("jp") is None:
+                stat_entry["jp"] = item.get("jp")
+            if stat_entry.get("en") is None:
+                stat_entry["en"] = item.get("en")
+            if stat_entry.get("type") in (None, ""):
+                stat_entry["type"] = item.get("type")
+            if (
+                stat_entry.get("level") is None
+                and base_meta
+                and base_meta.get("level") is not None
+            ):
+                stat_entry["level"] = base_meta.get("level")
+            stat_entry["answered"] += 1
+            if item["correct"]:
+                stat_entry["correct"] += 1
+            else:
+                stat_entry["wrong"] += 1
+            prev_last = stat_entry.get("lastAt") or ""
+            current_at = item.get("at") or ""
+            if current_at and current_at > prev_last:
+                stat_entry["lastAt"] = current_at
         session_at = r.get("endedAt") or r.get("receivedAt")
         session_dt = parse_iso(session_at)
         started_dt = None
@@ -1481,38 +1552,24 @@ def admin_summary():
                 break
         streaks[qid] = streak
 
-    by_q = {}
-    for a in answered_all:
-        qid = a.get("id") or "(no-id)"
-        d = by_q.setdefault(
-            qid,
-            {
-                "id": qid,
-                "unit": a.get("unit"),
-                "jp": a.get("jp"),
-                "en": a.get("en"),
-                "type": a.get("type"),
-                "answered": 0,
-                "correct": 0,
-                "wrong": 0,
-                "lastAt": None,
-                "streak": 0,
-            },
-        )
-        d["answered"] += 1
-        if a["correct"]:
-            d["correct"] += 1
-        else:
-            d["wrong"] += 1
-        d["lastAt"] = max(d["lastAt"] or "", a.get("at") or "")
-        d["streak"] = streaks.get(qid, 0)
+    for qid, streak in streaks.items():
+        if not qid:
+            continue
+        entry = question_stat_map.get(qid)
+        if entry:
+            entry["streak"] = streak
+
     top_missed = sorted(
-        by_q.values(), key=lambda x: (x["wrong"], x["answered"]), reverse=True
+        [item for item in question_stat_map.values() if item.get("answered")],
+        key=lambda x: (x["wrong"], x["answered"]),
+        reverse=True,
     )
 
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
-    question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
+    question_stats = sorted(
+        question_stat_map.values(), key=lambda x: (x["id"] or "")
+    )
 
     stage_buckets = {}
     selected_user = user not in (None, "", "__all__")
@@ -1574,7 +1631,7 @@ def admin_summary():
                         "jp": meta.get("jp"),
                         "en": meta.get("en"),
                         "unit": meta.get("unit"),
-                        "type": meta.get("type"),
+                        "type": _display_type(meta.get("type")),
                     }
                 )
 
