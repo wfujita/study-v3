@@ -1357,7 +1357,11 @@ def admin_summary():
                 at_dt = None
             if not at_dt or at_dt < cutoff:
                 continue
-            qid = a.get("id")
+            qid_raw = a.get("id")
+            if qid_raw not in (None, ""):
+                qid = str(qid_raw)
+            else:
+                qid = "(no-id)"
             qm = qmap.get(qid, {})
             item = {
                 "user": r.get("user", "guest"),
@@ -1397,7 +1401,7 @@ def admin_summary():
                 if qtext not in hay:
                     continue
             answered_all.append(item)
-            attempts_by_q.setdefault(qid or "(no-id)", []).append(
+            attempts_by_q.setdefault(qid, []).append(
                 (at_str or "", bool(a.get("correct")))
             )
         session_at = r.get("endedAt") or r.get("receivedAt")
@@ -1483,7 +1487,11 @@ def admin_summary():
 
     by_q = {}
     for a in answered_all:
-        qid = a.get("id") or "(no-id)"
+        qid_raw = a.get("id")
+        if qid_raw not in (None, ""):
+            qid = str(qid_raw)
+        else:
+            qid = "(no-id)"
         d = by_q.setdefault(
             qid,
             {
@@ -1512,7 +1520,33 @@ def admin_summary():
 
     recent = sorted(answered_all, key=lambda x: x.get("at") or "", reverse=True)[:100]
 
+    for qid_key, meta in qmap.items():
+        if not isinstance(meta, dict):
+            continue
+        qid_value = str(meta.get("id") or qid_key or "")
+        if not qid_value:
+            continue
+        if qid_value in by_q:
+            continue
+        if not _stage_item_matches(qid_value, meta):
+            continue
+        by_q[qid_value] = {
+            "id": qid_value,
+            "unit": meta.get("unit"),
+            "jp": meta.get("jp"),
+            "en": meta.get("en"),
+            "type": meta.get("type"),
+            "answered": 0,
+            "correct": 0,
+            "wrong": 0,
+            "lastAt": None,
+            "streak": 0,
+        }
+
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
+    for item in question_stats:
+        if (item.get("type") or "") == "vocab-choice":
+            item["type"] = "vocab"
 
     stage_buckets = {}
     selected_user = user not in (None, "", "__all__")
