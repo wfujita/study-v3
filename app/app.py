@@ -56,7 +56,7 @@ def _load_questions_file(subject: str) -> Optional[Dict[str, Any]]:
 
 
 def _iter_question_records(data: Dict[str, Any]):
-    keys = ("questions", "reorder", "vocabInput", "vocabChoice", "vocab", "rewrite")
+    keys = ("questions", "reorder", "vocabChoice", "vocab", "rewrite")
     for key in keys:
         items = data.get(key)
         if not isinstance(items, list):
@@ -244,7 +244,7 @@ def set_wrong_queue():
 def load_questions_map(subject: str = DEFAULT_SUBJECT):
     """
     static/data/questions.json を読み、id -> {jp,en,unit,type} にまとめる。
-    並べ替え（questions）と単語（vocab）の両方をサポート。
+    並べ替え（questions）と単語選択（vocabChoice）をサポート。
     """
     qmap = {}
     path = os.path.join(subject_static_dir(subject), "questions.json")
@@ -266,10 +266,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
                 "unit": q.get("unit"),
                 "type": "reorder",
             }
-    vocab_input = []
     vocab_choice = []
-    if isinstance(data.get("vocabInput"), list):
-        vocab_input.extend(data["vocabInput"])
     if isinstance(data.get("vocabChoice"), list):
         vocab_choice.extend(data["vocabChoice"])
     legacy_vocab = data.get("vocab")
@@ -278,19 +275,6 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
             choices = entry.get("choices")
             if isinstance(choices, list) and len(choices) > 0:
                 vocab_choice.append(entry)
-            else:
-                vocab_input.append(entry)
-
-    for v in vocab_input:
-        qid = v.get("id")
-        if qid:
-            qmap[qid] = {
-                "id": qid,
-                "jp": v.get("jp"),
-                "en": v.get("en"),
-                "unit": v.get("unit"),
-                "type": "vocab",
-            }
     for v in vocab_choice:
         qid = v.get("id")
         if qid:
@@ -1202,7 +1186,9 @@ def admin_summary():
     unit = request.args.get("unit") or ""
     qtext = (request.args.get("q") or "").lower()
     mode = request.args.get("mode") or "normal"
-    qtype = request.args.get("show") or "all"
+    qtype = (request.args.get("show") or "all").strip().lower()
+    if qtype == "vocab":
+        qtype = "vocab-choice"
     subject = normalize_subject(request.args.get("subject"))
 
     qmap = load_questions_map(subject)
@@ -1216,9 +1202,7 @@ def admin_summary():
     def _type_matches_filter(value: Optional[str]) -> bool:
         if qtype in (None, "", "all"):
             return True
-        normalized = (value or "").strip() or ""
-        if normalized == "vocab-choice":
-            normalized = "vocab"
+        normalized = (value or "").strip().lower()
         return normalized == qtype
 
     def _stage_item_matches(qid: Optional[str], meta: Dict[str, Any]) -> bool:
@@ -1332,13 +1316,12 @@ def admin_summary():
         ans = ans_all
 
         # 表示タイプ（単語/並べ替え）で絞り込み
-        if qtype in ("vocab", "reorder", "rewrite"):
+        if qtype in ("vocab-choice", "reorder", "rewrite"):
             filtered = []
             for a in ans_all:
                 qm = qmap.get(a.get("id")) or {}
                 atype = a.get("type") or qm.get("type") or ""
-                if qtype == "vocab" and atype == "vocab-choice":
-                    atype = "vocab"
+                atype = (atype or "").strip().lower()
                 if atype == qtype:
                     filtered.append(a)
             ans = filtered
@@ -1544,10 +1527,6 @@ def admin_summary():
         }
 
     question_stats = sorted(by_q.values(), key=lambda x: (x["id"] or ""))
-    for item in question_stats:
-        if (item.get("type") or "") == "vocab-choice":
-            item["type"] = "vocab"
-
     stage_buckets = {}
     selected_user = user not in (None, "", "__all__")
 

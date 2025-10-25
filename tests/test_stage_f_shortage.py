@@ -108,7 +108,7 @@ def execute_build_order(
 
     const fetchStub = async (url, options={{}})=>{{
       if(typeof url === 'string' && url.includes('/data/english/questions.json')){{
-        return {{ ok: true, json: async ()=>({{ vocabInput: deckData, vocabChoice: [], reorder: [], rewrite: [] }}) }};
+        return {{ ok: true, json: async ()=>({{ vocabChoice: deckData, reorder: [], rewrite: [] }}) }};
       }}
       if(url === '/api/stats/bulk'){{
         const body = JSON.parse(options.body || '{{}}');
@@ -187,7 +187,7 @@ def execute_build_order(
     vm.runInContext(match[1], context, {{ filename: 'index.html' }});
 
     vm.runInContext(`
-      state.qType = "vocab";
+      state.qType = "vocab-choice";
       state.mode = "normal";
       state.levelMax = {level_max_json};
       state.totalPerSet = {total_per_set};
@@ -221,7 +221,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
     deck = [
         {
             "id": "1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en1",
@@ -230,7 +230,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en2",
@@ -239,7 +239,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en3",
@@ -248,7 +248,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "4",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en4",
@@ -257,7 +257,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "5",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en5",
@@ -266,7 +266,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "6",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en6",
@@ -275,7 +275,7 @@ def test_stage_f_shortage_promotes_higher_level_items():
         },
         {
             "id": "7",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en7",
@@ -310,7 +310,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
     deck = [
         {
             "id": "f1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-f1",
@@ -319,7 +319,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "f2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-f2",
@@ -328,7 +328,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "f3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-f3",
@@ -337,7 +337,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "f4",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-f4",
@@ -346,7 +346,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "f5",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-f5",
@@ -355,7 +355,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "v052",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-v052",
@@ -364,7 +364,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "x1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-x1",
@@ -373,7 +373,7 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
         },
         {
             "id": "v053",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-v053",
@@ -414,7 +414,7 @@ def test_stage_f_pool_prefers_previously_seen_questions():
     deck = [
         {
             "id": "s1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-s1",
@@ -423,7 +423,7 @@ def test_stage_f_pool_prefers_previously_seen_questions():
         },
         {
             "id": "s2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-s2",
@@ -432,7 +432,7 @@ def test_stage_f_pool_prefers_previously_seen_questions():
         },
         {
             "id": "s3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-s3",
@@ -465,7 +465,7 @@ def test_stage_f_completion_fetches_higher_level_questions():
     deck = [
         {
             "id": str(i),
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": f"en-{i}",
@@ -476,7 +476,7 @@ def test_stage_f_completion_fetches_higher_level_questions():
     ] + [
         {
             "id": "8",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-8",
@@ -485,7 +485,7 @@ def test_stage_f_completion_fetches_higher_level_questions():
         },
         {
             "id": "9",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-9",
@@ -519,7 +519,7 @@ def test_stage_f_history_records_promoted_questions():
     deck = [
         {
             "id": "base1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-base1",
@@ -528,7 +528,7 @@ def test_stage_f_history_records_promoted_questions():
         },
         {
             "id": "base2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en-base2",
@@ -537,7 +537,7 @@ def test_stage_f_history_records_promoted_questions():
         },
         {
             "id": "extra1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-extra1",
@@ -546,7 +546,7 @@ def test_stage_f_history_records_promoted_questions():
         },
         {
             "id": "extra2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en-extra2",
@@ -578,7 +578,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
     deck = [
         {
             "id": "1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en1",
@@ -587,7 +587,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en2",
@@ -596,7 +596,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en3",
@@ -605,7 +605,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "4",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en4",
@@ -614,7 +614,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "5",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en5",
@@ -623,7 +623,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "6",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en6",
@@ -632,7 +632,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "7",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en7",
@@ -641,7 +641,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "8",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv3",
             "unit": "U1",
             "en": "en8",
@@ -650,7 +650,7 @@ def test_waiting_fallback_extras_are_replaced_by_additional_levels():
         },
         {
             "id": "9",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv3",
             "unit": "U1",
             "en": "en9",
@@ -683,7 +683,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
     deck = [
         {
             "id": "1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en1",
@@ -692,7 +692,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en2",
@@ -701,7 +701,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en3",
@@ -710,7 +710,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "4",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en4",
@@ -719,7 +719,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "5",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en5",
@@ -728,7 +728,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "6",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en6",
@@ -737,7 +737,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "7",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en7",
@@ -746,7 +746,7 @@ def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
         },
         {
             "id": "8",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en8",
@@ -782,7 +782,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
     deck = [
         {
             "id": "1",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en1",
@@ -791,7 +791,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "2",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en2",
@@ -800,7 +800,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "3",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en3",
@@ -809,7 +809,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "4",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en4",
@@ -818,7 +818,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "5",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
             "en": "en5",
@@ -827,7 +827,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "6",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en6",
@@ -836,7 +836,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "7",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en7",
@@ -845,7 +845,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "8",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en8",
@@ -854,7 +854,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "9",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en9",
@@ -863,7 +863,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "10",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en10",
@@ -872,7 +872,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "11",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
             "en": "en11",
@@ -881,7 +881,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "12",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv3",
             "unit": "U1",
             "en": "en12",
@@ -890,7 +890,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "13",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv3",
             "unit": "U1",
             "en": "en13",
@@ -899,7 +899,7 @@ def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used()
         },
         {
             "id": "14",
-            "type": "vocab",
+            "type": "vocab-choice",
             "level": "Lv3",
             "unit": "U1",
             "en": "en14",
