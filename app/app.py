@@ -1196,8 +1196,12 @@ def admin_summary():
 
     runtime_dir = subject_runtime_dir(subject)
     stage_store = stage_tracker.load_store(runtime_dir)
+    if not isinstance(stage_store, dict):
+        stage_store = {}
     if not stage_store and res:
         stage_store = stage_tracker.rebuild_store(runtime_dir, res)
+    if not isinstance(stage_store, dict):
+        stage_store = {}
 
     def _normalize_question_type(value: Optional[str]) -> str:
         if not value:
@@ -1554,9 +1558,14 @@ def admin_summary():
     if selected_user:
         normalized_user = (user or "").strip() or "guest"
         for item in question_stats:
-            state = stage_tracker.get_question_state(
-                stage_store, normalized_user, item.get("id")
-            )
+            state = None
+            if isinstance(stage_store, dict):
+                try:
+                    state = stage_tracker.get_question_state(
+                        stage_store, normalized_user, item.get("id")
+                    )
+                except Exception:
+                    state = None
             if state:
                 item["stage"] = state.get("stage")
                 item["nextDueAt"] = state.get("nextDueAt")
@@ -1571,9 +1580,11 @@ def admin_summary():
                 item["nextDueAt"] = None
                 continue
             try:
-                state = stage_tracker.get_question_state(
-                    stage_store, normalized_user, qid_value
-                )
+                state = None
+                if isinstance(stage_store, dict):
+                    state = stage_tracker.get_question_state(
+                        stage_store, normalized_user, qid_value
+                    )
             except Exception:
                 state = None
             if state:
@@ -1588,6 +1599,8 @@ def admin_summary():
             user_bucket = stage_store.get(normalized_user) or {}
             if not isinstance(user_bucket, dict):
                 user_bucket = {}
+        else:
+            user_bucket = {}
 
         for stage_name in stage_tracker.STAGE_SEQUENCE:
             bucket_items = []
