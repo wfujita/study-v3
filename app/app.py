@@ -1436,31 +1436,30 @@ def admin_summary():
         if not session_type:
             for a in ans_all:
                 session_type = _normalize_question_type(
-                    a.get("type")
-                    or (qmap.get(str(a.get("id"))) or {}).get("type")
+                    a.get("type") or (qmap.get(str(a.get("id"))) or {}).get("type")
                 )
                 if session_type:
                     break
 
         sessions.append(
-                {
-                    "user": r.get("user", "guest"),
-                    "endedAt": r.get("endedAt"),
-                    "total": len(ans),
-                    "correct": sum(1 for a in ans if a.get("correct")),
-                    "accuracy": (
-                        (sum(1 for a in ans if a.get("correct")) / len(ans) * 100)
-                        if len(ans)
-                        else 0
-                    ),
-                    "mode": mode,
-                    "qType": session_type,
-                    "setIndex": r.get("setIndex"),
-                    "seconds": r.get("seconds", 0),
-                    "startedAt": started_iso,
-                    "reviewDone": review_done,
-                }
-            )
+            {
+                "user": r.get("user", "guest"),
+                "endedAt": r.get("endedAt"),
+                "total": len(ans),
+                "correct": sum(1 for a in ans if a.get("correct")),
+                "accuracy": (
+                    (sum(1 for a in ans if a.get("correct")) / len(ans) * 100)
+                    if len(ans)
+                    else 0
+                ),
+                "mode": mode,
+                "qType": session_type,
+                "setIndex": r.get("setIndex"),
+                "seconds": r.get("seconds", 0),
+                "startedAt": started_iso,
+                "reviewDone": review_done,
+            }
+        )
 
     totals = {
         "sessions": len(sessions),
