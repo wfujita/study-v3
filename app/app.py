@@ -1319,6 +1319,11 @@ def admin_summary():
     for r in res:
         if not match_user(r):
             continue
+        record_mode = (r.get("mode") or "normal").strip().lower() or "normal"
+        if mode == "normal" and record_mode == "review":
+            continue
+        if mode == "review" and record_mode != "review":
+            continue
         if mode == "review":
             ans_all = r.get("reviewed") or []
         else:
@@ -1456,7 +1461,7 @@ def admin_summary():
                     if len(ans)
                     else 0
                 ),
-                "mode": mode,
+                "mode": record_mode,
                 "qType": session_type,
                 "setIndex": r.get("setIndex"),
                 "seconds": r.get("seconds", 0),
