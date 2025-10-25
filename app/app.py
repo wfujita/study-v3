@@ -1199,10 +1199,22 @@ def admin_summary():
     if not stage_store and res:
         stage_store = stage_tracker.rebuild_store(runtime_dir, res)
 
+    def _normalize_question_type(value: Optional[str]) -> str:
+        if not value:
+            return ""
+        cleaned = (value or "").strip().lower()
+        mapping = {
+            "vocab": "vocab-choice",
+            "vocab-choice": "vocab-choice",
+            "reorder": "reorder",
+            "rewrite": "rewrite",
+        }
+        return mapping.get(cleaned, cleaned)
+
     def _type_matches_filter(value: Optional[str]) -> bool:
         if qtype in (None, "", "all"):
             return True
-        normalized = (value or "").strip().lower()
+        normalized = _normalize_question_type(value)
         return normalized == qtype
 
     def _stage_item_matches(qid: Optional[str], meta: Dict[str, Any]) -> bool:
@@ -1352,7 +1364,7 @@ def admin_summary():
                 "unit": (a.get("unit") or qm.get("unit") or ""),
                 "jp": qm.get("jp"),
                 "en": qm.get("en"),
-                "type": (a.get("type") or qm.get("type") or ""),
+                "type": _normalize_question_type(a.get("type") or qm.get("type")),
                 "correct": bool(a.get("correct")),
                 "userAnswer": a.get("userAnswer"),
                 "at": at_str,
@@ -1420,7 +1432,17 @@ def admin_summary():
                     if rev_dt >= session_dt:
                         review_done = True
                         break
-            sessions.append(
+        session_type = _normalize_question_type(r.get("qType"))
+        if not session_type:
+            for a in ans_all:
+                session_type = _normalize_question_type(
+                    a.get("type")
+                    or (qmap.get(str(a.get("id"))) or {}).get("type")
+                )
+                if session_type:
+                    break
+
+        sessions.append(
                 {
                     "user": r.get("user", "guest"),
                     "endedAt": r.get("endedAt"),
@@ -1432,7 +1454,7 @@ def admin_summary():
                         else 0
                     ),
                     "mode": mode,
-                    "qType": r.get("qType"),
+                    "qType": session_type,
                     "setIndex": r.get("setIndex"),
                     "seconds": r.get("seconds", 0),
                     "startedAt": started_iso,
