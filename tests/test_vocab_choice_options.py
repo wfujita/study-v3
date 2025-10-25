@@ -280,7 +280,7 @@ async function fetchStub(url, options = {}) {
     return {
       ok: true,
       async json() {
-        return { vocabChoice: deckData, vocabInput: [], reorder: [], rewrite: [] };
+        return { vocabChoice: deckData, reorder: [], rewrite: [] };
       },
     };
   }
@@ -345,10 +345,10 @@ if (!scriptMatch) {
 vm.runInContext(scriptMatch[1], context, { filename: 'index.html' });
 
 const requiredIds = [
-  'setup','quiz','finished','status','explain','ui-reorder','ui-vocab','ui-vocab-choice','ui-rewrite',
+  'setup','quiz','finished','status','explain','ui-reorder','ui-vocab-choice','ui-rewrite',
   'prompt','vocab-choice-tip','vocab-choice-options','btn-hint','btn-next','btn-check',
   'stat-correct','stat-wrong','stat-streak','stat-accuracy','stat-bucket','stat-stage',
-  'vocab-input','rewrite-input'
+  'rewrite-input'
 ];
 requiredIds.forEach(id => { const el = documentStub.getElementById(id); el.id = id; });
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>英語クイズ｜並べ替え＋単語＋書き換え</title>
+  <title>英語クイズ｜並べ替え＋単語選択＋書き換え</title>
   <style>
     :root{ --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --border:#1f2937; --accent:#3b82f6; --warn:#ef4444 }
     *{ box-sizing:border-box }
@@ -46,7 +46,6 @@
     /* --- モバイル最適化 & 操作ボタンの押しやすさ改善 --- */
     :root{ --tap:44px }
     body{ touch-action:manipulation }
-    #vocab-input{ width:100% }
     #rewrite-input{ width:100%; min-height:72px; resize:vertical; }
     #target,#bank{ gap:10px }
     #bank{ max-height:40vh; overflow:auto; padding-bottom:6px }
@@ -66,7 +65,7 @@
   <header>
     <div class="container row">
       <div>
-        <h2 style="margin:0">英語クイズ <span class="muted">（並べ替え＋単語＋書き換え）</span></h2>
+        <h2 style="margin:0">英語クイズ <span class="muted">（並べ替え＋単語選択＋書き換え）</span></h2>
         <div class="muted" style="font-size:12px">外部JSON／復習モード／一問一採点／完了時は最小ペイロードをサーバ保存。</div>
       </div>
       <div class="right pill" id="user-pill">👤 ゲスト</div>
@@ -83,7 +82,6 @@
           <select id="qtype">
             <option value="reorder">並べ替え（文法）</option>
             <option value="rewrite">書き換え（指定の形に）</option>
-            <option value="vocab" selected>単語（意味→スペル）</option>
             <option value="vocab-choice">単語（英語→意味 選択式）</option>
           </select>
         </label>
@@ -98,7 +96,6 @@
       <div class="muted" style="margin-top:8px">
         並べ替え: <span class="kbd">1-9</span> で選択、<span class="kbd">Backspace</span> で戻す、<span class="kbd">Enter</span> で採点/次へ。<br>
         書き換え: 指示に従って英文を入力（句読点も忘れずに）。<br>
-        単語: 入力欄にスペルを入力（英字・大文字小文字は不問）。
         単語（選択式）: 表示される英単語に合う日本語の意味を選択。
       </div>
     </section>
@@ -121,15 +118,6 @@
       <div id="ui-reorder">
         <div id="target" class="target" aria-label="答えのエリア"></div>
         <div id="bank" class="bank" aria-label="単語のエリア"></div>
-      </div>
-
-      <!-- 単語UI -->
-      <div id="ui-vocab" style="display:none; margin-top:10px">
-        <div class="field">
-          <input id="vocab-input" class="input" type="text" placeholder="スペルを入力（例: interesting）" autocomplete="off" autocapitalize="off" autocorrect="off" inputmode="latin" />
-          <button id="btn-clear-vocab">🧹 クリア</button>
-        </div>
-        <div class="muted" id="vocab-tip" style="margin-top:6px"></div>
       </div>
 
       <!-- 単語選択UI -->
@@ -191,7 +179,6 @@
 
     /********** 問題ロード **********/
     let BANK_REORDER = [];
-    let BANK_VOCAB_INPUT = [];
     let BANK_VOCAB_CHOICE = [];
     let BANK_REWRITE = [];
 
@@ -344,9 +331,9 @@
       if(type==='reorder'){
         base.chunks = item.chunks;
         base.wrong = item.wrong||[];
-      } else if(type==='vocab' || type==='vocab-choice'){
+      } else if(type==='vocab-choice'){
         base.pos = item.pos||'';
-        if(type==='vocab-choice' && Array.isArray(item.choices)){
+        if(Array.isArray(item.choices)){
           const normalized = [];
           item.choices.forEach(choice=>{
             if(choice==null) return;
@@ -377,23 +364,17 @@
       return base;
     };
     async function ensureQuestions(){
-      if (BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ renderUnitFilterOptions(); return; }
+      if (BANK_REORDER.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
       // 互換: 旧形式 questions は並べ替え扱い
-      const rawVocabInput = Array.isArray(data.vocabInput)
-        ? data.vocabInput
-        : Array.isArray(data.vocab)
-          ? data.vocab.filter(item=>!(Array.isArray(item.choices) && item.choices.length>0))
-          : [];
       const rawVocabChoice = Array.isArray(data.vocabChoice)
         ? data.vocabChoice
         : Array.isArray(data.vocab)
           ? data.vocab.filter(item=>Array.isArray(item.choices) && item.choices.length>0)
           : [];
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
-      BANK_VOCAB_INPUT = rawVocabInput.map(v=>buildQuestion(v, 'vocab'));
       BANK_VOCAB_CHOICE = rawVocabChoice.map(v=>buildQuestion(v, 'vocab-choice'));
       BANK_REWRITE = (data.rewrite||[]).map(w=>buildQuestion(w, 'rewrite'));
       renderUnitFilterOptions();
@@ -423,11 +404,7 @@
     const $ = s=>document.querySelector(s);
     const $$ = s=>Array.from(document.querySelectorAll(s));
 
-    const typedInputElement = ()=>{
-      if(state.qType==='vocab') return $('#vocab-input');
-      if(state.qType==='rewrite') return $('#rewrite-input');
-      return null;
-    };
+    const typedInputElement = ()=> state.qType==='rewrite' ? $('#rewrite-input') : null;
 
     /********** ユーティリティ **********/
     const fmtTime = s=>{ const m=String(Math.floor(s/60)).padStart(2,'0'); const r=String(s%60).padStart(2,'0'); return `${m}:${r}` };
@@ -501,12 +478,19 @@
     }
     function getRememberedUnitFilter(qType){
       const map = readRememberedUnitMap();
-      const val = map && typeof map === 'object' ? map[qType] : '';
+      const lookup = map && typeof map === 'object' ? map : {};
+      let val = lookup[qType];
+      if((val === undefined || val === null) && qType === 'vocab-choice'){
+        val = lookup.vocab;
+      }
       return (typeof val === 'string') ? val : '';
     }
     function rememberUnitFilter(qType, value){
       const map = readRememberedUnitMap();
       const v = (value || '').trim();
+      if(qType === 'vocab-choice'){
+        delete map.vocab;
+      }
       if(v){ map[qType] = v; }
       else { delete map[qType]; }
       writeRememberedUnitMap(map);
@@ -627,8 +611,9 @@
     function loadRememberedSettings(){
       const u=(localStorage.getItem(REMEMBER_USER_KEY)||'').trim();
       if(u){ state.user=u; const inp=document.getElementById('learner'); if(inp) inp.value=u; const pill=document.getElementById('user-pill'); if(pill) pill.textContent=`👤 ${u}`; }
-      const qt=(localStorage.getItem(REMEMBER_QTYPE_KEY)||'').trim();
+      const qtRaw=(localStorage.getItem(REMEMBER_QTYPE_KEY)||'').trim();
       const qs=document.getElementById('qtype');
+      const qt = qtRaw === 'vocab' ? 'vocab-choice' : qtRaw;
       if(qt){ state.qType=qt; if(qs) qs.value=qt; }
       state.levelMax = DEFAULT_LEVEL;
       state.unitFilter = getRememberedUnitFilter(state.qType);
@@ -796,7 +781,6 @@
     /********** デッキ取得 **********/
     function deckByType(type){
       if(type==='reorder') return BANK_REORDER;
-      if(type==='vocab') return BANK_VOCAB_INPUT;
       if(type==='vocab-choice') return BANK_VOCAB_CHOICE;
       if(type==='rewrite') return BANK_REWRITE;
       return [];
@@ -1539,7 +1523,6 @@
 
       if(state.qType==='reorder'){
         $('#ui-reorder').style.display='block';
-        $('#ui-vocab').style.display='none';
         $('#ui-vocab-choice').style.display='none';
         $('#ui-rewrite').style.display='none';
         const basePrompt = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
@@ -1561,19 +1544,8 @@
         $('#target').ondragover=e=>{ e.preventDefault(); };
         $('#target').ondrop=e=>{ e.preventDefault(); const text=e.dataTransfer.getData('text/plain'); const src=[...$$('#bank .chip')].find(ch=>ch.getAttribute('data-text')===text && !ch.classList.contains('used')); if(src) placeChip(src); };
         $('#btn-next').disabled = true;
-      } else if(state.qType==='vocab'){
-        $('#ui-reorder').style.display='none';
-        $('#ui-vocab').style.display='block';
-        $('#ui-vocab-choice').style.display='none';
-        $('#ui-rewrite').style.display='none';
-        $('#prompt').innerHTML = `意味: <b>${q.jp}</b>`;
-        $('#vocab-tip').innerHTML = '';
-        $('#btn-hint').disabled = !q.tip;
-        const inp = $('#vocab-input'); inp.value=''; inp.focus();
-        $('#btn-next').disabled = false; // 入力だけなので次へボタンは常に押せる（採点は1回）
       } else if(state.qType==='vocab-choice'){
         $('#ui-reorder').style.display='none';
-        $('#ui-vocab').style.display='none';
         $('#ui-vocab-choice').style.display='block';
         $('#ui-rewrite').style.display='none';
         const word = q.en || '<span class="muted">英単語を確認しましょう</span>';
@@ -1725,7 +1697,6 @@
         $('#btn-next').disabled = true;
       } else if(state.qType==='rewrite'){
         $('#ui-reorder').style.display='none';
-        $('#ui-vocab').style.display='none';
         $('#ui-vocab-choice').style.display='none';
         $('#ui-rewrite').style.display='block';
         const instruction = q.jp || '<span class="muted">指示に従って英文を書き換えましょう</span>';
@@ -1749,8 +1720,6 @@
       if(state.qType==='reorder'){
         const base = q.jp || '<span class="muted">語順を並べ替えましょう</span>';
         $('#prompt').innerHTML = `${base}<br><span class="muted">ヒント: ${q.tip}</span>`;
-      } else if(state.qType==='vocab'){
-        $('#vocab-tip').innerHTML = `ヒント: ${q.tip}`;
       } else if(state.qType==='vocab-choice'){
         $('#vocab-choice-tip').textContent = `ヒント: ${q.tip}`;
       } else if(state.qType==='rewrite'){
@@ -1852,10 +1821,6 @@
         const normalizedAnsLower = typeof normalizedAns === 'string' ? normalizedAns.toLowerCase() : normalizedAns;
         const normalizedAnswersLower = normalizedAnswers.map(a=>typeof a === 'string' ? a.toLowerCase() : a);
         correct = normalizedAnswersLower.includes(normalizedAnsLower);
-      } else { // vocab
-        ans = normalizeWord(currentAnswer());
-        const normalizedAnswers = answerList.map(a=>normalizeWord(a));
-        correct = normalizedAnswers.includes(ans);
       }
 
       const record = {
@@ -1988,7 +1953,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }
@@ -2015,7 +1980,7 @@
         const unitSel=document.getElementById('unit-filter');
         if(unitSel){
           const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB_INPUT.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
+          if(BANK_REORDER.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
             state.unitFilter=selected;
           }
         }
@@ -2057,8 +2022,7 @@
       rememberSettings();
     });
 
-    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-vocab').onclick=()=>{ $('#vocab-input').value=''; $('#vocab-input').focus(); updateNextState(); }; document.getElementById('btn-clear-rewrite').onclick=()=>{ $('#rewrite-input').value=''; $('#rewrite-input').focus(); updateNextState(); }; document.getElementById('btn-hint').onclick=showHint;
-    document.getElementById('vocab-input').addEventListener('input', updateNextState);
+    document.getElementById('btn-check').onclick=checkAnswer; document.getElementById('btn-next').onclick=nextQuestion; document.getElementById('btn-undo').onclick=undo; document.getElementById('btn-clear').onclick=clearAnswer; document.getElementById('btn-clear-rewrite').onclick=()=>{ $('#rewrite-input').value=''; $('#rewrite-input').focus(); updateNextState(); }; document.getElementById('btn-hint').onclick=showHint;
     document.getElementById('rewrite-input').addEventListener('input', updateNextState);
     document.getElementById('btn-speak').onclick=()=>{
       const q=getCurrentQuestion();
