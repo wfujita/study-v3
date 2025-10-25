@@ -15,8 +15,8 @@ class StageConfig:
 
 DEFAULT_STAGE_RULES: Dict[str, Dict[str, Any]] = {
     "F": {"next": "E", "gap_days": None, "min_streak": 3},
-    "E": {"next": "D", "gap_days": 2},
-    "D": {"next": "C", "gap_days": 3},
+    "E": {"next": "D", "gap_days": 1},
+    "D": {"next": "C", "gap_days": 2},
     "C": {"next": "B", "gap_days": 7},
     "B": {"next": "A", "gap_days": 14},
     "A": {},

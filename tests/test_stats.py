@@ -187,7 +187,7 @@ def test_stage_progression_updates_on_result_post(tmp_path, monkeypatch):
     assert state["correct"] == 3
     expected_last_correct = iso(base + timedelta(minutes=2))
     assert state["lastCorrectAt"] == expected_last_correct
-    assert state["nextDueAt"] == iso(base + timedelta(minutes=2) + timedelta(days=2))
+    assert state["nextDueAt"] == iso(base + timedelta(minutes=2) + timedelta(days=1))
 
     session_two = {
         "user": "alice",
@@ -207,7 +207,7 @@ def test_stage_progression_updates_on_result_post(tmp_path, monkeypatch):
     assert state["stage"] == "D"
     assert state["streak"] == 4
     assert state["correct"] == 4
-    assert state["nextDueAt"] == iso(base + timedelta(days=4) + timedelta(days=3))
+    assert state["nextDueAt"] == iso(base + timedelta(days=4) + timedelta(days=2))
 
     session_three = {
         "user": "alice",
