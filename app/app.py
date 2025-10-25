@@ -1428,8 +1428,8 @@ def admin_summary():
                     .replace("+00:00", "Z")
                 )
 
+        review_done = False
         if session_dt and session_dt >= cutoff and ans:
-            review_done = False
             if (r.get("mode") or "normal") != "review":
                 key = (r.get("user", "guest"), r.get("setIndex"))
                 for rev_dt in review_sessions.get(key, []):
