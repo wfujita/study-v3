@@ -167,7 +167,7 @@
     <section class="card">
       <h3 style="margin:0 0 8px">テスト一覧</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-sessions"><thead><tr><th>開始</th><th>終了</th><th class="center">セット</th><th class="center">正解</th><th class="center">出題</th><th class="center">正答率</th><th class="center">復習</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-sessions"><thead><tr><th>開始</th><th>終了</th><th class="center">セット</th><th class="center">分類</th><th class="center">正解</th><th class="center">出題</th><th class="center">正答率</th><th class="center">復習</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -226,6 +226,18 @@
     const fmt = n=> new Intl.NumberFormat().format(n);
     const pct = x=> (Math.round(x*1000)/10).toFixed(1)+"%";
     const qs  = (obj)=> Object.entries(obj).map(([k,v])=> v!==undefined && v!==''? `${encodeURIComponent(k)}=${encodeURIComponent(v)}`:'' ).filter(Boolean).join('&');
+
+    const SESSION_TYPE_LABELS = {
+      'vocab-choice': '単語',
+      'reorder': '並べ替え',
+      'rewrite': '書き換え',
+    };
+
+    function formatSessionType(value){
+      const key = (value || '').trim().toLowerCase();
+      if(!key) return '―';
+      return SESSION_TYPE_LABELS[key] || key;
+    }
 
     async function getJSON(path, params={}){
       const merged = { subject: SUBJECT, ...params };
@@ -341,9 +353,11 @@
           reviewCell = s.reviewDone? '<span class="badge ok">済</span>' : '<span class="badge muted">未</span>';
         }
         const tr = document.createElement('tr');
+        const typeLabel = formatSessionType(s.qType);
         tr.innerHTML = `<td>${startTxt}</td>`+
                        `<td>${endTxt}</td>`+
                        `<td class="center">${s.setIndex ?? '―'}</td>`+
+                       `<td class="center">${typeLabel}</td>`+
                        `<td class="center ok">${fmt(correct)}</td>`+
                        `<td class="center">${fmt(total)}</td>`+
                        `<td class="center">${acc}%</td>`+
