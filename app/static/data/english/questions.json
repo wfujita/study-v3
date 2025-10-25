@@ -2701,7 +2701,7 @@
       "id": "v079",
       "unit": "接続詞-因果",
       "jp": "A だから B",
-      "en": "A so B",
+      "en": "A, so B",
       "pos": "conjunction",
       "choices": [
         {
