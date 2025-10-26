@@ -154,10 +154,6 @@ def stage_f_history():
         return jsonify({"keys": []})
 
     store = stage_tracker.load_store(runtime_dir)
-    if not store:
-        cached_results = iter_results(subject)
-        if cached_results:
-            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
 
     keys = []
     user_bucket = {}
@@ -743,8 +739,6 @@ def math_dashboard():
     if user_filter:
         runtime_dir = subject_runtime_dir(subject)
         stage_store = stage_tracker.load_store(runtime_dir)
-        if not stage_store and results:
-            stage_store = stage_tracker.rebuild_store(runtime_dir, results)
 
         normalized_user = (user_filter or "").strip() or "guest"
         if isinstance(stage_store, dict):
@@ -910,13 +904,6 @@ def question_stats_bulk():
     store = stage_tracker.load_store(runtime_dir)
     state_map = stage_tracker.get_question_states(store, user, normalized_ids)
 
-    missing = [qid for qid in normalized_ids if qid not in state_map]
-    if missing:
-        cached_results = iter_results(subject)
-        if cached_results:
-            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
-            state_map.update(stage_tracker.get_question_states(store, user, missing))
-
     results = [
         _state_to_payload(qid, state_map.get(qid), subject) for qid in normalized_ids
     ]
@@ -941,9 +928,6 @@ def question_stat():
 
     if state is None:
         cached_results = iter_results(subject)
-        if cached_results:
-            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
-            state = stage_tracker.get_question_state(store, user, qid)
 
     if state is not None:
         payload = _state_to_payload(str(qid), state, subject)
@@ -1110,14 +1094,12 @@ def admin_reset_progress():
 
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)
-    if not store or not stage_tracker.get_question_state(store, user, raw_qid):
-        cached_results = iter_results(subject)
-        if cached_results:
-            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
 
-    stage_removed = stage_tracker.remove_question_state(store, user, raw_qid)
-    if stage_removed:
-        stage_tracker.save_store(runtime_dir, store)
+    stage_removed = False
+    if store:
+        stage_removed = stage_tracker.remove_question_state(store, user, raw_qid)
+        if stage_removed:
+            stage_tracker.save_store(runtime_dir, store)
     return jsonify(
         {
             "ok": True,
@@ -1201,10 +1183,6 @@ def admin_summary():
 
     runtime_dir = subject_runtime_dir(subject)
     stage_store = stage_tracker.load_store(runtime_dir)
-    if not isinstance(stage_store, dict):
-        stage_store = {}
-    if not stage_store and res:
-        stage_store = stage_tracker.rebuild_store(runtime_dir, res)
     if not isinstance(stage_store, dict):
         stage_store = {}
 
