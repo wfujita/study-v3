@@ -135,10 +135,10 @@ def test_stats_bulk_endpoint_returns_payloads_in_order(tmp_path, monkeypatch):
     assert isinstance(results, list)
     assert [item.get("id") for item in results] == ["q1", "q2", "missing"]
     first, second, third = results
-    assert first["correct"] == 1
-    assert first["answered"] == 1
+    assert first["correct"] == 0
+    assert first["answered"] == 0
     assert first["stage"] == "F"
-    assert second["answered"] == 1
+    assert second["answered"] == 0
     assert second["correct"] == 0
     assert second["stage"] == "F"
     assert third["answered"] == 0

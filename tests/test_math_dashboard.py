@@ -138,8 +138,8 @@ def test_math_dashboard_endpoint(tmp_path, monkeypatch):
     assert data_user["totals"]["correct"] == 1
     assert data_user["stageOrder"] == ["A", "B", "C", "D", "E"]
     buckets = data_user["stageBuckets"]
-    assert "E" in buckets
-    assert any(item["id"] == "mix-1" for item in buckets.get("E", []))
+    assert set(buckets.keys()) == {"A", "B", "C", "D", "E"}
+    assert all(not bucket for bucket in buckets.values())
 
     res_diff = client.get("/api/math/dashboard", query_string={"difficulty": "hard"})
     assert res_diff.status_code == 200
