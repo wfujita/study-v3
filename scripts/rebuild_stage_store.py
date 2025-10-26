@@ -41,9 +41,7 @@ def main() -> None:
     if isinstance(store, dict):
         user_count = sum(1 for bucket in store.values() if isinstance(bucket, dict))
         state_count = sum(
-            len(bucket)
-            for bucket in store.values()
-            if isinstance(bucket, dict)
+            len(bucket) for bucket in store.values() if isinstance(bucket, dict)
         )
 
     print(
