@@ -55,6 +55,40 @@ def test_admin_reset_progress_clears_stage_history(tmp_path, monkeypatch):
     assert not (runtime_dir / "levels.json").exists()
 
 
+def test_admin_reset_progress_rebuilds_store(tmp_path, monkeypatch):
+    app = init_app(tmp_path, monkeypatch)
+    client = app.test_client()
+
+    runtime_dir = tmp_path / "runtime" / "english"
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    results_path = runtime_dir / "results.ndjson"
+
+    session = {
+        "user": "alice",
+        "subject": "english",
+        "receivedAt": "2024-01-01T00:00:00Z",
+        "answered": [
+            {"id": "q1", "correct": True, "at": "2024-01-01T00:00:00Z"},
+        ],
+    }
+    with open(results_path, "w", encoding="utf-8") as fp:
+        fp.write(json.dumps(session) + "\n")
+
+    res = client.post(
+        "/api/admin/reset-progress",
+        json={"user": "alice", "id": "q1"},
+    )
+    assert res.status_code == 200
+    payload = res.get_json()
+    assert payload == {"ok": True, "stageRemoved": True}
+
+    stage_path = runtime_dir / "stages.json"
+    assert stage_path.exists()
+    with open(stage_path, encoding="utf-8") as fp:
+        store = json.load(fp)
+    assert store == {}
+
+
 def test_admin_question_level_updates_and_clears_override(tmp_path, monkeypatch):
     questions_payload = {
         "questions": [

@@ -1110,6 +1110,11 @@ def admin_reset_progress():
 
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)
+    if not store or not stage_tracker.get_question_state(store, user, raw_qid):
+        cached_results = iter_results(subject)
+        if cached_results:
+            store = stage_tracker.rebuild_store(runtime_dir, cached_results)
+
     stage_removed = stage_tracker.remove_question_state(store, user, raw_qid)
     if stage_removed:
         stage_tracker.save_store(runtime_dir, store)
