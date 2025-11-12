@@ -452,7 +452,11 @@ def test_stage_f_history_respects_next_due_date():
     stats = {
         "f1": {"stage": "F", "streak": 0, "nextDueAt": None},
         "f2": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "future_pref": {"stage": "C", "streak": 3, "nextDueAt": "2099-01-01T00:00:00.000Z"},
+        "future_pref": {
+            "stage": "C",
+            "streak": 3,
+            "nextDueAt": "2099-01-01T00:00:00.000Z",
+        },
         "due_alt": {"stage": "C", "streak": 2, "nextDueAt": None},
     }
 
