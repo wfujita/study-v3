@@ -889,12 +889,14 @@
 
     /********** セット準備 **********/
     async function buildOrderFromBank(){
+      // ステージFの履歴や不足補填による優先制御に利用するキー集合。
       const blockedFallbackKeys = new Set();
       const MAX_ATTEMPTS = 4;
       let forcedExtraDeficit = 0;
       let forcedStagePromotionAttempted = false;
       let lastOrder = [];
 
+      // 直近のステージF出題と間違いキューを取得し、優先順を最新化。
       await refreshStageFHistory();
       await refreshWrongQueue();
 
@@ -1039,6 +1041,7 @@
           id: q && q.id ? String(q.id) : null,
         }));
 
+        // API 経由で各問題の学習ステータスをまとめて取得。
         const stats = await fetchStatsForEntries(entries, state.user);
 
         const now = Date.now();
@@ -1120,6 +1123,7 @@
         const order = [];
         const chosen = new Set();
 
+        // ステージ繰り上げ対象とステージFの候補数から、ステージ優先枠を算出。
         const dueCandidateCount = STAGE_PRIORITY.reduce((acc, stage)=>{
           const arr = dueByStage.get(stage);
           return acc + (Array.isArray(arr) ? arr.length : 0);
@@ -1146,6 +1150,7 @@
           return idx === -1 ? STAGE_PRIORITY.length : idx;
         };
 
+        // ステージ順に繰り上げ候補を選抜。
         for(const stage of STAGE_PRIORITY){
           if(stagePriorityPicked >= stagePriorityQuota) break;
           const arr = dueByStage.get(stage) || [];
@@ -1235,6 +1240,7 @@
         }
 
         if(order.length < n){
+          // まだ枠が埋まらない場合、上位レベルからランダム補充。
           const levelRanks = Array.from(levelBuckets.keys())
             .filter(idx=>Number.isFinite(idx))
             .sort((a,b)=>b-a);
@@ -1260,6 +1266,7 @@
           }
         }
 
+        // 今回採用したステージFの問題を記録し、次回以降の優先度に反映。
         const stageFKeysToRemember = [];
         const seenStageFKeys = new Set();
         for(const entry of order){
