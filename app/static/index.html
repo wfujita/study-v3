@@ -1079,7 +1079,7 @@
           const nextDue = parseIsoDate(s.nextDueAt);
           const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
           const isTrackedStageForWait = STAGE_PRIORITY.includes(actualStage);
-          const isWaiting = !hasHistoryOverride && isTrackedStageForWait && nextDueMs != null && nextDueMs > now;
+          const isWaiting = isTrackedStageForWait && nextDueMs != null && nextDueMs > now;
           const willPromote = !overrideStage && willStageUpOnSuccess(actualStage, nextDue, now);
           if(isWaiting){
             if(qKey && currentExtraKeys.has(qKey)){

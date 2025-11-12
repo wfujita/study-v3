@@ -410,6 +410,64 @@ def test_stage_f_topups_prioritize_previously_seen_questions():
     assert {"id:v052", "id:v053"}.issubset(set(result["stageFHistory"]))
 
 
+def test_stage_f_history_respects_next_due_date():
+    deck = [
+        {
+            "id": "f1",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-f1",
+            "jp": "jp-f1",
+            "answers": ["en-f1"],
+        },
+        {
+            "id": "f2",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-f2",
+            "jp": "jp-f2",
+            "answers": ["en-f2"],
+        },
+        {
+            "id": "future_pref",
+            "type": "vocab-choice",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "en-future",
+            "jp": "jp-future",
+            "answers": ["en-future"],
+        },
+        {
+            "id": "due_alt",
+            "type": "vocab-choice",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "en-due",
+            "jp": "jp-due",
+            "answers": ["en-due"],
+        },
+    ]
+    stats = {
+        "f1": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "f2": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "future_pref": {"stage": "C", "streak": 3, "nextDueAt": "2099-01-01T00:00:00.000Z"},
+        "due_alt": {"stage": "C", "streak": 2, "nextDueAt": None},
+    }
+
+    result = execute_build_order(
+        deck,
+        stats,
+        total_per_set=3,
+        stage_f_history=["id:future_pref"],
+    )
+
+    used_ids = [item.get("id") for item in result["orderWithIds"]]
+    assert used_ids.count("future_pref") == 0
+    assert used_ids.count("due_alt") == 1
+
+
 def test_stage_f_pool_prefers_previously_seen_questions():
     deck = [
         {
