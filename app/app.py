@@ -237,60 +237,80 @@ def set_wrong_queue():
 
 
 # ====== 管理ダッシュボード用ユーティリティ ======
+def _add_question_summary(
+    mapping: Dict[str, Dict[str, Any]],
+    qid: Any,
+    *,
+    jp: Any,
+    en: Any,
+    unit: Any,
+    qtype: str,
+) -> None:
+    if not qid:
+        return
+    key = str(qid)
+    mapping[key] = {
+        "id": key,
+        "jp": jp,
+        "en": en,
+        "unit": unit,
+        "type": qtype,
+    }
+
+
+def _iter_valid_entries(items: Any) -> List[Dict[str, Any]]:
+    if not isinstance(items, list):
+        return []
+    return [item for item in items if isinstance(item, dict)]
+
+
 def load_questions_map(subject: str = DEFAULT_SUBJECT):
     """
     static/data/questions.json を読み、id -> {jp,en,unit,type} にまとめる。
     並べ替え（questions）と単語選択（vocabChoice）をサポート。
     """
-    qmap = {}
-    path = os.path.join(subject_static_dir(subject), "questions.json")
-    if not os.path.exists(path):
-        return qmap
-    try:
-        with open(path, encoding="utf-8") as fp:
-            data = json.load(fp)
-    except Exception:
-        return qmap
 
-    for q in data.get("questions") or []:
-        qid = q.get("id")
-        if qid:
-            qmap[qid] = {
-                "id": qid,
-                "jp": q.get("jp"),
-                "en": q.get("en"),
-                "unit": q.get("unit"),
-                "type": "reorder",
-            }
-    vocab_choice = []
-    if isinstance(data.get("vocabChoice"), list):
-        vocab_choice.extend(data["vocabChoice"])
-    legacy_vocab = data.get("vocab")
-    if isinstance(legacy_vocab, list):
-        for entry in legacy_vocab:
-            choices = entry.get("choices")
-            if isinstance(choices, list) and len(choices) > 0:
-                vocab_choice.append(entry)
-    for v in vocab_choice:
-        qid = v.get("id")
-        if qid:
-            qmap[qid] = {
-                "id": qid,
-                "jp": v.get("jp"),
-                "en": v.get("en"),
-                "unit": v.get("unit"),
-                "type": "vocab-choice",
-            }
-    for w in data.get("rewrite") or []:
-        qid = w.get("id")
-        if qid:
-            qmap[qid] = {
-                "id": qid,
-                "jp": w.get("jp"),
-                "en": w.get("en"),
-                "unit": w.get("unit"),
-                "type": "rewrite",
-            }
+    data = _load_questions_file(subject) or {}
+    qmap: Dict[str, Dict[str, Any]] = {}
+
+    for record in _iter_valid_entries(data.get("questions")):
+        _add_question_summary(
+            qmap,
+            record.get("id"),
+            jp=record.get("jp"),
+            en=record.get("en"),
+            unit=record.get("unit"),
+            qtype="reorder",
+        )
+
+    vocab_choice: List[Dict[str, Any]] = []
+    vocab_choice.extend(_iter_valid_entries(data.get("vocabChoice")))
+
+    for entry in _iter_valid_entries(data.get("vocab")):
+        choices = entry.get("choices")
+        if isinstance(choices, list) and choices:
+            vocab_choice.append(entry)
+
+    for record in vocab_choice:
+        _add_question_summary(
+            qmap,
+            record.get("id"),
+            jp=record.get("jp"),
+            en=record.get("en"),
+            unit=record.get("unit"),
+            qtype="vocab-choice",
+        )
+
+    for record in _iter_valid_entries(data.get("rewrite")):
+        _add_question_summary(
+            qmap,
+            record.get("id"),
+            jp=record.get("jp"),
+            en=record.get("en"),
+            unit=record.get("unit"),
+            qtype="rewrite",
+        )
+
     return qmap
 
 
@@ -359,25 +379,13 @@ def _normalize_math_difficulty(value: str) -> str:
 def load_math_questions_map(subject: str) -> Dict[str, Dict[str, Any]]:
     """Return a mapping of math question id -> metadata for the dashboard."""
 
-    directory = subject_static_dir(subject)
-    path = os.path.join(directory, "questions.json")
-    if not os.path.exists(path):
-        return {}
-
-    try:
-        with open(path, encoding="utf-8") as fp:
-            data = json.load(fp)
-    except Exception:
-        return {}
-
-    questions = data.get("questions")
-    if not isinstance(questions, list):
+    data = _load_questions_file(subject) or {}
+    questions = _iter_valid_entries(data.get("questions"))
+    if not questions:
         return {}
 
     out: Dict[str, Dict[str, Any]] = {}
     for item in questions:
-        if not isinstance(item, dict):
-            continue
         qid = item.get("id")
         if not qid:
             continue
