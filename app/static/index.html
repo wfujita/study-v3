@@ -1575,114 +1575,78 @@
 
     function prepareVocabChoiceOptions(q, entry){
       entry = entry || {};
-      const pools = { correct: [], unit: [], samePos: [], general: [] };
-      const options = [];
-      let useCustomChoices = false;
-      let hasCorrect = false;
+      const optionMap = new Map();
       const correctTexts = [];
-      const registerPool = (pool, text)=>{
-        const trimmed = (text||'').trim();
-        if(!trimmed) return;
-        if(!pool.includes(trimmed)) pool.push(trimmed);
-      };
       const addCorrectText = text=>{
         const trimmed = (text||'').trim();
         if(!trimmed) return;
-        if(!correctTexts.includes(trimmed)){
-          correctTexts.push(trimmed);
-          registerPool(pools.correct, trimmed);
-        }
-      };
-      const pushOption = (text, correct)=>{
-        const trimmed = (text||'').trim();
-        if(!trimmed) return;
-        if(options.some(opt=>opt.text===trimmed)) return;
-        const isCorrect = correct === true || correctTexts.includes(trimmed);
-        if(isCorrect) hasCorrect = true;
-        options.push({ text: trimmed, correct: isCorrect });
+        if(!correctTexts.includes(trimmed)) correctTexts.push(trimmed);
       };
       addCorrectText(q.jp);
       if(Array.isArray(q.answers)){
         q.answers.forEach(ans=>addCorrectText(ans));
       }
+      const ensureOption = (text, correct)=>{
+        const trimmed = (text||'').trim();
+        if(!trimmed) return;
+        const isCorrect = correct === true || correctTexts.includes(trimmed);
+        if(optionMap.has(trimmed)){
+          const existing = optionMap.get(trimmed);
+          if(isCorrect && !existing.correct){
+            existing.correct = true;
+          }
+          return;
+        }
+        optionMap.set(trimmed, { text: trimmed, correct: isCorrect });
+      };
       if(Array.isArray(q.choices) && q.choices.length){
-        useCustomChoices = true;
         q.choices.forEach(choice=>{
           if(!choice || typeof choice.text !== 'string') return;
           const trimmed = choice.text.trim();
           if(!trimmed) return;
-          pushOption(trimmed, choice.correct === true);
-        });
-      }
-      if(q.unit){
-        const unitMatches = deckByType('vocab-choice').filter(item=>item.unit === q.unit && item !== q);
-        unitMatches.forEach(item=>{
-          if(item.jp) registerPool(pools.unit, item.jp);
-          if(item.answers && item.answers.length) registerPool(pools.unit, item.answers[0]);
-        });
-      }
-      const normalizedPos = normalizePos(q.pos);
-      if(normalizedPos){
-        const samePosItems = deckByType('vocab-choice').filter(item=> item !== q && normalizePos(item.pos) === normalizedPos);
-        samePosItems.forEach(item=>{
-          if(item.jp) registerPool(pools.samePos, item.jp);
-          if(item.answers && item.answers.length) registerPool(pools.samePos, item.answers[0]);
-        });
-      }
-      deckByType('vocab-choice').forEach(item=>{
-        if(item === q) return;
-        if(item.jp) registerPool(pools.general, item.jp);
-        if(item.answers && item.answers.length) registerPool(pools.general, item.answers[0]);
-      });
-      const fillFromPools = (count)=>{
-        const poolOrder = [pools.correct, pools.unit, pools.samePos, pools.general];
-        const seen = new Set(options.map(opt=>opt.text));
-        const shuffleCopy = arr=>arr.slice().sort(()=>Math.random()-0.5);
-        for(const pool of poolOrder){
-          const candidates = shuffleCopy(pool).filter(text=>!seen.has(text));
-          for(const text of candidates){
-            pushOption(text, pool===pools.correct);
-            seen.add(text);
-            if(options.length >= count) return;
+          if(choice.correct === true){
+            addCorrectText(trimmed);
           }
+          ensureOption(trimmed, choice.correct === true);
+        });
+      }
+      if(optionMap.size === 0 && correctTexts.length){
+        ensureOption(correctTexts[0], true);
+      }
+      if(!Array.from(optionMap.values()).some(opt=>opt.correct) && optionMap.size){
+        const match = Array.from(optionMap.values()).find(opt=>correctTexts.includes(opt.text));
+        if(match){
+          match.correct = true;
+        } else {
+          const first = optionMap.values().next().value;
+          if(first) first.correct = true;
         }
-      };
-      const primaryCorrect = correctTexts[0] || '';
-      if(useCustomChoices){
-        if(!hasCorrect && primaryCorrect){
-          pushOption(primaryCorrect, true);
-        }
-        const desiredCount = Math.max(options.length, 6);
-        fillFromPools(desiredCount);
-      } else {
-        const desiredCount = Math.max(options.length || 0, 5);
-        fillFromPools(desiredCount);
       }
-      if(!hasCorrect && primaryCorrect){
-        pushOption(primaryCorrect, true);
-      }
-      if(options.length < 2 && primaryCorrect){
-        pushOption(primaryCorrect, true);
-      }
-      const shuffledOptions = shuffle(options);
-      const availableCount = shuffledOptions.length;
+      const allOptions = Array.from(optionMap.values());
+      const availableCount = allOptions.length;
       const rawEntryStreak = entry && entry.streak != null ? Number(entry.streak) : 0;
       const entryStreak = Number.isFinite(rawEntryStreak) ? rawEntryStreak : 0;
       const streak = Math.max(0, entryStreak);
       const targetCount = streak + MIN_VOCAB_CHOICE_OPTIONS;
-      const desiredCount = Math.max(1, Math.min(availableCount, targetCount));
-      let finalOptions = shuffledOptions.slice(0, desiredCount);
-      if(!finalOptions.some(opt=>opt.correct)){
-        const correctOption = shuffledOptions.find(opt=>opt.correct);
-        if(correctOption){
-          if(finalOptions.length < desiredCount){
-            finalOptions.push(correctOption);
-          } else {
-            finalOptions[finalOptions.length-1] = correctOption;
-          }
+      const baseDesired = Math.max(1, Math.min(availableCount, targetCount));
+      const correctOptions = allOptions.filter(opt=>opt.correct);
+      const desiredCount = Math.max(baseDesired, correctOptions.length);
+      const shuffledCorrect = shuffle(correctOptions);
+      const incorrectOptions = allOptions.filter(opt=>!opt.correct);
+      const shuffledIncorrect = shuffle(incorrectOptions);
+      const selected = [];
+      shuffledCorrect.forEach(opt=>{ selected.push(opt); });
+      for(const opt of shuffledIncorrect){
+        if(selected.length >= desiredCount) break;
+        selected.push(opt);
+      }
+      if(selected.length < Math.min(desiredCount, availableCount)){
+        for(const opt of shuffledCorrect){
+          if(selected.length >= desiredCount) break;
+          if(!selected.includes(opt)) selected.push(opt);
         }
       }
-      return finalOptions;
+      return shuffle(selected);
     }
 
 
@@ -1850,13 +1814,33 @@
       return answers.map(ans=>`<b>${ans}</b>`).join('<br><span class="muted">または</span> ');
     }
 
+    function collectVocabChoiceCorrectAnswers(q){
+      const answers = new Set();
+      const push = text=>{
+        const trimmed = (text||'').trim();
+        if(trimmed) answers.add(trimmed);
+      };
+      push(q.jp);
+      if(Array.isArray(q.answers)){
+        q.answers.forEach(push);
+      }
+      if(Array.isArray(q.choices)){
+        q.choices.forEach(choice=>{
+          if(choice && choice.correct === true && typeof choice.text === 'string'){
+            push(choice.text);
+          }
+        });
+      }
+      return Array.from(answers);
+    }
+
     /********** 採点・進行 **********/
     function checkAnswer(){
       if(state.graded) return; // 二重加算防止
       const q = getCurrentQuestion();
 
       const answerList = state.qType==='vocab-choice'
-        ? ((q.jp ? [q.jp] : []).filter(Boolean))
+        ? collectVocabChoiceCorrectAnswers(q)
         : ((Array.isArray(q.answers) && q.answers.length) ? q.answers : [q.en]);
       let ans, correct;
       if(state.qType==='reorder'){
