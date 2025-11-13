@@ -41,6 +41,7 @@ const deckData = __DECK_DATA__;
 const statsMapInit = __STATS_MAP__;
 const mathRandomValue = __MATH_RANDOM__;
 const questionIndex = __QUESTION_INDEX__;
+const afterRenderScript = __AFTER_RENDER__;
 
 class FakeElement {
   constructor(tag) {
@@ -376,14 +377,24 @@ requiredIds.forEach(id => { const el = documentStub.getElementById(id); el.id = 
     })();
   `, context);
 
+  if (afterRenderScript && afterRenderScript.trim().length > 0) {
+    await vm.runInContext(afterRenderScript, context);
+  }
+
   const result = vm.runInContext(`
     (() => {
       const optionsEl = document.getElementById('vocab-choice-options');
       const optionNodes = optionsEl ? optionsEl.children.slice() : [];
+      const answered = Array.isArray(state.answered) ? state.answered.slice() : [];
       return {
         optionCount: optionNodes.length,
         optionValues: optionNodes.map(opt => opt.getAttribute('data-value')),
         optionTexts: optionNodes.map(opt => opt.textContent),
+        graded: !!state.graded,
+        correctCount: state.correct,
+        wrongCount: state.wrong,
+        answered,
+        explainHTML: document.getElementById('explain') ? document.getElementById('explain').innerHTML : ''
       };
     })();
   `, context);
@@ -402,6 +413,7 @@ def render_vocab_choice_options(
     *,
     math_random: float = 0.23456,
     question_index: int = 0,
+    after_render: str = "",
 ) -> Dict[str, Any]:
     """Run the vocab-choice renderer and return the captured option metadata."""
 
@@ -413,6 +425,7 @@ def render_vocab_choice_options(
         ("__STATS_MAP__", stats_json),
         ("__MATH_RANDOM__", repr(math_random)),
         ("__QUESTION_INDEX__", str(question_index)),
+        ("__AFTER_RENDER__", json.dumps(after_render)),
     ]:
         node_code = node_code.replace(placeholder, value)
     output = run_node(node_code)
@@ -420,7 +433,21 @@ def render_vocab_choice_options(
 
 
 def build_deck() -> List[Dict[str, Any]]:
-    base = {"id": "base", "en": "alpha", "jp": "意味A", "unit": "U1", "level": "Lv1"}
+    base = {
+        "id": "base",
+        "en": "alpha",
+        "jp": "意味A",
+        "unit": "U1",
+        "level": "Lv1",
+        "choices": [
+            {"text": "意味A", "correct": True},
+            {"text": "意味B"},
+            {"text": "意味C"},
+            {"text": "意味D"},
+            {"text": "意味E"},
+            {"text": "意味F"},
+        ],
+    }
     distractors = [
         {
             "id": f"d{i}",
@@ -452,3 +479,29 @@ def test_vocab_choice_options_scale_with_streak():
 
     assert result["optionCount"] == 5
     assert "意味A" in result["optionValues"]
+
+
+def test_vocab_choice_accepts_multiple_correct_options():
+    deck = build_deck()
+    deck[0]["choices"] = [
+        {"text": "意味A", "correct": True},
+        {"text": "別解A", "correct": True},
+        {"text": "意味B"},
+        {"text": "意味C"},
+    ]
+    stats = {"base": {"stage": "F", "streak": 0, "nextDueAt": None}}
+
+    result = render_vocab_choice_options(
+        deck,
+        stats,
+        after_render="selectChoice('別解A'); checkAnswer();",
+    )
+
+    assert "意味A" in result["optionValues"]
+    assert "別解A" in result["optionValues"]
+    assert result["optionCount"] >= 2
+    assert result["graded"] is True
+    assert result["answered"], "Expected at least one answer record"
+    last = result["answered"][-1]
+    assert last["correct"] is True
+    assert last["userAnswer"] == "別解A"
