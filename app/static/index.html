@@ -814,6 +814,17 @@
       : ((typeof globalThis !== 'undefined' && globalThis.__stagePriority)
         ? globalThis.__stagePriority
         : {});
+    const determineStagePriorityQuota = typeof stagePriorityApi.determineStagePriorityQuota === 'function'
+      ? (totalNeeded, stageFCount) => {
+          return stagePriorityApi.determineStagePriorityQuota(totalNeeded, stageFCount);
+        }
+      : (totalNeeded, stageFCount) => {
+          const n = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
+          const count = Number.isFinite(stageFCount) ? Math.max(0, Math.floor(stageFCount)) : 0;
+          if(n === 0) return 0;
+          return Math.max(0, n - Math.min(count, n));
+        };
+
     const shouldPrioritizeStagePromotion = typeof stagePriorityApi.shouldPrioritizeStagePromotion === 'function'
       ? stagePriorityApi.shouldPrioritizeStagePromotion
       : (stage, nextDue, nowMs) => {
@@ -889,413 +900,186 @@
 
     /********** セット準備 **********/
     async function buildOrderFromBank(){
-      // ステージFの履歴や不足補填による優先制御に利用するキー集合。
-      const blockedFallbackKeys = new Set();
-      const MAX_ATTEMPTS = 4;
-      let forcedExtraDeficit = 0;
-      let forcedStagePromotionAttempted = false;
-      let lastOrder = [];
-
-      // 直近のステージF出題と間違いキューを取得し、優先順を最新化。
-      await refreshStageFHistory();
-      await refreshWrongQueue();
-
-      for(let attempt=0; attempt<MAX_ATTEMPTS; attempt++){
-        const baseDeck = deck({ includeExtras: false });
-        state.fallbackExtras = [];
-        state.fallbackStageOverrides = new Map();
-        const fallbackStageOverrides = state.fallbackStageOverrides;
-        const desired = state.totalPerSet;
-        const deckArrBase = baseDeck.slice();
-        const baseDeckCount = deckArrBase.length;
-        const appendFallbackExtras = (typeof window !== 'undefined'
-          && window
-          && window.__quizFallbackExtras
-          && typeof window.__quizFallbackExtras.appendFallbackExtras === 'function')
-            ? window.__quizFallbackExtras.appendFallbackExtras
-            : (extrasArr, prioritizedList, othersList, totalNeeded, baseCountValue)=>{
-                if(!Array.isArray(extrasArr)) return extrasArr;
-                const total = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
-                if(total === 0) return extrasArr;
-                const base = Number.isFinite(baseCountValue)
-                  ? Math.min(Math.max(0, Math.floor(baseCountValue)), total)
-                  : 0;
-                const limit = Math.max(0, total - base);
-                if(limit === 0) return extrasArr;
-                const pushLimited = (list)=>{
-                  if(!Array.isArray(list) || !list.length) return;
-                  const remaining = limit - extrasArr.length;
-                  if(remaining <= 0) return;
-                  extrasArr.push(...list.slice(0, remaining));
-                };
-                pushLimited(prioritizedList);
-                pushLimited(othersList);
-                return extrasArr;
-              };
-
-        const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
-        const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
-        const maxLevelIdx = levelIndex(state.levelMax);
-
-        const allDeck = deckByType(state.qType);
-        const stageFHistory = getStageFHistory();
-
-        const toKey = (item)=>{
-          if(!item) return '';
-          try{
-            return questionKey(item);
-          }catch(_err){
-            if(item.id != null) return `id:${item.id}`;
-            const en = item.en || '';
-            const jp = item.jp || '';
-            return `${en}__${jp}`;
-          }
-        };
-        const toLegacyKey = (item)=>{
-          if(!item) return '';
-          if(item.id != null) return `id:${item.id}`;
-          const en = item.en || '';
-          const jp = item.jp || '';
-          return `${en}__${jp}`;
-        };
-
-        const seenKeys = new Set(deckArrBase.map(q=>toKey(q)).filter(Boolean));
-        blockedFallbackKeys.forEach(key=>{
-          if(key) seenKeys.add(key);
-        });
-
-        const baseShortage = Math.max(0, desired - baseDeckCount);
-        const extrasLimit = baseShortage + Math.max(0, forcedExtraDeficit);
-
-        if(extrasLimit > 0){
-          const wrongSet = new Set();
-          (getWrongQueue() || []).forEach(item=>{
-            if(!item) return;
-            if(item.key) wrongSet.add(item.key);
-            const primary = toKey(item);
-            if(primary) wrongSet.add(primary);
-            const legacy = toLegacyKey(item);
-            if(legacy) wrongSet.add(legacy);
-          });
-          const extras = [];
-          const pickFromLevel = (levelIdx)=>{
-            const candidates = allDeck.filter(q=> levelIndex(q.level) === levelIdx);
-            const filteredCandidates = unitFilter
-              ? candidates.filter(q=> normalizeUnit(q.unit) === unitFilter)
-              : candidates;
-            const prioritized = [];
-            const others = [];
-            for(const q of filteredCandidates){
-              const key = toKey(q);
-              if(!key) continue;
-              if(seenKeys.has(key)) continue;
-              seenKeys.add(key);
-              const legacyKey = toLegacyKey(q);
-              if(wrongSet.has(key) || (legacyKey && wrongSet.has(legacyKey))) prioritized.push(q);
-              else others.push(q);
-            }
-            const prioritizedShuffled = prioritized.length ? shuffle(prioritized) : [];
-            const othersShuffled = others.length ? shuffle(others) : [];
-            const applyStageFPriorityOrdering = (list)=>{
-              if(!Array.isArray(list) || !list.length) return list;
-              const preferred = [];
-              const rest = [];
-              for(const item of list){
-                const key = toKey(item);
-                if(key && stageFHistory.has(key)) preferred.push(item);
-                else rest.push(item);
-              }
-              return preferred.concat(rest);
-            };
-            const prioritizedOrdered = applyStageFPriorityOrdering(prioritizedShuffled);
-            const othersOrdered = applyStageFPriorityOrdering(othersShuffled);
-            const desiredTotalForExtras = baseDeckCount + extrasLimit;
-            appendFallbackExtras(extras, prioritizedOrdered, othersOrdered, desiredTotalForExtras, baseDeckCount);
-          };
-
-          for(let levelIdx = maxLevelIdx + 1; levelIdx < LEVEL_ORDER.length; levelIdx++){
-            pickFromLevel(levelIdx);
-            if(baseDeckCount + extras.length >= baseDeckCount + extrasLimit) break;
-          }
-
-          state.fallbackExtras = extras;
-          extras.forEach(q=>{
-            const key = toKey(q);
-            if(!key) return;
-            fallbackStageOverrides.set(key, 'F');
-          });
-        }
-
-        const currentExtraKeys = new Set((state.fallbackExtras || []).map(item=>toKey(item)).filter(Boolean));
-
-        const deckArr = deck({ includeExtras: true });
-        const targetCount = Math.min(desired, deckArr.length);
-
-        const dueByStage = new Map(STAGE_PRIORITY.map(stage=>[stage, []]));
-        const stageFPool = [];
-        const levelBuckets = new Map();
-        const stageByIndex = new Map();
-
-        const entries = deckArr.map((q, idx)=>({
-          idx,
-          id: q && q.id ? String(q.id) : null,
-        }));
-
-        // API 経由で各問題の学習ステータスをまとめて取得。
-        const stats = await fetchStatsForEntries(entries, state.user);
-
-        const now = Date.now();
-
-        const pushLevelCandidate = (levelIdx, payload)=>{
-          if(!Number.isFinite(levelIdx)) return;
-          let bucket = levelBuckets.get(levelIdx);
-          if(!bucket){
-            bucket = [];
-            levelBuckets.set(levelIdx, bucket);
-          }
-          bucket.push(payload);
-        };
-
-        for(let i=0;i<deckArr.length;i++){
-          const question = deckArr[i];
-          const levelIdx = levelIndex(question && question.level);
-          const s = stats[i];
-          if(!s || typeof s !== 'object'){
-            stageByIndex.set(i, 'F');
-            stageFPool.push({idx:i, streak:0});
-            pushLevelCandidate(levelIdx, { idx:i, stage:'F', streak:0, nextDue:null, rand:Math.random() });
-            continue;
-          }
-
-          const qKey = toKey(question);
-          const hasFallbackOverride = qKey && fallbackStageOverrides.has(qKey);
-          const hasHistoryOverride = qKey && stageFHistory.has(qKey);
-          const actualStage = normalizeStage(s.stage);
-          const overrideStage = hasFallbackOverride
-            ? normalizeStage(fallbackStageOverrides.get(qKey))
-            : (hasHistoryOverride ? 'F' : null);
-          const stage = overrideStage || actualStage;
-          stageByIndex.set(i, stage);
-          const rawStreak = Number(s.streak);
-          const baseStreak = Number.isFinite(rawStreak) ? rawStreak : 0;
-          const streak = hasFallbackOverride ? 0 : baseStreak;
-          const nextDue = parseIsoDate(s.nextDueAt);
-          const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
-          const isTrackedStageForWait = STAGE_PRIORITY.includes(actualStage);
-          const isWaiting = isTrackedStageForWait && nextDueMs != null && nextDueMs > now;
-          const willPromote = !overrideStage && willStageUpOnSuccess(actualStage, nextDue, now);
-          if(isWaiting){
-            if(qKey && currentExtraKeys.has(qKey)){
-              blockedFallbackKeys.add(qKey);
-            }
-            continue;
-          }
-          const payload = { idx:i, stage, actualStage, streak, nextDue, rand:Math.random() };
-          pushLevelCandidate(levelIdx, payload);
-          if(willPromote){
-            const arr = dueByStage.get(actualStage);
-            if(arr){
-              arr.push(payload);
-              continue;
-            }
-          }
-
-          if(stage === 'F'){
-            stageFPool.push({ idx:i, streak });
-          }else if(!STAGE_PRIORITY.includes(stage)){
-            stageFPool.push({ idx:i, streak });
-          }
-        }
-
-        const stageFShortage = stageFPool.length === 0;
-        if(stageFShortage && !forcedStagePromotionAttempted && attempt < MAX_ATTEMPTS - 1){
-          const hasHigherLevelCandidates = allDeck.some(q=> levelIndex(q.level) > maxLevelIdx);
-          if(hasHigherLevelCandidates){
-            forcedStagePromotionAttempted = true;
-            const desiredExtras = Number.isFinite(desired) ? Math.max(1, Math.floor(desired)) : 1;
-            forcedExtraDeficit = Math.max(forcedExtraDeficit, desiredExtras);
-            continue;
-          }
-        }
-
-        const n = targetCount;
-
-        const order = [];
-        const chosen = new Set();
-
-        // ステージ繰り上げ対象とステージFの候補数から、ステージ優先枠を算出。
-        const dueCandidateCount = STAGE_PRIORITY.reduce((acc, stage)=>{
-          const arr = dueByStage.get(stage);
-          return acc + (Array.isArray(arr) ? arr.length : 0);
-        }, 0);
-        const effectiveStageFCount = Math.max(0, stageFPool.length - dueCandidateCount);
-        const baseStagePriorityQuota = typeof determineStagePriorityQuota === 'function'
-          ? determineStagePriorityQuota(n, effectiveStageFCount)
-          : Math.max(0, n - Math.min(effectiveStageFCount, n));
-        let stagePriorityQuota = baseStagePriorityQuota;
-        if(stagePriorityQuota < n && dueCandidateCount > 0){
-          const minimumQuota = Math.min(
-            n,
-            Math.max(1, Math.min(dueCandidateCount, Math.ceil(n / 3)))
-          );
-          if(stagePriorityQuota < minimumQuota){
-            stagePriorityQuota = minimumQuota;
-          }
-        }
-        let stagePriorityPicked = 0;
-        const lv2Index = LEVEL_ORDER.indexOf('Lv2');
-        const normalizeRank = (stage)=>{
-          if(stage === 'F') return -1;
-          const idx = STAGE_PRIORITY.indexOf(stage);
-          return idx === -1 ? STAGE_PRIORITY.length : idx;
-        };
-
-        // ステージ順に繰り上げ候補を選抜。
-        for(const stage of STAGE_PRIORITY){
-          if(stagePriorityPicked >= stagePriorityQuota) break;
-          const arr = dueByStage.get(stage) || [];
-          arr.sort((a,b)=>{
-            const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : -Infinity;
-            const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : -Infinity;
-            if(aDue !== bDue) return aDue - bDue;
-            return a.rand - b.rand;
-          });
-          for(const entry of arr){
-            if(order.length >= n) break;
-            if(stagePriorityPicked >= stagePriorityQuota) break;
-            if(chosen.has(entry.idx)) continue;
-            order.push({ idx:entry.idx, bucket:`Stage ${entry.stage}`, streak:entry.streak });
-            chosen.add(entry.idx);
-            stagePriorityPicked += 1;
-          }
-          if(order.length >= n) break;
-        }
-
-        const stageFTopUps = [];
-        if(order.length < n){
-          let stageFSlotsRemaining = Math.max(0, n - order.length);
-          if(stageFSlotsRemaining > stageFPool.length && lv2Index !== -1){
-            let stageFNeeded = stageFSlotsRemaining - stageFPool.length;
-            const levelCandidates = (levelBuckets.get(lv2Index) || []).slice().sort((a,b)=>{
-              const rankDiff = normalizeRank(a.stage) - normalizeRank(b.stage);
-              if(rankDiff !== 0) return rankDiff;
-              const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
-              const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
-              if(aDue !== bDue) return aDue - bDue;
-              return a.rand - b.rand;
-            });
-            const prioritized = [];
-            const general = [];
-            for(const entry of levelCandidates){
-              const question = deckArr[entry.idx];
-              const key = toKey(question);
-              if(key && stageFHistory.has(key)){
-                prioritized.push({ entry, question });
-              }else{
-                general.push({ entry, question });
-              }
-            }
-            const promoteCandidate = (entry, question)=>{
-              if(stageFNeeded <= 0) return;
-              if(chosen.has(entry.idx)) return;
-              const key = toKey(question);
-              if(key) fallbackStageOverrides.set(key, 'F');
-              stageByIndex.set(entry.idx, 'F');
-              stageFTopUps.push({ idx:entry.idx, streak:entry.streak });
-              stageFNeeded -= 1;
-            };
-            for(const candidate of prioritized){
-              promoteCandidate(candidate.entry, candidate.question);
-              if(stageFNeeded <= 0) break;
-            }
-            if(stageFNeeded > 0){
-              for(const candidate of general){
-                promoteCandidate(candidate.entry, candidate.question);
-                if(stageFNeeded <= 0) break;
-              }
-            }
-          }
-        }
-
-        const prioritizeStageFPool = (list)=>{
-          if(!Array.isArray(list) || !list.length) return [];
-          const preferred = [];
-          const others = [];
-          for(const entry of list){
-            const question = deckArr[entry.idx];
-            const key = toKey(question);
-            if(key && stageFHistory.has(key)) preferred.push(entry);
-            else others.push(entry);
-          }
-          const shuffledPreferred = preferred.length ? shuffle(preferred) : [];
-          const shuffledOthers = others.length ? shuffle(others) : [];
-          return shuffledPreferred.concat(shuffledOthers);
-        };
-        const shuffledF = prioritizeStageFPool(stageFPool.concat(stageFTopUps));
-        for(const entry of shuffledF){
-          if(order.length >= n) break;
-          if(chosen.has(entry.idx)) continue;
-          order.push({ idx:entry.idx, bucket:'Stage F', streak:entry.streak });
-          chosen.add(entry.idx);
-        }
-
-        if(order.length < n){
-          // まだ枠が埋まらない場合、上位レベルからランダム補充。
-          const levelRanks = Array.from(levelBuckets.keys())
-            .filter(idx=>Number.isFinite(idx))
-            .sort((a,b)=>b-a);
-          for(const levelIdx of levelRanks){
-            if(levelIdx === lv2Index) continue;
-            const levelCandidates = (levelBuckets.get(levelIdx) || []).slice().sort((a,b)=>{
-              const rankDiff = normalizeRank(a.stage) - normalizeRank(b.stage);
-              if(rankDiff !== 0) return rankDiff;
-              const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
-              const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
-              if(aDue !== bDue) return aDue - bDue;
-              return a.rand - b.rand;
-            });
-            const levelLabel = LEVEL_ORDER[levelIdx] || '';
-            for(const entry of levelCandidates){
-              if(order.length >= n) break;
-              if(chosen.has(entry.idx)) continue;
-              const bucketLabel = levelLabel ? `Lv優先 (${levelLabel})` : 'Lv優先';
-              order.push({ idx:entry.idx, bucket:bucketLabel, streak:entry.streak });
-              chosen.add(entry.idx);
-            }
-            if(order.length >= n || chosen.size === deckArr.length) break;
-          }
-        }
-
-        // 今回採用したステージFの問題を記録し、次回以降の優先度に反映。
-        const stageFKeysToRemember = [];
-        const seenStageFKeys = new Set();
-        for(const entry of order){
-          const stage = stageByIndex.get(entry.idx);
-          if(stage !== 'F') continue;
-          const question = deckArr[entry.idx];
-          const key = toKey(question);
-          if(!key || seenStageFKeys.has(key)) continue;
-          seenStageFKeys.add(key);
-          stageFKeysToRemember.push(key);
-        }
-        if(stageFKeysToRemember.length){
-          rememberStageFKeys(stageFKeysToRemember);
-        }
-
-        lastOrder = order;
-
-        if(order.length < targetCount){
-          const shortage = targetCount - order.length;
-          if(shortage > 0 && attempt < MAX_ATTEMPTS - 1){
-            forcedExtraDeficit = Math.max(0, forcedExtraDeficit) + shortage;
-            continue;
-          }
-        }
-
-        return order;
+      const desiredRaw = state.totalPerSet;
+      const desired = Number.isFinite(desiredRaw) ? Math.max(0, Math.floor(desiredRaw)) : 0;
+      state.fallbackExtras = [];
+      state.fallbackStageOverrides = new Map();
+      if(desired === 0){
+        return [];
       }
 
-      return lastOrder;
+      const maxLevelIdx = levelIndex(state.levelMax);
+      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+      const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
+
+      const baseDeck = deck({ includeExtras: false });
+      const baseEntries = baseDeck.map((q, idx)=>({
+        idx,
+        id: q && q.id != null ? String(q.id) : null,
+      }));
+      const baseStats = await fetchStatsForEntries(baseEntries, state.user);
+      const now = Date.now();
+      const seenKeys = new Set();
+
+      for(const question of baseDeck){
+        try{
+          const key = questionKey(question);
+          if(key) seenKeys.add(key);
+        }catch(_err){
+          if(question && question.id != null){
+            seenKeys.add(`id:${question.id}`);
+          }
+        }
+      }
+
+      let promotableBaseCount = 0;
+      for(let i=0;i<baseDeck.length;i++){
+        const stat = baseStats[i];
+        const stage = stat && stat.stage ? normalizeStage(stat.stage) : 'F';
+        const nextDue = stat ? parseIsoDate(stat.nextDueAt) : null;
+        if(willStageUpOnSuccess(stage, nextDue, now)){
+          promotableBaseCount += 1;
+        }
+      }
+
+      const n = desired;
+      const effectiveStageFCount = promotableBaseCount;
+      const shortage = determineStagePriorityQuota(n, effectiveStageFCount);
+      if(shortage > 0){
+        const allDeck = deckByType(state.qType) || [];
+        const candidates = [];
+        for(const item of allDeck){
+          const levelIdx = levelIndex(item && item.level);
+          if(!Number.isFinite(levelIdx) || levelIdx <= maxLevelIdx) continue;
+          if(unitFilter && normalizeUnit(item.unit) !== unitFilter) continue;
+          let key = '';
+          try{
+            key = questionKey(item);
+          }catch(_err){
+            if(item && item.id != null){
+              key = `id:${item.id}`;
+            }
+          }
+          if(!key || seenKeys.has(key)) continue;
+          seenKeys.add(key);
+          candidates.push(item);
+        }
+        candidates.sort((a,b)=>{
+          const levelDiff = levelIndex(a && a.level) - levelIndex(b && b.level);
+          if(levelDiff !== 0) return levelDiff;
+          const aEn = a && typeof a.en === 'string' ? a.en : '';
+          const bEn = b && typeof b.en === 'string' ? b.en : '';
+          const localeCompare = aEn.localeCompare(bEn, 'ja', { numeric: true, sensitivity: 'base' });
+          if(localeCompare !== 0) return localeCompare;
+          const aId = a && a.id != null ? String(a.id) : '';
+          const bId = b && b.id != null ? String(b.id) : '';
+          return aId.localeCompare(bId, 'ja', { numeric: true, sensitivity: 'base' });
+        });
+        const extras = candidates.slice(0, shortage);
+        if(extras.length){
+          state.fallbackExtras = extras.slice();
+        }
+      }
+
+      const deckArr = deck({ includeExtras: true });
+      if(deckArr.length === 0){
+        return [];
+      }
+
+      const entries = deckArr.map((q, idx)=>({
+        idx,
+        id: q && q.id != null ? String(q.id) : null,
+      }));
+
+      const stats = await fetchStatsForEntries(entries, state.user);
+
+      const promotable = [];
+      const higherLevelBuckets = new Map();
+      const remainingFallback = [];
+
+      const stageRank = (stage)=>{
+        const normalized = normalizeStage(stage);
+        const idx = STAGE_PRIORITY.indexOf(normalized);
+        return idx === -1 ? STAGE_PRIORITY.length : idx;
+      };
+
+      for(let i=0;i<deckArr.length;i++){
+        const question = deckArr[i];
+        const stat = stats[i];
+        const levelIdx = levelIndex(question && question.level);
+        const normalizedStage = stat && stat.stage ? normalizeStage(stat.stage) : 'F';
+        const rawStreak = stat && Number.isFinite(Number(stat.streak)) ? Number(stat.streak) : 0;
+        const streak = Math.max(0, rawStreak);
+        const nextDue = stat ? parseIsoDate(stat.nextDueAt) : null;
+        const payload = { idx: i, stage: normalizedStage, streak, nextDue, levelIdx };
+        if(willStageUpOnSuccess(normalizedStage, nextDue, now)){
+          promotable.push(payload);
+        }else if(Number.isFinite(levelIdx) && levelIdx > maxLevelIdx){
+          let bucket = higherLevelBuckets.get(levelIdx);
+          if(!bucket){
+            bucket = [];
+            higherLevelBuckets.set(levelIdx, bucket);
+          }
+          bucket.push(payload);
+        }else{
+          remainingFallback.push(payload);
+        }
+      }
+
+      promotable.sort((a,b)=>{
+        const rankDiff = stageRank(a.stage) - stageRank(b.stage);
+        if(rankDiff !== 0) return rankDiff;
+        const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : -Infinity;
+        const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : -Infinity;
+        if(aDue !== bDue) return aDue - bDue;
+        return a.idx - b.idx;
+      });
+
+      const order = [];
+      const chosen = new Set();
+
+      for(const entry of promotable){
+        if(order.length >= desired) break;
+        if(chosen.has(entry.idx)) continue;
+        order.push({ idx: entry.idx, bucket: `Stage ${entry.stage}`, streak: entry.streak });
+        chosen.add(entry.idx);
+      }
+
+      if(order.length < desired){
+        const higherLevelKeys = Array.from(higherLevelBuckets.keys()).sort((a,b)=> a - b);
+        for(const levelIdx of higherLevelKeys){
+          const levelLabel = LEVEL_ORDER[levelIdx] || '';
+          const bucketLabel = levelLabel ? `Lv優先 (${levelLabel})` : 'Lv優先';
+          const list = higherLevelBuckets.get(levelIdx) || [];
+          list.sort((a,b)=>{
+            const aDue = a.nextDue instanceof Date ? a.nextDue.getTime() : Infinity;
+            const bDue = b.nextDue instanceof Date ? b.nextDue.getTime() : Infinity;
+            if(aDue !== bDue) return aDue - bDue;
+            const rankDiff = stageRank(a.stage) - stageRank(b.stage);
+            if(rankDiff !== 0) return rankDiff;
+            return a.idx - b.idx;
+          });
+          for(const entry of list){
+            if(order.length >= desired) break;
+            if(chosen.has(entry.idx)) continue;
+            order.push({ idx: entry.idx, bucket: bucketLabel, streak: entry.streak });
+            chosen.add(entry.idx);
+          }
+          if(order.length >= desired) break;
+        }
+      }
+
+      if(order.length < desired){
+        remainingFallback.sort((a,b)=> a.idx - b.idx);
+        for(const entry of remainingFallback){
+          if(order.length >= desired) break;
+          if(chosen.has(entry.idx)) continue;
+          order.push({ idx: entry.idx, bucket: null, streak: entry.streak });
+          chosen.add(entry.idx);
+        }
+      }
+
+      return order.slice(0, desired);
     }
 
 
