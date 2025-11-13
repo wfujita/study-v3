@@ -1,7 +1,7 @@
 import json
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List
 
 
 def run_node(code: str) -> str:
@@ -20,34 +20,19 @@ def execute_build_order(
     stats_map: Dict[str, Dict[str, Any]],
     *,
     level_max: str = "Lv1",
-    total_per_set: int = 7,
-    unit_filter: str = "",
+    total_per_set: int = 5,
     math_random: float = 0.11111,
-    force_stage_priority_quota: Optional[int] = None,
-    stage_f_history: Optional[Iterable[str]] = None,
 ) -> Dict[str, Any]:
     deck_json = json.dumps(deck_data)
     stats_json = json.dumps(stats_map)
     level_max_json = json.dumps(level_max)
-    unit_filter_json = json.dumps(unit_filter)
-    stage_f_history_json = json.dumps(list(stage_f_history or []))
-    override_snippet = ""
-    if force_stage_priority_quota is not None:
-        override_snippet = (
-            "      if(typeof determineStagePriorityQuota === 'function'){\n"
-            f"        determineStagePriorityQuota = () => {force_stage_priority_quota};\n"
-            "      }\n"
-        )
     node_code = f"""
     const fs = require('fs');
     const path = require('path');
     const vm = require('vm');
-    const {{ URL }} = require('url');
 
     const deckData = {deck_json};
     const statsMapInit = {stats_json};
-    const stageFHistoryInit = {stage_f_history_json};
-    const wrongQueueStore = new Map();
 
     class Element {{
       constructor(id){{
@@ -64,8 +49,6 @@ def execute_build_order(
       removeChild(child){{ this.children = this.children.filter(c => c !== child); }}
       set textContent(val){{ this._textContent = val; }}
       get textContent(){{ return this._textContent; }}
-      set onclick(fn){{ this._onclick = fn; }}
-      get onclick(){{ return this._onclick; }}
       addEventListener(){{ }}
       removeEventListener(){{ }}
       setAttribute(name, value){{ this.attributes[name] = value; }}
@@ -120,44 +103,11 @@ def execute_build_order(
         }});
         return {{ ok: true, json: async ()=>({{ results }}) }};
       }}
-      if(typeof url === 'string' && url.startsWith('/api/stats/stage-f')){{
-        const list = Array.isArray(stageFHistoryInit) ? stageFHistoryInit : [];
-        return {{ ok: true, json: async ()=>({{ keys: list }}) }};
-      }}
-      if(typeof url === 'string' && url.startsWith('/api/wrong-queue')){{
-        const method = (options.method || 'GET').toUpperCase();
-        if(method === 'POST'){{
-          const body = JSON.parse(options.body || '{{}}');
-          const user = (body.user || '').trim() || 'guest';
-          const qType = (body.qType || '').trim() || '';
-          const key = `${{user}}::${{qType}}`;
-          const items = Array.isArray(body.items) ? body.items : [];
-          wrongQueueStore.set(key, items);
-          return {{ ok: true, json: async ()=>({{ ok: true }}) }};
-        }}
-        const parsed = new URL(url, 'https://example.invalid');
-        const user = (parsed.searchParams.get('user') || '').trim() || 'guest';
-        const qType = (parsed.searchParams.get('qType') || '').trim() || '';
-        const key = `${{user}}::${{qType}}`;
-        const items = wrongQueueStore.get(key) || [];
-        return {{ ok: true, json: async ()=>({{ items }}) }};
-      }}
-      if(typeof url === 'string' && url.startsWith('/api/history')){{
-        const method = (options.method || 'GET').toUpperCase();
-        if(method === 'POST'){{
-          return {{ ok: true, json: async ()=>({{ ok: true }}) }};
-        }}
-        return {{ ok: true, json: async ()=>({{ history: [] }}) }};
-      }}
       return {{ ok: true, json: async ()=>({{}}) }};
     }};
 
     const context = {{
       console: {{ log(){{}}, warn(){{}}, error(){{}} }},
-      setTimeout,
-      clearTimeout,
-      setInterval,
-      clearInterval,
       Math: Object.assign(Object.create(Math), {{ random: () => {math_random} }}),
       document: documentStub,
       localStorage: localStorageStub,
@@ -172,12 +122,9 @@ def execute_build_order(
       __stagePriority: require('./app/static/stage_priority.js'),
     }};
     context.window.window = context.window;
-    context.window.__quizFallbackExtras = require('./app/static/fallback_extras.js');
-    context.__quizFallbackExtras = context.window.__quizFallbackExtras;
     context.globalThis = context;
     context.SpeechSynthesisUtterance = function(){{}};
     context.AbortController = AbortController;
-    context.URL = URL;
 
     vm.createContext(context);
     const htmlPath = path.join(__dirname, 'app/static/index.html');
@@ -191,33 +138,27 @@ def execute_build_order(
       state.mode = "normal";
       state.levelMax = {level_max_json};
       state.totalPerSet = {total_per_set};
-      state.unitFilter = {unit_filter_json};
-      state.fallbackExtras = [];
-      state.fallbackStageOverrides = new Map();
+      state.unitFilter = '';
       state.user = "tester";
-{override_snippet}
     `, context);
 
     (async ()=>{{
       await vm.runInContext('ensureQuestions()', context);
       const buildOrderFromBank = vm.runInContext('buildOrderFromBank', context);
       const order = await buildOrderFromBank();
-      const extrasIds = vm.runInContext('state.fallbackExtras.map(q => q.id)', context);
-      const overrides = vm.runInContext('Array.from(state.fallbackStageOverrides.entries())', context);
       const deckSnapshot = vm.runInContext('deck({{ includeExtras: true }})', context);
-      const stageFHistoryParsed = vm.runInContext('Array.from(getStageFHistory())', context);
       const orderWithIds = order.map(entry => {{
         const question = deckSnapshot[entry.idx];
-        return {{ id: question ? question.id : undefined, bucket: entry.bucket }};
+        return {{ id: question ? question.id : undefined, bucket: entry.bucket, streak: entry.streak }};
       }});
-      process.stdout.write(JSON.stringify({{ extrasIds, overrides, orderWithIds, orderLength: order.length, stageFHistory: stageFHistoryParsed }}));
+      process.stdout.write(JSON.stringify({{ orderWithIds, orderLength: order.length }}));
     }})();
     """
     output = run_node(node_code)
     return json.loads(output)
 
 
-def test_stage_f_shortage_promotes_higher_level_items():
+def test_promotable_items_are_prioritized():
     deck = [
         {
             "id": "1",
@@ -264,320 +205,26 @@ def test_stage_f_shortage_promotes_higher_level_items():
             "jp": "jp5",
             "answers": ["en5"],
         },
-        {
-            "id": "6",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en6",
-            "jp": "jp6",
-            "answers": ["en6"],
-        },
-        {
-            "id": "7",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en7",
-            "jp": "jp7",
-            "answers": ["en7"],
-        },
     ]
     stats = {
-        "1": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "2": {"stage": "F", "streak": 2, "nextDueAt": None},
-        "3": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "4": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "5": {"stage": "F", "streak": 3, "nextDueAt": None},
-        "6": {"stage": "C", "streak": 4, "nextDueAt": None},
-        "7": {"stage": "D", "streak": 1, "nextDueAt": None},
+        "1": {"stage": "D", "streak": 2, "nextDueAt": "2000-01-01T00:00:00.000Z"},
+        "2": {"stage": "B", "streak": 1, "nextDueAt": "2000-01-01T00:00:00.000Z"},
+        "3": {"stage": "C", "streak": 4, "nextDueAt": "2099-01-01T00:00:00.000Z"},
+        "4": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "5": {"stage": "E", "streak": 3, "nextDueAt": "2000-01-01T00:00:00.000Z"},
     }
 
-    result = execute_build_order(deck, stats)
+    result = execute_build_order(deck, stats, total_per_set=3)
 
-    assert set(result["extrasIds"]) == {"6", "7"}
-    overrides = dict(result["overrides"])
-    assert overrides.get("id:6") == "F"
-    assert overrides.get("id:7") == "F"
-    stage_f_ids = [
-        item for item in result["orderWithIds"] if item.get("id") in {"6", "7"}
-    ]
-    assert len(stage_f_ids) == 2
-    assert all(item["bucket"] == "Stage F" for item in stage_f_ids)
-
-
-def test_stage_f_topups_prioritize_previously_seen_questions():
-    deck = [
-        {
-            "id": "f1",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f1",
-            "jp": "jp-f1",
-            "answers": ["en-f1"],
-        },
-        {
-            "id": "f2",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f2",
-            "jp": "jp-f2",
-            "answers": ["en-f2"],
-        },
-        {
-            "id": "f3",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f3",
-            "jp": "jp-f3",
-            "answers": ["en-f3"],
-        },
-        {
-            "id": "f4",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f4",
-            "jp": "jp-f4",
-            "answers": ["en-f4"],
-        },
-        {
-            "id": "f5",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f5",
-            "jp": "jp-f5",
-            "answers": ["en-f5"],
-        },
-        {
-            "id": "v052",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-v052",
-            "jp": "jp-v052",
-            "answers": ["en-v052"],
-        },
-        {
-            "id": "x1",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-x1",
-            "jp": "jp-x1",
-            "answers": ["en-x1"],
-        },
-        {
-            "id": "v053",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-v053",
-            "jp": "jp-v053",
-            "answers": ["en-v053"],
-        },
-    ]
-    stats = {
-        "f1": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "f2": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "f3": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "f4": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "f5": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "v052": {"stage": "C", "streak": 0, "nextDueAt": None},
-        "x1": {"stage": "C", "streak": 0, "nextDueAt": None},
-        "v053": {"stage": "C", "streak": 0, "nextDueAt": None},
-    }
-
-    result = execute_build_order(
-        deck,
-        stats,
-        total_per_set=7,
-        force_stage_priority_quota=0,
-        stage_f_history=["id:v052", "id:v053"],
-    )
-
-    stage_f_ids = [
-        item.get("id")
-        for item in result["orderWithIds"]
-        if item.get("bucket") == "Stage F" and item.get("id") in {"v052", "v053", "x1"}
-    ]
-    assert len(stage_f_ids) == 2
-    assert set(stage_f_ids) == {"v052", "v053"}
-    assert {"id:v052", "id:v053"}.issubset(set(result["stageFHistory"]))
-
-
-def test_stage_f_history_respects_next_due_date():
-    deck = [
-        {
-            "id": "f1",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f1",
-            "jp": "jp-f1",
-            "answers": ["en-f1"],
-        },
-        {
-            "id": "f2",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-f2",
-            "jp": "jp-f2",
-            "answers": ["en-f2"],
-        },
-        {
-            "id": "future_pref",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-future",
-            "jp": "jp-future",
-            "answers": ["en-future"],
-        },
-        {
-            "id": "due_alt",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-due",
-            "jp": "jp-due",
-            "answers": ["en-due"],
-        },
-    ]
-    stats = {
-        "f1": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "f2": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "future_pref": {
-            "stage": "C",
-            "streak": 3,
-            "nextDueAt": "2099-01-01T00:00:00.000Z",
-        },
-        "due_alt": {"stage": "C", "streak": 2, "nextDueAt": None},
-    }
-
-    result = execute_build_order(
-        deck,
-        stats,
-        total_per_set=3,
-        stage_f_history=["id:future_pref"],
-    )
-
-    used_ids = [item.get("id") for item in result["orderWithIds"]]
-    assert used_ids.count("future_pref") == 0
-    assert used_ids.count("due_alt") == 1
-
-
-def test_stage_f_pool_prefers_previously_seen_questions():
-    deck = [
-        {
-            "id": "s1",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-s1",
-            "jp": "jp-s1",
-            "answers": ["en-s1"],
-        },
-        {
-            "id": "s2",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en-s2",
-            "jp": "jp-s2",
-            "answers": ["en-s2"],
-        },
-        {
-            "id": "s3",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-s3",
-            "jp": "jp-s3",
-            "answers": ["en-s3"],
-        },
-    ]
-    stats = {
-        item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck
-    }
-
-    result = execute_build_order(
-        deck,
-        stats,
-        total_per_set=1,
-        stage_f_history=["id:s3"],
-        force_stage_priority_quota=0,
-    )
-
-    stage_f_ids = [
-        item.get("id")
-        for item in result["orderWithIds"]
-        if item.get("bucket") == "Stage F"
-    ]
-    assert stage_f_ids == ["s3"]
-    assert "id:s3" in result["stageFHistory"]
-
-
-def test_stage_f_completion_fetches_higher_level_questions():
-    deck = [
-        {
-            "id": str(i),
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": f"en-{i}",
-            "jp": f"jp-{i}",
-            "answers": [f"en-{i}"],
-        }
-        for i in range(1, 8)
-    ] + [
-        {
-            "id": "8",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-8",
-            "jp": "jp-8",
-            "answers": ["en-8"],
-        },
-        {
-            "id": "9",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en-9",
-            "jp": "jp-9",
-            "answers": ["en-9"],
-        },
+    ids_with_buckets = [(item["id"], item["bucket"]) for item in result["orderWithIds"]]
+    assert ids_with_buckets == [
+        ("2", "Stage B"),
+        ("1", "Stage D"),
+        ("5", "Stage E"),
     ]
 
-    stats = {
-        str(i): {"stage": "E", "streak": 2, "nextDueAt": None} for i in range(1, 8)
-    }
-    stats.update(
-        {
-            "8": {"stage": "F", "streak": 0, "nextDueAt": None},
-            "9": {"stage": "F", "streak": 0, "nextDueAt": None},
-        }
-    )
 
-    result = execute_build_order(deck, stats, stage_f_history=[])
-
-    stage_f_ids = {
-        item.get("id")
-        for item in result["orderWithIds"]
-        if item.get("bucket") == "Stage F"
-    }
-    assert stage_f_ids & {"8", "9"}
-    assert set(result["extrasIds"]) & {"8", "9"}
-
-
-def test_stage_f_history_records_promoted_questions():
+def test_higher_levels_fill_shortage():
     deck = [
         {
             "id": "base1",
@@ -598,399 +245,82 @@ def test_stage_f_history_records_promoted_questions():
             "answers": ["en-base2"],
         },
         {
-            "id": "extra1",
+            "id": "high1",
             "type": "vocab-choice",
             "level": "Lv2",
             "unit": "U1",
-            "en": "en-extra1",
-            "jp": "jp-extra1",
-            "answers": ["en-extra1"],
+            "en": "en-high1",
+            "jp": "jp-high1",
+            "answers": ["en-high1"],
         },
         {
-            "id": "extra2",
+            "id": "high2",
             "type": "vocab-choice",
-            "level": "Lv2",
+            "level": "Lv3",
             "unit": "U1",
-            "en": "en-extra2",
-            "jp": "jp-extra2",
-            "answers": ["en-extra2"],
+            "en": "en-high2",
+            "jp": "jp-high2",
+            "answers": ["en-high2"],
         },
     ]
     stats = {
-        item["id"]: {"stage": "F", "streak": 0, "nextDueAt": None} for item in deck
+        "base1": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "base2": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "high1": {"stage": "C", "streak": 1, "nextDueAt": None},
+        "high2": {"stage": "D", "streak": 1, "nextDueAt": None},
     }
 
-    result = execute_build_order(
-        deck,
-        stats,
-        total_per_set=3,
-        stage_f_history=None,
-    )
+    result = execute_build_order(deck, stats, total_per_set=2, level_max="Lv1")
 
-    stage_f_ids = {
-        item.get("id")
-        for item in result["orderWithIds"]
-        if item.get("bucket") == "Stage F"
-    }
-    assert stage_f_ids & {"extra1", "extra2"}
-    assert any(key in result["stageFHistory"] for key in {"id:extra1", "id:extra2"})
+    ids_with_buckets = [(item["id"], item["bucket"]) for item in result["orderWithIds"]]
+    assert ids_with_buckets == [
+        ("high1", "Lv優先 (Lv2)"),
+        ("high2", "Lv優先 (Lv3)"),
+    ]
 
 
-def test_waiting_fallback_extras_are_replaced_by_additional_levels():
+def test_shortage_then_fill_with_remaining_questions():
     deck = [
         {
-            "id": "1",
+            "id": "base1",
             "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
-            "en": "en1",
-            "jp": "jp1",
-            "answers": ["en1"],
+            "en": "en-base1",
+            "jp": "jp-base1",
+            "answers": ["en-base1"],
         },
         {
-            "id": "2",
+            "id": "base2",
             "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
-            "en": "en2",
-            "jp": "jp2",
-            "answers": ["en2"],
+            "en": "en-base2",
+            "jp": "jp-base2",
+            "answers": ["en-base2"],
         },
         {
-            "id": "3",
+            "id": "due1",
             "type": "vocab-choice",
             "level": "Lv1",
             "unit": "U1",
-            "en": "en3",
-            "jp": "jp3",
-            "answers": ["en3"],
-        },
-        {
-            "id": "4",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en4",
-            "jp": "jp4",
-            "answers": ["en4"],
-        },
-        {
-            "id": "5",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en5",
-            "jp": "jp5",
-            "answers": ["en5"],
-        },
-        {
-            "id": "6",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en6",
-            "jp": "jp6",
-            "answers": ["en6"],
-        },
-        {
-            "id": "7",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en7",
-            "jp": "jp7",
-            "answers": ["en7"],
-        },
-        {
-            "id": "8",
-            "type": "vocab-choice",
-            "level": "Lv3",
-            "unit": "U1",
-            "en": "en8",
-            "jp": "jp8",
-            "answers": ["en8"],
-        },
-        {
-            "id": "9",
-            "type": "vocab-choice",
-            "level": "Lv3",
-            "unit": "U1",
-            "en": "en9",
-            "jp": "jp9",
-            "answers": ["en9"],
+            "en": "en-due1",
+            "jp": "jp-due1",
+            "answers": ["en-due1"],
         },
     ]
     stats = {
-        "1": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "2": {"stage": "F", "streak": 2, "nextDueAt": None},
-        "3": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "4": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "5": {"stage": "F", "streak": 3, "nextDueAt": None},
-        "6": {"stage": "C", "streak": 4, "nextDueAt": "2099-01-01T00:00:00.000Z"},
-        "7": {"stage": "D", "streak": 2, "nextDueAt": "2099-01-02T00:00:00.000Z"},
-        "8": {"stage": "D", "streak": 1, "nextDueAt": None},
-        "9": {"stage": "E", "streak": 2, "nextDueAt": None},
+        "base1": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "base2": {"stage": "F", "streak": 0, "nextDueAt": None},
+        "due1": {"stage": "B", "streak": 2, "nextDueAt": "2000-01-01T00:00:00.000Z"},
     }
 
-    result = execute_build_order(deck, stats, math_random=0.22222)
+    result = execute_build_order(deck, stats, total_per_set=2, level_max="Lv1")
 
-    assert result["orderLength"] == 7
-    assert set(result["extrasIds"]) == {"8", "9"}
-    used_ids = [item.get("id") for item in result["orderWithIds"]]
-    assert used_ids.count("8") == 1
-    assert used_ids.count("9") == 1
-
-
-def test_due_stage_items_appear_even_when_stage_f_is_sufficient():
-    deck = [
-        {
-            "id": "1",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en1",
-            "jp": "jp1",
-            "answers": ["en1"],
-        },
-        {
-            "id": "2",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en2",
-            "jp": "jp2",
-            "answers": ["en2"],
-        },
-        {
-            "id": "3",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en3",
-            "jp": "jp3",
-            "answers": ["en3"],
-        },
-        {
-            "id": "4",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en4",
-            "jp": "jp4",
-            "answers": ["en4"],
-        },
-        {
-            "id": "5",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en5",
-            "jp": "jp5",
-            "answers": ["en5"],
-        },
-        {
-            "id": "6",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en6",
-            "jp": "jp6",
-            "answers": ["en6"],
-        },
-        {
-            "id": "7",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en7",
-            "jp": "jp7",
-            "answers": ["en7"],
-        },
-        {
-            "id": "8",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en8",
-            "jp": "jp8",
-            "answers": ["en8"],
-        },
+    ids_with_buckets = [(item["id"], item["bucket"]) for item in result["orderWithIds"]]
+    assert ids_with_buckets == [
+        ("due1", "Stage B"),
+        ("base1", None),
     ]
-    stats = {
-        "1": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "2": {"stage": "F", "streak": 2, "nextDueAt": None},
-        "3": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "4": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "5": {"stage": "F", "streak": 3, "nextDueAt": None},
-        "6": {"stage": "F", "streak": 2, "nextDueAt": None},
-        "7": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "8": {"stage": "D", "streak": 4, "nextDueAt": "2000-01-01T00:00:00.000Z"},
-    }
-
-    result = execute_build_order(deck, stats, math_random=0.44444)
-
-    assert result["orderLength"] == 7
-    ids_with_buckets = {
-        item.get("id"): item.get("bucket") for item in result["orderWithIds"]
-    }
-    assert ids_with_buckets.get("8") == "Stage D"
-    stage_f_count = sum(
-        1 for bucket in ids_with_buckets.values() if bucket == "Stage F"
-    )
-    assert stage_f_count == 6
-
-
-def test_waiting_fallback_extras_trigger_additional_retry_until_new_level_used():
-    deck = [
-        {
-            "id": "1",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en1",
-            "jp": "jp1",
-            "answers": ["en1"],
-        },
-        {
-            "id": "2",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en2",
-            "jp": "jp2",
-            "answers": ["en2"],
-        },
-        {
-            "id": "3",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en3",
-            "jp": "jp3",
-            "answers": ["en3"],
-        },
-        {
-            "id": "4",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en4",
-            "jp": "jp4",
-            "answers": ["en4"],
-        },
-        {
-            "id": "5",
-            "type": "vocab-choice",
-            "level": "Lv1",
-            "unit": "U1",
-            "en": "en5",
-            "jp": "jp5",
-            "answers": ["en5"],
-        },
-        {
-            "id": "6",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en6",
-            "jp": "jp6",
-            "answers": ["en6"],
-        },
-        {
-            "id": "7",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en7",
-            "jp": "jp7",
-            "answers": ["en7"],
-        },
-        {
-            "id": "8",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en8",
-            "jp": "jp8",
-            "answers": ["en8"],
-        },
-        {
-            "id": "9",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en9",
-            "jp": "jp9",
-            "answers": ["en9"],
-        },
-        {
-            "id": "10",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en10",
-            "jp": "jp10",
-            "answers": ["en10"],
-        },
-        {
-            "id": "11",
-            "type": "vocab-choice",
-            "level": "Lv2",
-            "unit": "U1",
-            "en": "en11",
-            "jp": "jp11",
-            "answers": ["en11"],
-        },
-        {
-            "id": "12",
-            "type": "vocab-choice",
-            "level": "Lv3",
-            "unit": "U1",
-            "en": "en12",
-            "jp": "jp12",
-            "answers": ["en12"],
-        },
-        {
-            "id": "13",
-            "type": "vocab-choice",
-            "level": "Lv3",
-            "unit": "U1",
-            "en": "en13",
-            "jp": "jp13",
-            "answers": ["en13"],
-        },
-        {
-            "id": "14",
-            "type": "vocab-choice",
-            "level": "Lv3",
-            "unit": "U1",
-            "en": "en14",
-            "jp": "jp14",
-            "answers": ["en14"],
-        },
-    ]
-    stats = {
-        "1": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "2": {"stage": "F", "streak": 2, "nextDueAt": None},
-        "3": {"stage": "F", "streak": 0, "nextDueAt": None},
-        "4": {"stage": "F", "streak": 1, "nextDueAt": None},
-        "5": {"stage": "F", "streak": 3, "nextDueAt": None},
-        "6": {"stage": "C", "streak": 4, "nextDueAt": "2099-01-01T00:00:00.000Z"},
-        "7": {"stage": "D", "streak": 2, "nextDueAt": "2099-01-01T00:00:00.000Z"},
-        "8": {"stage": "D", "streak": 1, "nextDueAt": "2099-01-03T00:00:00.000Z"},
-        "9": {"stage": "D", "streak": 2, "nextDueAt": "2099-01-04T00:00:00.000Z"},
-        "10": {"stage": "C", "streak": 1, "nextDueAt": "2099-01-05T00:00:00.000Z"},
-        "11": {"stage": "C", "streak": 2, "nextDueAt": "2099-01-06T00:00:00.000Z"},
-        "12": {"stage": "D", "streak": 1, "nextDueAt": None},
-        "13": {"stage": "D", "streak": 1, "nextDueAt": None},
-        "14": {"stage": "E", "streak": 2, "nextDueAt": None},
-    }
-
-    result = execute_build_order(deck, stats, math_random=0.33333)
-
-    assert result["orderLength"] == 7
-    assert set(result["extrasIds"]) == {"12", "13", "14"}
-    used_ids = [item.get("id") for item in result["orderWithIds"]]
-    assert {"12", "13"}.issubset(set(used_ids))
-    assert used_ids.count("12") == 1
-    assert used_ids.count("13") == 1
+    streaks = [item["streak"] for item in result["orderWithIds"]]
+    assert streaks == [2, 0]
