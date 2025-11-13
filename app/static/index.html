@@ -814,6 +814,17 @@
       : ((typeof globalThis !== 'undefined' && globalThis.__stagePriority)
         ? globalThis.__stagePriority
         : {});
+    const determineStagePriorityQuota = typeof stagePriorityApi.determineStagePriorityQuota === 'function'
+      ? (totalNeeded, stageFCount) => {
+          return stagePriorityApi.determineStagePriorityQuota(totalNeeded, stageFCount);
+        }
+      : (totalNeeded, stageFCount) => {
+          const n = Number.isFinite(totalNeeded) ? Math.max(0, Math.floor(totalNeeded)) : 0;
+          const count = Number.isFinite(stageFCount) ? Math.max(0, Math.floor(stageFCount)) : 0;
+          if(n === 0) return 0;
+          return Math.max(0, n - Math.min(count, n));
+        };
+
     const shouldPrioritizeStagePromotion = typeof stagePriorityApi.shouldPrioritizeStagePromotion === 'function'
       ? stagePriorityApi.shouldPrioritizeStagePromotion
       : (stage, nextDue, nowMs) => {
@@ -931,7 +942,9 @@
         }
       }
 
-      const shortage = Math.max(0, desired - promotableBaseCount);
+      const n = desired;
+      const effectiveStageFCount = promotableBaseCount;
+      const shortage = determineStagePriorityQuota(n, effectiveStageFCount);
       if(shortage > 0){
         const allDeck = deckByType(state.qType) || [];
         const candidates = [];
