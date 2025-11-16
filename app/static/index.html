@@ -91,7 +91,6 @@
           </select>
         </label>
         <button class="primary" id="btn-start">▶ 学習スタート</button>
-        <button id="btn-weak" title="過去7日の正答率が低い問題">🎯 弱点対策（過去7日）</button>
       </div>
       <div class="muted" style="margin-top:8px">
         並べ替え: <span class="kbd">1-9</span> で選択、<span class="kbd">Backspace</span> で戻す、<span class="kbd">Enter</span> で採点/次へ。<br>
@@ -394,7 +393,6 @@
       graded:false,  // 一問一採点
       mode:'normal',
       reviewStrategy:'all', // 'all' | 'recent'
-      weakWindowDays:7,      // 過去◯日を対象
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
       choiceSelection: null,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
@@ -793,7 +791,7 @@
       const maxLevelIdx = levelIndex(state.levelMax);
       const stageFHistory = getStageFHistory();
       let filtered = all.filter(q=> isEligibleByLevel(q, maxLevelIdx, stageFHistory));
-      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+      const shouldFilterByUnit = state.mode==='normal';
       const unit = shouldFilterByUnit ? (state.unitFilter || '') : '';
       if(unit){
         filtered = filtered.filter(q=> normalizeUnit(q.unit) === unit);
@@ -909,7 +907,7 @@
       }
 
       const maxLevelIdx = levelIndex(state.levelMax);
-      const shouldFilterByUnit = state.mode==='normal' || state.mode==='weak';
+      const shouldFilterByUnit = state.mode==='normal';
       const unitFilter = shouldFilterByUnit ? (state.unitFilter || '') : '';
 
       const baseDeck = deck({ includeExtras: false });
@@ -1144,7 +1142,7 @@
       return baseEntries.map(({idx, bucket, streak})=>({ idx, bucket, streak }));
     }
 
-    // === 成績インデックス（ローカル）: 過去データから弱点抽出 ===
+    // === 成績インデックス（ローカル） ===
     const PERF_KEY = (u)=>`quiz:${u}:perf`;
     function loadPerf(){ return JSON.parse(localStorage.getItem(PERF_KEY(state.user))||'{}'); }
     function savePerf(p){ localStorage.setItem(PERF_KEY(state.user), JSON.stringify(p)); }
@@ -1190,58 +1188,6 @@
           elStage.textContent='ステージ: --';
         });
     }
-    function weakCandidates(windowDays){
-      const p = loadPerf();
-      const cut = Date.now() - (windowDays*24*3600*1000);
-      const list = [];
-      const d = deck();
-      for(const q of d){
-        const k = questionKey(q);
-        const rec = p[k];
-        if(!rec || !rec.attempts || rec.attempts.length===0) continue;
-        const arr = rec.attempts.filter(a=> new Date(a.at).getTime() >= cut);
-        if(arr.length===0) continue;
-        const wrong = arr.filter(a=>!a.correct).length;
-        const acc = (arr.length - wrong)/arr.length;
-        list.push({ q, acc, attempts: arr.length, wrong, lastAt: arr[arr.length-1].at });
-      }
-      // 低正答率 → 試行回数多 → 最近 の順
-      list.sort((a,b)=> (a.acc - b.acc) || (b.attempts - a.attempts) || (new Date(b.lastAt)-new Date(a.lastAt)) );
-      return list;
-    }
-    async function buildOrderWeak(windowDays=7){
-      const stats = weakCandidates(windowDays);
-      if(stats.length===0) return [];
-
-      const entries = stats.map((item, idx)=>({
-        idx,
-        id: item && item.q && item.q.id != null ? String(item.q.id) : null,
-      }));
-
-      let filtered = stats.slice();
-      const trimmedUser = (state.user || '').trim();
-      const hasIds = entries.some(entry => entry.id);
-      if(trimmedUser && hasIds){
-        const stageStats = await fetchStatsForEntries(entries, trimmedUser);
-        const nowMs = Date.now();
-        filtered = stats.filter((item, idx)=>{
-          const stat = stageStats[idx];
-          if(!stat || typeof stat !== 'object') return true;
-          const stage = normalizeStage(stat.stage);
-          const nextDue = parseIsoDate(stat.nextDueAt);
-          const nextDueMs = nextDue instanceof Date ? nextDue.getTime() : null;
-          const isTrackedStage = STAGE_PRIORITY.includes(stage);
-          return !(isTrackedStage && nextDueMs != null && nextDueMs > nowMs);
-        });
-      }
-
-      if(filtered.length===0) return [];
-
-      const pick = filtered.slice(0, Math.min(state.totalPerSet, filtered.length)).map(s=>s.q);
-      window.__WEAK_DECK__ = pick;
-      return pick.map((_,i)=>i);
-    }
-
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
       state.fallbackExtras = [];
@@ -1253,10 +1199,6 @@
         const ord = buildOrderFromWrong(state.reviewStrategy||'all');
         if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
         state.order = await createOrderEntriesFromIndexes(ord, window.__REVIEW_DECK__);
-      }else if(state.mode==='weak'){
-        const ord = await buildOrderWeak(state.weakWindowDays||7);
-        if(ord.length===0){ alert('弱点候補が見つかりません（最近のデータが不足）。通常モードで解いてデータを増やしましょう。'); show('setup'); return; }
-        state.order = await createOrderEntriesFromIndexes(ord, window.__WEAK_DECK__);
       }else{
         state.order = await buildOrderFromBank();
         if(!state.order.length){
@@ -1273,7 +1215,6 @@
       const entry = state.order[state.qIndex] || { idx:0, bucket:null, streak:0 };
       const idx = entry.idx;
       if(state.mode==='review') return window.__REVIEW_DECK__[idx];
-      if(state.mode==='weak') return window.__WEAK_DECK__[idx];
       return deck()[idx];
     }
 
@@ -1699,9 +1640,7 @@
       show('finished');
 
       // --- このセットの誤答だけを抽出してボタンに渡す ---
-      const srcDeck = (state.mode==='review') ? window.__REVIEW_DECK__
-                    : (state.mode==='weak')  ? window.__WEAK_DECK__
-                    : deck();
+      const srcDeck = (state.mode==='review') ? window.__REVIEW_DECK__ : deck();
 
       // 解答記録（通常 or 復習）の qIndex は「state.order 上の位置」
       const records = (state.mode==='review') ? state.reviewed : state.answered;
@@ -1793,28 +1732,6 @@
       await startSetCustom(deck);
     };
 
-    // 弱点対策（過去7日）
-    document.getElementById('btn-weak').onclick=async ()=>{
-      try{
-        state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
-        document.getElementById('user-pill').textContent=`👤 ${state.user}`;
-        clearStageFHistoryCache();
-        clearWrongQueueCache();
-        state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
-        state.endpoint=DEFAULT_ENDPOINT;
-        state.setIndex=0; state.mode='weak'; state.qType=document.getElementById('qtype').value||'reorder';
-        const unitSel=document.getElementById('unit-filter');
-        if(unitSel){
-          const selected=(unitSel.value||'').trim();
-          if(BANK_REORDER.length || BANK_VOCAB_CHOICE.length || !state.unitFilter){
-            state.unitFilter=selected;
-          }
-        }
-        rememberSettings();
-        await startSet();
-      }catch(e){ alert('弱点対策を開始できません: '+(e.message||e)); }
-    };
-   
     // 入力欄変更で即保存＋サジェスト更新
     document.getElementById('learner').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
