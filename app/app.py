@@ -144,35 +144,6 @@ def save_results():
     return jsonify({"ok": True}), 201
 
 
-@app.get("/api/stats/stage-f")
-def stage_f_history():
-    user = (request.args.get("user") or "").strip()
-    subject = normalize_subject(request.args.get("subject"))
-    runtime_dir = subject_runtime_dir(subject)
-
-    if not user:
-        return jsonify({"keys": []})
-
-    store = stage_tracker.load_store(runtime_dir)
-
-    keys = []
-    user_bucket = {}
-    if isinstance(store, dict):
-        normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
-        bucket = store.get(normalized_user)
-        if isinstance(bucket, dict):
-            user_bucket = bucket
-
-    for qid, state in user_bucket.items():
-        if not isinstance(state, dict):
-            continue
-        stage_value = (state.get("stage") or "").strip().upper()
-        if stage_value == "F":
-            keys.append(f"id:{qid}")
-
-    return jsonify({"keys": keys})
-
-
 @app.get("/api/history")
 def get_history():
     user = (request.args.get("user") or "").strip()

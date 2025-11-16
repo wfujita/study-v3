@@ -396,7 +396,6 @@
       choiceSelection: null,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
       fallbackStageOverrides: new Map(), // 補充問題のステージ上書き（問題キー -> ステージ）
-      stageFHistorySet: new Set(),
     };
 
     const $ = s=>document.querySelector(s);
@@ -494,56 +493,18 @@
       writeRememberedUnitMap(map);
     }
 
-    async function fetchStageFHistory(){
-      const trimmedUser = (state.user || '').trim();
-      if(!trimmedUser){
-        return new Set();
-      }
-      try{
-        const url = `/api/stats/stage-f?user=${encodeURIComponent(trimmedUser)}&subject=${encodeURIComponent(SUBJECT)}`;
-        const res = await fetch(url, { cache: 'no-store' });
-        if(!res.ok){
-          return new Set();
-        }
-        const data = await res.json();
-        const keys = Array.isArray(data.keys) ? data.keys : [];
-        const set = new Set();
-        keys.forEach(v=>{ if(typeof v === 'string' && v){ set.add(v); } });
-        return set;
-      }catch(err){
-        console.warn('ステージF履歴の取得に失敗しました', err);
-        return new Set();
-      }
-    }
-
-    function resetStageFHistoryCache(){
-      state.stageFHistorySet = new Set();
-    }
-
-    async function refreshStageFHistory(){
-      state.stageFHistorySet = await fetchStageFHistory();
-      return state.stageFHistorySet;
-    }
-
-    function isEligibleByLevel(question, maxLevelIdx, stageFSet){
+    function isEligibleByLevel(question, maxLevelIdx){
       if(!question) return false;
       if(!Number.isFinite(maxLevelIdx)) return true;
       const lvlIdx = levelIndex(question.level);
-      if(lvlIdx <= maxLevelIdx) return true;
-      const stageFHistory = (stageFSet instanceof Set)
-        ? stageFSet
-        : (state.stageFHistorySet instanceof Set ? state.stageFHistorySet : new Set());
-      if(!(stageFHistory instanceof Set)) return false;
-      const key = questionKey(question);
-      return key ? stageFHistory.has(key) : false;
+      return lvlIdx <= maxLevelIdx;
     }
 
     async function renderUnitFilterOptions(){
       const sel = document.getElementById('unit-filter');
       if(!sel) return;
       const maxLevelIdx = levelIndex(state.levelMax);
-      const stageFHistory = await refreshStageFHistory();
-      const deckArr = deckByType(state.qType).filter(q=> isEligibleByLevel(q, maxLevelIdx, stageFHistory));
+      const deckArr = deckByType(state.qType).filter(q=> isEligibleByLevel(q, maxLevelIdx));
       const units = Array.from(new Set(deckArr.map(q=>normalizeUnit(q.unit)).filter(u=>u))).sort((a,b)=>a.localeCompare(b, 'ja', { numeric:true, sensitivity:'base' }));
       sel.innerHTML='';
       const optAll=document.createElement('option'); optAll.value=''; optAll.textContent='全ユニット'; sel.appendChild(optAll);
@@ -576,8 +537,6 @@
       const unitSel = document.getElementById('unit-filter');
       if(unitSel){ unitSel.value = state.unitFilter || ''; }
       state.endpoint=DEFAULT_ENDPOINT;
-      resetStageFHistoryCache();
-      refreshStageFHistory().catch(()=>{});
       populateUserSuggestions();
     }
     function rememberSettings(){
@@ -647,8 +606,7 @@
       const all = deckByType(state.qType);
       if(state.mode==='review') return all;
       const maxLevelIdx = levelIndex(state.levelMax);
-      const stageFHistory = state.stageFHistorySet instanceof Set ? state.stageFHistorySet : new Set();
-      let filtered = all.filter(q=> isEligibleByLevel(q, maxLevelIdx, stageFHistory));
+      let filtered = all.filter(q=> isEligibleByLevel(q, maxLevelIdx));
       const shouldFilterByUnit = state.mode==='normal';
       const unit = shouldFilterByUnit ? (state.unitFilter || '') : '';
       if(unit){
@@ -1027,7 +985,6 @@
     }
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
-      await refreshStageFHistory();
       state.fallbackExtras = [];
       const fullDeck = deckByType(state.qType);
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
@@ -1539,7 +1496,6 @@
       try{
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
-        resetStageFHistoryCache();
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
@@ -1564,8 +1520,6 @@
     document.getElementById('learner').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
-      resetStageFHistoryCache();
-      refreshStageFHistory().catch(()=>{});
       rememberSettings();
     });
     document.getElementById('unit-filter').addEventListener('change', (e)=>{
@@ -1607,7 +1561,6 @@
         try{
         state.setIndex++;
         if(state.mode==='review'){ state.mode='normal'; }
-        resetStageFHistoryCache();
         await startSet();
         }catch(e){
           alert('次セットを開始できません: '+(e.message||e));
