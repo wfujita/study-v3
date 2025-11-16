@@ -363,7 +363,7 @@
       return base;
     };
     async function ensureQuestions(){
-      if (BANK_REORDER.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ renderUnitFilterOptions(); return; }
+      if (BANK_REORDER.length || BANK_VOCAB_CHOICE.length || BANK_REWRITE.length){ await renderUnitFilterOptions(); return; }
       const res = await fetch(QUESTIONS_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("質問ファイルの読み込みに失敗: " + res.status);
       const data = await res.json();
@@ -376,7 +376,7 @@
       BANK_REORDER = (data.questions||data.reorder||[]).map(q=>buildQuestion(q, 'reorder'));
       BANK_VOCAB_CHOICE = rawVocabChoice.map(v=>buildQuestion(v, 'vocab-choice'));
       BANK_REWRITE = (data.rewrite||[]).map(w=>buildQuestion(w, 'rewrite'));
-      renderUnitFilterOptions();
+      await renderUnitFilterOptions();
     }
 
     /********** 状態 **********/
@@ -397,6 +397,7 @@
       choiceSelection: null,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
       fallbackStageOverrides: new Map(), // 補充問題のステージ上書き（問題キー -> ステージ）
+      stageFHistorySet: new Set(),
     };
 
     const $ = s=>document.querySelector(s);
@@ -494,80 +495,35 @@
       writeRememberedUnitMap(map);
     }
 
-    function stageFCacheKey(){
-      const user = (state.user || '').trim() || 'guest';
-      return `${user}::${SUBJECT}`;
-    }
-
-    let stageFCache = { key: null, set: new Set(), pending: null, fetched: false };
-
-    function getStageFHistory(){
-      const key = stageFCacheKey();
-      if(stageFCache.key !== key){
-        stageFCache = { key, set: new Set(), pending: null, fetched: false };
-      }
-      if(!(stageFCache.set instanceof Set)){
-        stageFCache.set = new Set();
-      }
-      return stageFCache.set;
-    }
-
-    async function refreshStageFHistory(force=false){
-      const key = stageFCacheKey();
-      if(stageFCache.key !== key){
-        stageFCache = { key, set: new Set(), pending: null, fetched: false };
-      }
-      if(stageFCache.fetched && !force){
-        return stageFCache.set;
-      }
-      if(stageFCache.pending && !force){
-        return stageFCache.pending;
-      }
+    async function fetchStageFHistory(){
       const trimmedUser = (state.user || '').trim();
       if(!trimmedUser){
-        stageFCache.set = new Set();
-        stageFCache.fetched = true;
-        return stageFCache.set;
+        return new Set();
       }
-      const promise = (async ()=>{
-        try{
-          const url = `/api/stats/stage-f?user=${encodeURIComponent(trimmedUser)}&subject=${encodeURIComponent(SUBJECT)}`;
-          const res = await fetch(url, { cache: 'no-store' });
-          if(res.ok){
-            const data = await res.json();
-            const keys = Array.isArray(data.keys) ? data.keys : [];
-            const set = new Set();
-            keys.forEach(v=>{ if(typeof v === 'string' && v){ set.add(v); } });
-            stageFCache.set = set;
-          }else{
-            stageFCache.set = new Set();
-          }
-        }catch(err){
-          console.warn('ステージF履歴の取得に失敗しました', err);
-          stageFCache.set = new Set();
-        }finally{
-          stageFCache.pending = null;
-          stageFCache.fetched = true;
+      try{
+        const url = `/api/stats/stage-f?user=${encodeURIComponent(trimmedUser)}&subject=${encodeURIComponent(SUBJECT)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if(!res.ok){
+          return new Set();
         }
-        return stageFCache.set;
-      })();
-      stageFCache.pending = promise;
-      return promise;
+        const data = await res.json();
+        const keys = Array.isArray(data.keys) ? data.keys : [];
+        const set = new Set();
+        keys.forEach(v=>{ if(typeof v === 'string' && v){ set.add(v); } });
+        return set;
+      }catch(err){
+        console.warn('ステージF履歴の取得に失敗しました', err);
+        return new Set();
+      }
     }
 
-    function rememberStageFKeys(keys){
-      if(!Array.isArray(keys) || keys.length === 0) return;
-      const set = getStageFHistory();
-      keys.forEach(key => {
-        if(typeof key === 'string' && key){
-          set.add(key);
-        }
-      });
-      stageFCache.fetched = true;
+    function resetStageFHistoryCache(){
+      state.stageFHistorySet = new Set();
     }
 
-    function clearStageFHistoryCache(){
-      stageFCache = { key: null, set: new Set(), pending: null, fetched: false };
+    async function refreshStageFHistory(){
+      state.stageFHistorySet = await fetchStageFHistory();
+      return state.stageFHistorySet;
     }
 
     function isEligibleByLevel(question, maxLevelIdx, stageFSet){
@@ -575,16 +531,19 @@
       if(!Number.isFinite(maxLevelIdx)) return true;
       const lvlIdx = levelIndex(question.level);
       if(lvlIdx <= maxLevelIdx) return true;
-      if(!(stageFSet instanceof Set)) return false;
+      const stageFHistory = (stageFSet instanceof Set)
+        ? stageFSet
+        : (state.stageFHistorySet instanceof Set ? state.stageFHistorySet : new Set());
+      if(!(stageFHistory instanceof Set)) return false;
       const key = questionKey(question);
-      return key ? stageFSet.has(key) : false;
+      return key ? stageFHistory.has(key) : false;
     }
 
-    function renderUnitFilterOptions(){
+    async function renderUnitFilterOptions(){
       const sel = document.getElementById('unit-filter');
       if(!sel) return;
       const maxLevelIdx = levelIndex(state.levelMax);
-      const stageFHistory = getStageFHistory();
+      const stageFHistory = await refreshStageFHistory();
       const deckArr = deckByType(state.qType).filter(q=> isEligibleByLevel(q, maxLevelIdx, stageFHistory));
       const units = Array.from(new Set(deckArr.map(q=>normalizeUnit(q.unit)).filter(u=>u))).sort((a,b)=>a.localeCompare(b, 'ja', { numeric:true, sensitivity:'base' }));
       sel.innerHTML='';
@@ -618,7 +577,7 @@
       const unitSel = document.getElementById('unit-filter');
       if(unitSel){ unitSel.value = state.unitFilter || ''; }
       state.endpoint=DEFAULT_ENDPOINT;
-      clearStageFHistoryCache();
+      resetStageFHistoryCache();
       clearWrongQueueCache();
       refreshStageFHistory().catch(()=>{});
       populateUserSuggestions();
@@ -789,7 +748,7 @@
       const all = deckByType(state.qType);
       if(state.mode==='review') return all;
       const maxLevelIdx = levelIndex(state.levelMax);
-      const stageFHistory = getStageFHistory();
+      const stageFHistory = state.stageFHistorySet instanceof Set ? state.stageFHistorySet : new Set();
       let filtered = all.filter(q=> isEligibleByLevel(q, maxLevelIdx, stageFHistory));
       const shouldFilterByUnit = state.mode==='normal';
       const unit = shouldFilterByUnit ? (state.unitFilter || '') : '';
@@ -1190,6 +1149,7 @@
     }
     async function startSet(){
       try{ await ensureQuestions(); }catch(e){ alert(e.message||e); return; }
+      await refreshStageFHistory();
       state.fallbackExtras = [];
       const fullDeck = deckByType(state.qType);
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
@@ -1710,7 +1670,7 @@
       try{
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
-        clearStageFHistoryCache();
+        resetStageFHistoryCache();
         clearWrongQueueCache();
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
@@ -1736,7 +1696,7 @@
     document.getElementById('learner').addEventListener('change', (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
-      clearStageFHistoryCache();
+      resetStageFHistoryCache();
       clearWrongQueueCache();
       refreshStageFHistory().catch(()=>{});
       refreshWrongQueue().catch(()=>{});
@@ -1759,7 +1719,7 @@
         console.error('ensureQuestions failed', err);
         alert('問題の読み込みに失敗: '+(err.message||err));
       }
-      renderUnitFilterOptions();
+      await renderUnitFilterOptions();
       const sel=document.getElementById('unit-filter');
       if(sel){ state.unitFilter=(sel.value||'').trim(); }
       rememberSettings();
@@ -1783,7 +1743,7 @@
         try{
           state.setIndex++;
           if(state.mode==='review'){ state.mode='normal'; }
-          clearStageFHistoryCache();
+          resetStageFHistoryCache();
           clearWrongQueueCache();
           await startSet();
         }catch(e){
