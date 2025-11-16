@@ -6,6 +6,7 @@ import json
 import re
 
 import app.level_store as level_store
+import app.order_builder as order_builder
 import app.stage_tracker as stage_tracker
 import app.user_state as user_state
 
@@ -97,6 +98,70 @@ def _build_questions_response(subject: str):
     overrides = level_store.load_levels(runtime_dir)
     payload = _apply_level_overrides(dict(data), overrides) if overrides else data
     return jsonify(payload)
+
+
+def _normalize_level(value: Any) -> str:
+    try:
+        text = str(value).strip()
+    except Exception:
+        return order_builder.DEFAULT_LEVEL
+    if not text:
+        return order_builder.DEFAULT_LEVEL
+    if text in order_builder.LEVEL_ORDER:
+        return text
+    m = re.search(r"([1-3])", text)
+    if m:
+        candidate = f"Lv{m.group(1)}"
+        if candidate in order_builder.LEVEL_ORDER:
+            return candidate
+    return order_builder.DEFAULT_LEVEL
+
+
+def _build_question_entry(item: Dict[str, Any], qtype: str) -> Dict[str, Any]:
+    return {
+        "id": item.get("id"),
+        "type": qtype,
+        "level": _normalize_level(item.get("level")),
+        "unit": item.get("unit"),
+        "en": item.get("en"),
+        "jp": item.get("jp"),
+    }
+
+
+def load_question_bank(subject: str) -> Optional[Dict[str, List[Dict[str, Any]]]]:
+    data = _load_questions_file(subject)
+    if data is None:
+        return None
+
+    runtime_dir = subject_runtime_dir(subject)
+    overrides = level_store.load_levels(runtime_dir)
+    if overrides:
+        data = _apply_level_overrides(dict(data), overrides)
+
+    vocab_choice: List[Dict[str, Any]] = []
+    vocab_choice.extend(
+        [item for item in data.get("vocabChoice", []) if isinstance(item, dict)]
+    )
+    if isinstance(data.get("vocab"), list):
+        for item in data.get("vocab", []):
+            if isinstance(item, dict) and isinstance(item.get("choices"), list):
+                vocab_choice.append(item)
+
+    return {
+        "reorder": [
+            _build_question_entry(item, "reorder")
+            for item in data.get("questions") or data.get("reorder") or []
+            if isinstance(item, dict)
+        ],
+        "vocab-choice": [
+            _build_question_entry(item, "vocab-choice") for item in vocab_choice
+        ],
+        "rewrite": [
+            _build_question_entry(item, "rewrite")
+            for item in data.get("rewrite", [])
+            if isinstance(item, dict)
+        ],
+    }
 
 
 # ===== 静的ページ =====
@@ -827,6 +892,79 @@ def _state_to_payload(qid: str, state: Optional[dict], subject: str) -> dict:
         }
     )
     return payload
+
+
+@app.post("/api/order")
+def build_order_api():
+    body = request.get_json(silent=True) or {}
+    user = (body.get("user") or request.args.get("user") or "").strip()
+    subject = normalize_subject(body.get("subject") or request.args.get("subject"))
+
+    bank = load_question_bank(subject)
+    if bank is None:
+        return jsonify({"error": "subject not found"}), 404
+
+    raw_qtype = body.get("qType") or request.args.get("qType") or body.get("type") or ""
+    qtype = (raw_qtype or "reorder").strip()
+    deck = bank.get(qtype) or []
+
+    total = body.get("totalPerSet")
+    if total is None:
+        total = body.get("total")
+    if total is None:
+        total = request.args.get("totalPerSet") or request.args.get("total")
+
+    level_max = (
+        body.get("levelMax")
+        or request.args.get("levelMax")
+        or order_builder.DEFAULT_LEVEL
+    )
+
+    mode = (body.get("mode") or request.args.get("mode") or "normal").strip()
+    unit_filter = (
+        body.get("unitFilter") or request.args.get("unitFilter") or ""
+    ).strip()
+
+    runtime_dir = subject_runtime_dir(subject)
+    store = stage_tracker.load_store(runtime_dir)
+    ids = [str(q.get("id")) for q in deck if q.get("id") not in (None, "")]
+    state_map = stage_tracker.get_question_states(store, user, ids)
+    default_stage = stage_tracker.get_stage_config(subject).default_stage
+    stats_lookup: Dict[str, Dict[str, Any]] = {}
+    for qid in ids:
+        stats_lookup[qid] = state_map.get(qid) or {
+            "stage": default_stage,
+            "streak": 0,
+            "nextDueAt": None,
+        }
+
+    result = order_builder.build_order(
+        deck,
+        stats_lookup,
+        total_per_set=total,
+        level_max=level_max,
+        mode=mode,
+        unit_filter=unit_filter,
+        default_stage=default_stage,
+    )
+
+    payload = {
+        "order": [
+            {
+                "idx": entry.idx,
+                "bucket": entry.bucket,
+                "streak": entry.streak,
+                "id": entry.id,
+                "key": entry.key,
+            }
+            for entry in result.order
+        ],
+        "fallbackExtras": result.fallback_extra_keys,
+        "deckSize": len(deck),
+        "qType": qtype,
+    }
+
+    return jsonify(payload)
 
 
 @app.post("/api/stats/bulk")
