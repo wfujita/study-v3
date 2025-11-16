@@ -298,9 +298,6 @@ async function fetchStub(url, options = {}) {
   if (typeof url === 'string' && url.startsWith('/api/stats/stage-f')) {
     return { ok: true, async json() { return { keys: [] }; } };
   }
-  if (typeof url === 'string' && url.startsWith('/api/wrong-queue')) {
-    return { ok: true, async json() { return { items: [] }; } };
-  }
   if (typeof url === 'string' && url.startsWith('/api/history')) {
     return { ok: true, async json() { return { history: [] }; } };
   }
