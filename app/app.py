@@ -207,7 +207,6 @@ def append_history():
     return jsonify({"ok": True})
 
 
-
 # ====== 管理ダッシュボード用ユーティリティ ======
 def _add_question_summary(
     mapping: Dict[str, Dict[str, Any]],

@@ -63,4 +63,3 @@ def append_history(
         del history[limit:]
     bucket["history"] = history
     _save_state(runtime_dir, state)
-
