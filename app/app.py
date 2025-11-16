@@ -207,35 +207,6 @@ def append_history():
     return jsonify({"ok": True})
 
 
-@app.get("/api/wrong-queue")
-def get_wrong_queue():
-    user = (request.args.get("user") or "").strip()
-    qtype = (request.args.get("qType") or request.args.get("qtype") or "").strip()
-    subject = normalize_subject(request.args.get("subject"))
-    runtime_dir = subject_runtime_dir(subject)
-
-    items = user_state.get_wrong_queue(runtime_dir, user, qtype)
-    return jsonify({"items": items})
-
-
-@app.post("/api/wrong-queue")
-def set_wrong_queue():
-    payload = request.get_json(silent=True) or {}
-    user = (payload.get("user") or request.args.get("user") or "").strip()
-    qtype = (
-        payload.get("qType") or payload.get("qtype") or request.args.get("qType") or ""
-    ).strip()
-    subject = normalize_subject(payload.get("subject") or request.args.get("subject"))
-    items = payload.get("items")
-    if not isinstance(items, list):
-        items = []
-
-    runtime_dir = subject_runtime_dir(subject)
-    normalized_user = stage_tracker._normalize_user(user)  # type: ignore[attr-defined]
-    user_state.set_wrong_queue(runtime_dir, normalized_user, qtype, items)
-    return jsonify({"ok": True})
-
-
 # ====== 管理ダッシュボード用ユーティリティ ======
 def _add_question_summary(
     mapping: Dict[str, Dict[str, Any]],

@@ -63,36 +63,3 @@ def append_history(
         del history[limit:]
     bucket["history"] = history
     _save_state(runtime_dir, state)
-
-
-def get_wrong_queue(runtime_dir: str, user: str, qtype: str) -> List[Dict[str, Any]]:
-    state = _load_state(runtime_dir)
-    bucket = _ensure_user_bucket(state, user)
-    wrong_all = bucket.get("wrongQueue")
-    if not isinstance(wrong_all, dict):
-        return []
-    queue = wrong_all.get(qtype)
-    if isinstance(queue, list):
-        return queue
-    return []
-
-
-def set_wrong_queue(
-    runtime_dir: str,
-    user: str,
-    qtype: str,
-    items: List[Dict[str, Any]],
-    limit: int = 150,
-) -> None:
-    state = _load_state(runtime_dir)
-    bucket = _ensure_user_bucket(state, user)
-    wrong_all = bucket.get("wrongQueue")
-    if not isinstance(wrong_all, dict):
-        wrong_all = {}
-    if limit > 0:
-        items = list(items)[:limit]
-    else:
-        items = list(items)
-    wrong_all[qtype] = items
-    bucket["wrongQueue"] = wrong_all
-    _save_state(runtime_dir, state)

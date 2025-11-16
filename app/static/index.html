@@ -392,7 +392,6 @@
       reviewed:[],   // サーバ送信用（復習モード）
       graded:false,  // 一問一採点
       mode:'normal',
-      reviewStrategy:'all', // 'all' | 'recent'
       missedSetDeck: [],   // このセットで間違えた問題のデッキ
       choiceSelection: null,
       fallbackExtras: [],  // レベル不足を補う追加問題（このセット限定）
@@ -578,7 +577,6 @@
       if(unitSel){ unitSel.value = state.unitFilter || ''; }
       state.endpoint=DEFAULT_ENDPOINT;
       resetStageFHistoryCache();
-      clearWrongQueueCache();
       refreshStageFHistory().catch(()=>{});
       populateUserSuggestions();
     }
@@ -632,105 +630,6 @@
         console.warn('学習履歴の保存に失敗しました', err);
       }
     }
-
-    function wrongQueueCacheKey(){
-      const user = (state.user || '').trim() || 'guest';
-      const qType = (state.qType || '').trim() || 'reorder';
-      return `${user}::${qType}::${SUBJECT}`;
-    }
-
-    let wrongQueueCache = { key: null, list: [], pending: null, fetched: false };
-
-    function ensureWrongQueueCache(){
-      const key = wrongQueueCacheKey();
-      if(wrongQueueCache.key !== key){
-        wrongQueueCache = { key, list: [], pending: null, fetched: false };
-      }
-      if(!Array.isArray(wrongQueueCache.list)){
-        wrongQueueCache.list = [];
-      }
-      return wrongQueueCache.list;
-    }
-
-    function getWrongQueue(){
-      return ensureWrongQueueCache();
-    }
-
-    async function refreshWrongQueue(force=false){
-      const key = wrongQueueCacheKey();
-      if(wrongQueueCache.key !== key){
-        wrongQueueCache = { key, list: [], pending: null, fetched: false };
-      }
-      if(wrongQueueCache.fetched && !force){
-        return wrongQueueCache.list;
-      }
-      if(wrongQueueCache.pending && !force){
-        return wrongQueueCache.pending;
-      }
-      const trimmedUser = (state.user || '').trim();
-      if(!trimmedUser){
-        wrongQueueCache.list = [];
-        wrongQueueCache.fetched = true;
-        return wrongQueueCache.list;
-      }
-      const qType = state.qType || '';
-      const promise = (async ()=>{
-        try{
-          const url = `/api/wrong-queue?user=${encodeURIComponent(trimmedUser)}&qType=${encodeURIComponent(qType)}&subject=${encodeURIComponent(SUBJECT)}`;
-          const res = await fetch(url, { cache: 'no-store' });
-          if(res.ok){
-            const data = await res.json();
-            const arr = Array.isArray(data.items) ? data.items : [];
-            wrongQueueCache.list = arr.filter(item => item && typeof item === 'object').slice(0, 150);
-          }else{
-            wrongQueueCache.list = [];
-          }
-        }catch(err){
-          console.warn('誤答キューの取得に失敗しました', err);
-          wrongQueueCache.list = [];
-        }finally{
-          wrongQueueCache.pending = null;
-          wrongQueueCache.fetched = true;
-        }
-        return wrongQueueCache.list;
-      })();
-      wrongQueueCache.pending = promise;
-      return promise;
-    }
-
-    async function persistWrongQueue(){
-      const trimmedUser = (state.user || '').trim();
-      if(!trimmedUser){
-        return;
-      }
-      try{
-        await fetch('/api/wrong-queue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user: trimmedUser,
-            qType: state.qType,
-            subject: SUBJECT,
-            items: getWrongQueue(),
-          }),
-        });
-      }catch(err){
-        console.warn('誤答キューの保存に失敗しました', err);
-      }
-    }
-
-    function setWrongQueue(list){
-      ensureWrongQueueCache();
-      wrongQueueCache.list = Array.isArray(list) ? list.slice(0, 150) : [];
-      wrongQueueCache.fetched = true;
-      persistWrongQueue();
-    }
-
-    function clearWrongQueueCache(){
-      wrongQueueCache = { key: null, list: [], pending: null, fetched: false };
-    }
-    function addWrongLocal(item){ const q=getWrongQueue(); const key=item.id?`id:${item.id}`:`${item.en}__${item.jp}`; if(!q.some(x=>x.key===key)){ q.unshift({...item, key}); setWrongQueue(q); } }
-    function removeFromWrongIfMatched(rec){ const q=getWrongQueue(); const key=rec.id?`id:${rec.id}`:null; let idx=-1; if(key){ idx=q.findIndex(x=>x.key===key); } if(idx===-1){ idx=q.findIndex(x=>x.en===rec.en && x.jp===rec.jp); } if(idx>-1){ q.splice(idx,1); setWrongQueue(q); } }
 
     /********** 画面切替 **********/
     function show(id){ ['setup','quiz','finished'].forEach(sec=>{ const el=$(`#${sec}`); if(!el) return; el.style.display = (sec===id)?'block':'none'; }); }
@@ -1044,27 +943,6 @@
 
 
 
-    function buildOrderFromWrong(strategy='all'){
-      const wrong=getWrongQueue();
-      if(wrong.length===0) return [];
-      const need = Math.min(state.totalPerSet, wrong.length);
-      let pool = [];
-      if(strategy==='recent'){
-        const cutoff = Date.now() - 7*24*3600*1000;
-        const recent = wrong.filter(x=> x.at && (new Date(x.at).getTime()>=cutoff))
-                            .sort((a,b)=> new Date(b.at)-new Date(a.at));
-        pool = recent.slice(0, need);
-        if(pool.length < need){
-          const rest = wrong.filter(x=> !pool.includes(x));
-          pool = pool.concat(rest.slice(0, need - pool.length));
-        }
-      }else{
-        pool = wrong.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).slice(0, need);
-      }
-      window.__REVIEW_DECK__ = pool.map(w=>({ ...w }));
-      return [...window.__REVIEW_DECK__.keys()];
-    }
-
     async function createOrderEntriesFromIndexes(indexes, deckArray, bucketValue=null){
       if(!Array.isArray(indexes) || indexes.length===0){
         return [];
@@ -1155,17 +1033,11 @@
       if(!fullDeck.length){ alert(`この出題タイプの問題がありません。/data/${SUBJECT}/questions.json をご確認ください。`); show('setup'); return; }
       state.qIndex=0; state.correct=0; state.wrong=0; state.answered=[]; state.reviewed=[]; state.graded=false; state.choiceSelection=null;
       $('#stat-correct').textContent='0'; $('#stat-wrong').textContent='0';
-      if(state.mode==='review'){
-        const ord = buildOrderFromWrong(state.reviewStrategy||'all');
-        if(ord.length===0){ alert('復習する問題がありません。まずは通常モードで間違いをためましょう。'); show('setup'); return; }
-        state.order = await createOrderEntriesFromIndexes(ord, window.__REVIEW_DECK__);
-      }else{
-        state.order = await buildOrderFromBank();
-        if(!state.order.length){
-          alert('選択した条件に合う問題がありません。条件を見直してください。');
-          show('setup');
-          return;
-        }
+      state.order = await buildOrderFromBank();
+      if(!state.order.length){
+        alert('選択した条件に合う問題がありません。条件を見直してください。');
+        show('setup');
+        return;
       }
       show('quiz'); startTimer(); renderQuestion();
     }
@@ -1564,7 +1436,6 @@
         state.correct++; $('#stat-correct').textContent = state.correct;
         const detail = buildFeedbackDetail(q, false);
         $('#explain').innerHTML = `✅ 正解！ <span class="muted">${ans}</span>${detail}`;
-        removeFromWrongIfMatched({id:q.id, jp:q.jp, en:q.en});
       } else {
         state.wrong++; $('#stat-wrong').textContent = state.wrong;
         const detail = buildFeedbackDetail(q, true);
@@ -1572,8 +1443,6 @@
         $('#explain').innerHTML = state.qType==='reorder'
           ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
           : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
-        // 復習用には詳細保持
-        addWrongLocal({ type:state.qType, id:q.id||null, unit:q.unit||null, level:q.level||DEFAULT_LEVEL, jp:q.jp, en:q.en, chunks:q.chunks, tip:q.tip||'', explain:q.explain||'', source:q.source||'', task:q.task||'', userAnswer: ans, at: record.at });
       }
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
@@ -1671,7 +1540,6 @@
         state.user=(document.getElementById('learner').value||'guest').trim()||'guest';
         document.getElementById('user-pill').textContent=`👤 ${state.user}`;
         resetStageFHistoryCache();
-        clearWrongQueueCache();
         state.totalPerSet=Math.max(3,Math.min(20,parseInt(document.getElementById('count').value||7,10)));
         state.endpoint=DEFAULT_ENDPOINT;
         state.setIndex=0; state.mode='normal'; state.qType=document.getElementById('qtype').value||'reorder';
@@ -1697,9 +1565,7 @@
       const v=(e.target.value||'').trim(); if(!v) return;
       state.user=v; document.getElementById('user-pill').textContent=`👤 ${v}`;
       resetStageFHistoryCache();
-      clearWrongQueueCache();
       refreshStageFHistory().catch(()=>{});
-      refreshWrongQueue().catch(()=>{});
       rememberSettings();
     });
     document.getElementById('unit-filter').addEventListener('change', (e)=>{
@@ -1710,8 +1576,6 @@
     document.getElementById('qtype').addEventListener('change', async (e)=>{
       const v=(e.target.value||'').trim(); if(!v) return;
       state.qType=v;
-      clearWrongQueueCache();
-      refreshWrongQueue().catch(()=>{});
       state.unitFilter = getRememberedUnitFilter(state.qType);
       try{
         await ensureQuestions();
@@ -1741,11 +1605,10 @@
     // 完了画面の遷移
       document.getElementById('btn-nextset').onclick=async ()=>{
         try{
-          state.setIndex++;
-          if(state.mode==='review'){ state.mode='normal'; }
-          resetStageFHistoryCache();
-          clearWrongQueueCache();
-          await startSet();
+        state.setIndex++;
+        if(state.mode==='review'){ state.mode='normal'; }
+        resetStageFHistoryCache();
+        await startSet();
         }catch(e){
           alert('次セットを開始できません: '+(e.message||e));
         }
