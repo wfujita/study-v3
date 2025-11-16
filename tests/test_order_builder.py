@@ -10,11 +10,46 @@ def _build_stats(mapper):
 
 def test_promotable_items_are_prioritized():
     deck = [
-        {"id": "1", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en1", "jp": "jp1"},
-        {"id": "2", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en2", "jp": "jp2"},
-        {"id": "3", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en3", "jp": "jp3"},
-        {"id": "4", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en4", "jp": "jp4"},
-        {"id": "5", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en5", "jp": "jp5"},
+        {
+            "id": "1",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en1",
+            "jp": "jp1",
+        },
+        {
+            "id": "2",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en2",
+            "jp": "jp2",
+        },
+        {
+            "id": "3",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en3",
+            "jp": "jp3",
+        },
+        {
+            "id": "4",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en4",
+            "jp": "jp4",
+        },
+        {
+            "id": "5",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en5",
+            "jp": "jp5",
+        },
     ]
     stats = _build_stats(
         {
@@ -47,10 +82,38 @@ def test_promotable_items_are_prioritized():
 
 def test_higher_levels_fill_shortage():
     deck = [
-        {"id": "base1", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en-base1", "jp": "jp-base1"},
-        {"id": "base2", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en-base2", "jp": "jp-base2"},
-        {"id": "high1", "type": "vocab-choice", "level": "Lv2", "unit": "U1", "en": "en-high1", "jp": "jp-high1"},
-        {"id": "high2", "type": "vocab-choice", "level": "Lv3", "unit": "U1", "en": "en-high2", "jp": "jp-high2"},
+        {
+            "id": "base1",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-base1",
+            "jp": "jp-base1",
+        },
+        {
+            "id": "base2",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-base2",
+            "jp": "jp-base2",
+        },
+        {
+            "id": "high1",
+            "type": "vocab-choice",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "en-high1",
+            "jp": "jp-high1",
+        },
+        {
+            "id": "high2",
+            "type": "vocab-choice",
+            "level": "Lv3",
+            "unit": "U1",
+            "en": "en-high2",
+            "jp": "jp-high2",
+        },
     ]
     stats = _build_stats(
         {
@@ -81,15 +144,40 @@ def test_higher_levels_fill_shortage():
 
 def test_shortage_then_fill_with_remaining_questions():
     deck = [
-        {"id": "base1", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en-base1", "jp": "jp-base1"},
-        {"id": "base2", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en-base2", "jp": "jp-base2"},
-        {"id": "due1", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "en-due1", "jp": "jp-due1"},
+        {
+            "id": "base1",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-base1",
+            "jp": "jp-base1",
+        },
+        {
+            "id": "base2",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-base2",
+            "jp": "jp-base2",
+        },
+        {
+            "id": "due1",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "en-due1",
+            "jp": "jp-due1",
+        },
     ]
     stats = _build_stats(
         {
             "base1": {"stage": "F", "streak": 0, "nextDueAt": None},
             "base2": {"stage": "F", "streak": 0, "nextDueAt": None},
-            "due1": {"stage": "B", "streak": 2, "nextDueAt": "2000-01-01T00:00:00.000Z"},
+            "due1": {
+                "stage": "B",
+                "streak": 2,
+                "nextDueAt": "2000-01-01T00:00:00.000Z",
+            },
         }
     )
 
@@ -111,4 +199,3 @@ def test_shortage_then_fill_with_remaining_questions():
     ]
     streaks = [entry.streak for entry in result.order]
     assert streaks == [2, 0]
-

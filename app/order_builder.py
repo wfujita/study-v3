@@ -178,7 +178,9 @@ def _filter_deck(
     if not unit_filter:
         return base + list(extras)
 
-    filtered_extras = [q for q in extras if normalize_unit(q.get("unit")) == unit_filter]
+    filtered_extras = [
+        q for q in extras if normalize_unit(q.get("unit")) == unit_filter
+    ]
     return base + filtered_extras
 
 
@@ -217,7 +219,9 @@ def build_order(
     promotable_base = 0
     for q in base_deck:
         stat = _resolve_stat(stats, q, default_stage=default_stage)
-        if should_prioritize_stage_promotion(stat.get("stage"), stat.get("nextDueAt"), now_dt):
+        if should_prioritize_stage_promotion(
+            stat.get("stage"), stat.get("nextDueAt"), now_dt
+        ):
             promotable_base += 1
 
     shortage = determine_stage_priority_quota(desired, promotable_base)
@@ -265,7 +269,9 @@ def build_order(
 
     for idx, q, stat in entries:
         lvl_idx = level_index(q.get("level"))
-        if should_prioritize_stage_promotion(stat.get("stage"), stat.get("nextDueAt"), now_dt):
+        if should_prioritize_stage_promotion(
+            stat.get("stage"), stat.get("nextDueAt"), now_dt
+        ):
             promotable.append((idx, q, stat))
         elif lvl_idx > max_level_idx:
             higher_level.setdefault(lvl_idx, []).append((idx, q, stat))
@@ -349,4 +355,3 @@ def build_order(
 
     fallback_keys = [question_key(q) for q in fallback_extras if question_key(q)]
     return OrderResult(order=order[:desired], fallback_extra_keys=fallback_keys)
-

@@ -139,7 +139,9 @@ def load_question_bank(subject: str) -> Optional[Dict[str, List[Dict[str, Any]]]
         data = _apply_level_overrides(dict(data), overrides)
 
     vocab_choice: List[Dict[str, Any]] = []
-    vocab_choice.extend([item for item in data.get("vocabChoice", []) if isinstance(item, dict)])
+    vocab_choice.extend(
+        [item for item in data.get("vocabChoice", []) if isinstance(item, dict)]
+    )
     if isinstance(data.get("vocab"), list):
         for item in data.get("vocab", []):
             if isinstance(item, dict) and isinstance(item.get("choices"), list):
@@ -152,8 +154,7 @@ def load_question_bank(subject: str) -> Optional[Dict[str, List[Dict[str, Any]]]
             if isinstance(item, dict)
         ],
         "vocab-choice": [
-            _build_question_entry(item, "vocab-choice")
-            for item in vocab_choice
+            _build_question_entry(item, "vocab-choice") for item in vocab_choice
         ],
         "rewrite": [
             _build_question_entry(item, "rewrite")
@@ -903,12 +904,7 @@ def build_order_api():
     if bank is None:
         return jsonify({"error": "subject not found"}), 404
 
-    raw_qtype = (
-        body.get("qType")
-        or request.args.get("qType")
-        or body.get("type")
-        or ""
-    )
+    raw_qtype = body.get("qType") or request.args.get("qType") or body.get("type") or ""
     qtype = (raw_qtype or "reorder").strip()
     deck = bank.get(qtype) or []
 
@@ -925,7 +921,9 @@ def build_order_api():
     )
 
     mode = (body.get("mode") or request.args.get("mode") or "normal").strip()
-    unit_filter = (body.get("unitFilter") or request.args.get("unitFilter") or "").strip()
+    unit_filter = (
+        body.get("unitFilter") or request.args.get("unitFilter") or ""
+    ).strip()
 
     runtime_dir = subject_runtime_dir(subject)
     store = stage_tracker.load_store(runtime_dir)
