@@ -713,7 +713,7 @@
     }
 
     /********** セット準備 **********/
-    async function buildOrderFromBank(){
+    async function buildOrderFromBankLocal(){
       const desiredRaw = state.totalPerSet;
       const desired = Number.isFinite(desiredRaw) ? Math.max(0, Math.floor(desiredRaw)) : 0;
       state.fallbackExtras = [];
@@ -896,9 +896,88 @@
       return order.slice(0, desired);
     }
 
+    function hydrateFallbackExtrasFromKeys(keys){
+      const extras = [];
+      if(Array.isArray(keys) && keys.length){
+        const candidates = deckByType(state.qType) || [];
+        const lookup = new Map();
+        candidates.forEach(q=>{
+          const key = questionKey(q);
+          if(key && !lookup.has(key)) lookup.set(key, q);
+        });
+        keys.forEach(key=>{
+          const normalized = typeof key === 'string' ? key.trim() : '';
+          if(!normalized) return;
+          const hit = lookup.get(normalized);
+          if(hit && !extras.includes(hit)) extras.push(hit);
+        });
+      }
+      state.fallbackExtras = extras;
+    }
 
+    function mapServerOrderEntries(entries){
+      if(!Array.isArray(entries)) return [];
+      const deckArr = deck({ includeExtras: true });
+      const keyToIdx = new Map();
+      deckArr.forEach((q, idx)=>{
+        const key = questionKey(q);
+        if(key && !keyToIdx.has(key)) keyToIdx.set(key, idx);
+        if(q && q.id != null){
+          const idKey = `id:${q.id}`;
+          if(!keyToIdx.has(idKey)) keyToIdx.set(idKey, idx);
+        }
+      });
+      return entries.map(entry=>{
+        if(!entry || typeof entry !== 'object') return null;
+        const key = typeof entry.key === 'string' ? entry.key : (entry.id != null ? `id:${entry.id}` : '');
+        const idx = Number.isFinite(entry.idx) ? entry.idx : keyToIdx.get(key);
+        if(!Number.isFinite(idx) || idx < 0 || idx >= deckArr.length) return null;
+        const streakRaw = Number(entry.streak);
+        const streak = Number.isFinite(streakRaw) ? Math.max(0, Math.floor(streakRaw)) : 0;
+        const bucket = entry.bucket || null;
+        return { idx, bucket, streak };
+      }).filter(Boolean);
+    }
 
+    async function buildOrderFromBank(){
+      const desiredRaw = state.totalPerSet;
+      const desired = Number.isFinite(desiredRaw) ? Math.max(0, Math.floor(desiredRaw)) : 0;
+      state.fallbackExtras = [];
+      state.fallbackStageOverrides = new Map();
+      if(desired === 0){
+        return [];
+      }
 
+      const payload = {
+        user: (state.user || '').trim(),
+        subject: SUBJECT,
+        qType: state.qType,
+        mode: state.mode,
+        levelMax: state.levelMax,
+        totalPerSet: desired,
+        unitFilter: state.mode === 'normal' ? (state.unitFilter || '') : '',
+      };
+
+      try{
+        const res = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if(res.ok){
+          const data = await res.json();
+          hydrateFallbackExtrasFromKeys(Array.isArray(data.fallbackExtras) ? data.fallbackExtras : []);
+          const mapped = mapServerOrderEntries(Array.isArray(data.order) ? data.order : []);
+          if(mapped.length){
+            return mapped.slice(0, desired);
+          }
+        }
+      }catch(err){
+        console.warn('サーバ側の出題生成に失敗しました', err);
+      }
+
+      return buildOrderFromBankLocal();
+    }
 
 
     async function createOrderEntriesFromIndexes(indexes, deckArray, bucketValue=null){
