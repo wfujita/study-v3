@@ -19,13 +19,11 @@ def execute_build_order(
     deck_data: List[Dict[str, Any]],
     stats_map: Dict[str, Dict[str, Any]],
     *,
-    level_max: str = "Lv1",
     total_per_set: int = 5,
     math_random: float = 0.11111,
 ) -> Dict[str, Any]:
     deck_json = json.dumps(deck_data)
     stats_json = json.dumps(stats_map)
-    level_max_json = json.dumps(level_max)
     node_code = f"""
     const fs = require('fs');
     const path = require('path');
@@ -136,7 +134,6 @@ def execute_build_order(
     vm.runInContext(`
       state.qType = "vocab-choice";
       state.mode = "normal";
-      state.levelMax = {level_max_json};
       state.totalPerSet = {total_per_set};
       state.unitFilter = '';
       state.user = "tester";
@@ -270,12 +267,12 @@ def test_higher_levels_fill_shortage():
         "high2": {"stage": "D", "streak": 1, "nextDueAt": None},
     }
 
-    result = execute_build_order(deck, stats, total_per_set=2, level_max="Lv1")
+    result = execute_build_order(deck, stats, total_per_set=2)
 
     ids_with_buckets = [(item["id"], item["bucket"]) for item in result["orderWithIds"]]
     assert ids_with_buckets == [
-        ("high1", "Lv優先 (Lv2)"),
-        ("high2", "Lv優先 (Lv3)"),
+        ("base1", None),
+        ("base2", None),
     ]
 
 
@@ -315,7 +312,7 @@ def test_shortage_then_fill_with_remaining_questions():
         "due1": {"stage": "B", "streak": 2, "nextDueAt": "2000-01-01T00:00:00.000Z"},
     }
 
-    result = execute_build_order(deck, stats, total_per_set=2, level_max="Lv1")
+    result = execute_build_order(deck, stats, total_per_set=2)
 
     ids_with_buckets = [(item["id"], item["bucket"]) for item in result["orderWithIds"]]
     assert ids_with_buckets == [
