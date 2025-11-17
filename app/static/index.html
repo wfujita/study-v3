@@ -296,9 +296,8 @@
     };
 
     const levelIndex = (value)=>{
-      const lvl = normalizeLevel(value);
-      const idx = LEVEL_ORDER.indexOf(lvl);
-      return idx === -1 ? LEVEL_ORDER.length : idx;
+      // レベル指定は廃止。すべて同一レベルとして扱う。
+      return 0;
     };
 
     const questionKey = (question)=>{
@@ -953,7 +952,6 @@
         subject: SUBJECT,
         qType: state.qType,
         mode: state.mode,
-        levelMax: state.levelMax,
         totalPerSet: desired,
         unitFilter: state.mode === 'normal' ? (state.unitFilter || '') : '',
       };
@@ -966,7 +964,6 @@
         });
         if(res.ok){
           const data = await res.json();
-          hydrateFallbackExtrasFromKeys(Array.isArray(data.fallbackExtras) ? data.fallbackExtras : []);
           const mapped = mapServerOrderEntries(Array.isArray(data.order) ? data.order : []);
           if(mapped.length){
             return mapped.slice(0, desired);

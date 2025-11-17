@@ -65,7 +65,6 @@ def test_promotable_items_are_prioritized():
         deck,
         stats,
         total_per_set=3,
-        level_max="Lv1",
         mode="normal",
         unit_filter="",
         default_stage="F",
@@ -128,7 +127,6 @@ def test_higher_levels_fill_shortage():
         deck,
         stats,
         total_per_set=2,
-        level_max="Lv1",
         mode="normal",
         unit_filter="",
         default_stage="F",
@@ -137,8 +135,8 @@ def test_higher_levels_fill_shortage():
 
     ids_with_buckets = [(entry.id, entry.bucket) for entry in result.order]
     assert ids_with_buckets == [
-        ("high1", "Lv優先 (Lv2)"),
-        ("high2", "Lv優先 (Lv3)"),
+        ("base1", None),
+        ("base2", None),
     ]
 
 
@@ -185,7 +183,6 @@ def test_shortage_then_fill_with_remaining_questions():
         deck,
         stats,
         total_per_set=2,
-        level_max="Lv1",
         mode="normal",
         unit_filter="",
         default_stage="F",

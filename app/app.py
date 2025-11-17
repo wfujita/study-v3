@@ -914,12 +914,6 @@ def build_order_api():
     if total is None:
         total = request.args.get("totalPerSet") or request.args.get("total")
 
-    level_max = (
-        body.get("levelMax")
-        or request.args.get("levelMax")
-        or order_builder.DEFAULT_LEVEL
-    )
-
     mode = (body.get("mode") or request.args.get("mode") or "normal").strip()
     unit_filter = (
         body.get("unitFilter") or request.args.get("unitFilter") or ""
@@ -942,7 +936,6 @@ def build_order_api():
         deck,
         stats_lookup,
         total_per_set=total,
-        level_max=level_max,
         mode=mode,
         unit_filter=unit_filter,
         default_stage=default_stage,
@@ -959,7 +952,6 @@ def build_order_api():
             }
             for entry in result.order
         ],
-        "fallbackExtras": result.fallback_extra_keys,
         "deckSize": len(deck),
         "qType": qtype,
     }
