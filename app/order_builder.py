@@ -9,7 +9,7 @@ tested without Flask.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 STAGE_PRIORITY: Tuple[str, ...] = ("A", "B", "C", "D", "E")
@@ -72,9 +72,13 @@ def _parse_iso_date(value: Any) -> Optional[datetime]:
         return None
     try:
         if isinstance(value, datetime):
-            return value
-        text = str(value)
-        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+            parsed = value
+        else:
+            text = str(value)
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        if parsed.tzinfo is not None:
+            parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        return parsed
     except Exception:
         return None
 
@@ -200,6 +204,8 @@ def build_order(
         return OrderResult(order=[], fallback_extra_keys=[])
 
     now_dt = now or datetime.utcnow()
+    if now_dt.tzinfo is not None:
+        now_dt = now_dt.astimezone(timezone.utc).replace(tzinfo=None)
     max_level_idx = level_index(level_max)
     effective_unit = unit_filter if mode == "normal" else ""
 
