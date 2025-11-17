@@ -1,9 +1,11 @@
 from flask import Flask, request, send_from_directory, jsonify
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
+import logging
 import os
 import json
 import re
+from logging.handlers import RotatingFileHandler
 
 import app.level_store as level_store
 import app.order_builder as order_builder
@@ -19,6 +21,36 @@ RUNTIME_DATA_DIR = os.getenv(
 DEFAULT_SUBJECT = "english"
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+
+
+def _configure_logging() -> str:
+    """Ensure app logs are written to a rotating file handler."""
+
+    log_dir = os.getenv("LOG_DIR", os.path.join(RUNTIME_DATA_DIR, "logs"))
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, "app.log")
+
+    for handler in app.logger.handlers:
+        if isinstance(handler, RotatingFileHandler) and getattr(
+            handler, "baseFilename", None
+        ) == log_path:
+            return log_path
+
+    handler = RotatingFileHandler(
+        log_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+    )
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
+    return log_path
+
+
+_configure_logging()
 
 _MISSING = object()
 
