@@ -159,15 +159,18 @@ def build_order(
     default_stage: str = "F",
     now: Optional[datetime] = None,
 ) -> OrderResult:
+    # 1. 希望する出題数が0なら即終了。
     desired = _to_non_negative_int(total_per_set)
     if desired == 0:
         return OrderResult(order=[])
 
+    # 2. 現在時刻とユニット絞り込みの準備。
     now_dt = now or datetime.utcnow()
     if now_dt.tzinfo is not None:
         now_dt = now_dt.astimezone(timezone.utc).replace(tzinfo=None)
     effective_unit = unit_filter if mode == "normal" else ""
 
+    # 3. モードに応じてデッキを絞り込み、ステータスを解決。
     deck_with_extras = _filter_deck(
         deck,
         unit_filter=effective_unit,
@@ -179,6 +182,7 @@ def build_order(
         stat = _resolve_stat(stats, q, default_stage=default_stage)
         entries.append((idx, q, stat))
 
+    # 4. 昇格優先（期限到来かつA/F以外）とそれ以外に振り分ける。
     promotable: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
     remaining: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
 
@@ -190,6 +194,7 @@ def build_order(
         else:
             remaining.append((idx, q, stat))
 
+    # 5. 昇格候補はステージ順位→次回出題時刻→元の並び順で優先。
     promotable.sort(
         key=lambda item: (
             _stage_rank(item[2].get("stage")),
@@ -201,6 +206,7 @@ def build_order(
     order: List[OrderEntry] = []
     chosen = set()
 
+    # 6. 昇格候補から枠が埋まるまで採用し、ステージ名をbucketに残す。
     for idx, q, stat in promotable:
         if len(order) >= desired:
             break
@@ -217,6 +223,7 @@ def build_order(
         )
         chosen.add(idx)
 
+    # 7. まだ足りない分は残りを元の並び順で補充。
     if len(order) < desired and remaining:
         remaining.sort(key=lambda item: item[0])
         for idx, q, stat in remaining:
