@@ -931,13 +931,28 @@ def build_order_api():
     user = (body.get("user") or request.args.get("user") or "").strip()
     subject = normalize_subject(body.get("subject") or request.args.get("subject"))
 
+    app.logger.info(
+        "[order] request received user=%s subject=%s",
+        user or "(anonymous)",
+        subject,
+    )
+
     bank = load_question_bank(subject)
     if bank is None:
+        app.logger.info("[order] subject not found: %s", subject)
         return jsonify({"error": "subject not found"}), 404
 
     raw_qtype = body.get("qType") or request.args.get("qType") or body.get("type") or ""
     qtype = (raw_qtype or "reorder").strip()
     deck = bank.get(qtype) or []
+
+    app.logger.info(
+        "[order] deck resolved qType=%s size=%s mode=%s unitFilter=%s",
+        qtype,
+        len(deck),
+        (body.get("mode") or request.args.get("mode") or "normal").strip(),
+        (body.get("unitFilter") or request.args.get("unitFilter") or "").strip(),
+    )
 
     total = body.get("totalPerSet")
     if total is None:
@@ -963,6 +978,12 @@ def build_order_api():
             "nextDueAt": None,
         }
 
+    app.logger.info(
+        "[order] loaded state for %s questions (defaults applied: %s)",
+        len(state_map),
+        len(ids) - len(state_map),
+    )
+
     result = order_builder.build_order(
         deck,
         stats_lookup,
@@ -970,6 +991,13 @@ def build_order_api():
         mode=mode,
         unit_filter=unit_filter,
         default_stage=default_stage,
+    )
+
+    app.logger.info(
+        "[order] order built count=%s totalPerSet=%s mode=%s",
+        len(result.order),
+        total,
+        mode,
     )
 
     payload = {
