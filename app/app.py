@@ -31,17 +31,16 @@ def _configure_logging() -> str:
     log_path = os.path.join(log_dir, "app.log")
 
     for handler in app.logger.handlers:
-        if isinstance(handler, RotatingFileHandler) and getattr(
-            handler, "baseFilename", None
-        ) == log_path:
+        if (
+            isinstance(handler, RotatingFileHandler)
+            and getattr(handler, "baseFilename", None) == log_path
+        ):
             return log_path
 
     handler = RotatingFileHandler(
         log_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
     )
-    formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
 
