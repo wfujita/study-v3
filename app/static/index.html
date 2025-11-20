@@ -645,6 +645,8 @@
           if(!STAGE_PRIORITY.includes(normalizedStage) || normalizedStage === 'A'){
             return false;
           }
+          // Aランクは昇格対象から外し、通常の出題枠に残すことで
+          // 出力対象から漏れないようにしている。
           if(!(nextDue instanceof Date)){
             return false;
           }
