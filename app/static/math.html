@@ -137,6 +137,8 @@
           if(!STAGE_PRIORITY.includes(normalizedStage) || normalizedStage === 'A'){
             return false;
           }
+          // Aランクは昇格チェックから除外し、出題候補として残す。
+          // 最終ランクの問題も必要に応じて出力できるようにするための措置。
           if(!(nextDue instanceof Date)){
             return false;
           }

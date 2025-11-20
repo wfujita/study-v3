@@ -77,6 +77,8 @@ def should_prioritize_stage_promotion(stage: Any, next_due: Any, now: datetime) 
         stage_key = ""
     if stage_key in ("", "A", "F"):
         return False
+    # A/Fは昇格チェックから外し、最終ランク（Aランク）も通常の出題枠に残す。
+    # これにより、Aランクの問題も出力対象から除外されずに提示できる。
     due = _parse_iso_date(next_due)
     if due is None:
         return False
