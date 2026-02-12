@@ -5,6 +5,7 @@ import logging
 import os
 import json
 import re
+import glob
 from logging.handlers import RotatingFileHandler
 
 import app.level_store as level_store
@@ -73,10 +74,84 @@ def _questions_file_path(subject: str) -> str:
     return os.path.join(subject_static_dir(subject), "questions.json")
 
 
+def _questions_dir_path(subject: str) -> str:
+    return os.path.join(subject_static_dir(subject), "questions")
+
+
+def _question_group_from_dir_name(name: str) -> Optional[str]:
+    key = (name or "").strip().lower()
+    mapping = {
+        "questions": "questions",
+        "reorder": "questions",
+        "vocab": "vocab",
+        "vocab-choice": "vocabChoice",
+        "vocab-choice-en-ja": "vocabChoice",
+        "vocab-choice-ja-en": "rewrite",
+        "rewrite": "rewrite",
+    }
+    return mapping.get(key)
+
+
+def _merge_question_data(target: Dict[str, Any], payload: Any, fallback_key: str) -> None:
+    if isinstance(payload, list):
+        bucket = target.setdefault(fallback_key, [])
+        if isinstance(bucket, list):
+            bucket.extend([item for item in payload if isinstance(item, dict)])
+        return
+    if not isinstance(payload, dict):
+        return
+    for key, value in payload.items():
+        if key == "meta" and isinstance(value, dict):
+            meta = target.setdefault("meta", {})
+            if isinstance(meta, dict):
+                meta.update(value)
+            continue
+        if key not in {"questions", "reorder", "vocabChoice", "vocab", "rewrite"}:
+            continue
+        normalized_key = "questions" if key == "reorder" else key
+        if isinstance(value, list):
+            bucket = target.setdefault(normalized_key, [])
+            if isinstance(bucket, list):
+                bucket.extend([item for item in value if isinstance(item, dict)])
+
+
+def _load_questions_from_directory(subject: str) -> Optional[Dict[str, Any]]:
+    questions_dir = _questions_dir_path(subject)
+    if not os.path.isdir(questions_dir):
+        return None
+
+    aggregate: Dict[str, Any] = {"questions": [], "vocabChoice": [], "vocab": [], "rewrite": []}
+
+    meta_path = os.path.join(questions_dir, "meta.json")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, encoding="utf-8") as fp:
+                meta_payload = json.load(fp)
+            if isinstance(meta_payload, dict):
+                aggregate["meta"] = meta_payload
+        except Exception:
+            pass
+
+    pattern = os.path.join(questions_dir, "*", "*.json")
+    for path in sorted(glob.glob(pattern)):
+        parent_name = os.path.basename(os.path.dirname(path))
+        group_key = _question_group_from_dir_name(parent_name)
+        if not group_key:
+            continue
+        try:
+            with open(path, encoding="utf-8") as fp:
+                payload = json.load(fp)
+        except Exception:
+            continue
+        _merge_question_data(aggregate, payload, group_key)
+
+    return aggregate
+
+
 def _load_questions_file(subject: str) -> Optional[Dict[str, Any]]:
     path = _questions_file_path(subject)
     if not os.path.exists(path):
-        return None
+        return _load_questions_from_directory(subject)
     try:
         with open(path, encoding="utf-8") as fp:
             data = json.load(fp)
