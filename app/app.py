@@ -92,7 +92,9 @@ def _question_group_from_dir_name(name: str) -> Optional[str]:
     return mapping.get(key)
 
 
-def _merge_question_data(target: Dict[str, Any], payload: Any, fallback_key: str) -> None:
+def _merge_question_data(
+    target: Dict[str, Any], payload: Any, fallback_key: str
+) -> None:
     if isinstance(payload, list):
         bucket = target.setdefault(fallback_key, [])
         if isinstance(bucket, list):
@@ -120,7 +122,12 @@ def _load_questions_from_directory(subject: str) -> Optional[Dict[str, Any]]:
     if not os.path.isdir(questions_dir):
         return None
 
-    aggregate: Dict[str, Any] = {"questions": [], "vocabChoice": [], "vocab": [], "rewrite": []}
+    aggregate: Dict[str, Any] = {
+        "questions": [],
+        "vocabChoice": [],
+        "vocab": [],
+        "rewrite": [],
+    }
 
     meta_path = os.path.join(questions_dir, "meta.json")
     if os.path.exists(meta_path):
