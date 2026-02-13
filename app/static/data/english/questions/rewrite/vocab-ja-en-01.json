@@ -1,0 +1,46 @@
+[
+  {
+    "id": "w001",
+    "unit": "rewrite-be-basic",
+    "jp": "「I am a student.」を否定文に書き換えなさい。",
+    "en": "I am not a student.",
+    "answers": [
+      "I am not a student.",
+      "I'm not a student."
+    ],
+    "source": "I am a student.",
+    "task": "否定文にする",
+    "tip": "be 動詞の否定は am/is/are の後ろに not をつけます。",
+    "explain": "主語が I のときは am に not を続けて am not とします。短縮形 I'm not でも構いません。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w002",
+    "unit": "rewrite-be-basic",
+    "jp": "「She is in the classroom.」を疑問文に書き換えなさい。",
+    "en": "Is she in the classroom?",
+    "answers": [
+      "Is she in the classroom?"
+    ],
+    "source": "She is in the classroom.",
+    "task": "疑問文にする",
+    "tip": "be 動詞の疑問文は be 動詞を文頭に移動します。",
+    "explain": "be 動詞 is を主語の前に移動させて Is she ...? の形を作ります。語尾は ? で終わります。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w003",
+    "unit": "rewrite-do-basic",
+    "jp": "「He likes apples.」を否定文に書き換えなさい。",
+    "en": "He does not like apples.",
+    "answers": [
+      "He does not like apples.",
+      "He doesn't like apples."
+    ],
+    "source": "He likes apples.",
+    "task": "否定文にする",
+    "tip": "一般動詞の否定は do/does not + 動詞の原形を使います。",
+    "explain": "三人称単数の否定文では likes の s を取り、does not/doesn't を前につけて He does not like apples. とします。",
+    "level": "Lv1"
+  }
+]

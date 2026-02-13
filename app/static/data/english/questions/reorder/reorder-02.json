@@ -1,0 +1,520 @@
+[
+  {
+    "id": "r025",
+    "unit": "present-simple-q",
+    "jp": "あなたはどんな種類の本が好きですか。",
+    "en": "What kind of books do you like?",
+    "chunks": [
+      "what",
+      "kind",
+      "of",
+      "books",
+      "do",
+      "you",
+      "like",
+      "?"
+    ],
+    "tip": "What kind of ～ do you like? で「どんな種類の〜が好きですか」を尋ねます",
+    "explain": "What kind of 〜 で「どんな種類の〜」を表し、一般動詞の疑問文なので do を続け、主語 you の後に like を置いて好きなものを尋ねます。",
+    "wrong": [
+      "are",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r026",
+    "unit": "possessive-adj",
+    "jp": "彼はあなたのクラスメートですか。",
+    "en": "Is he your classmate?",
+    "chunks": [
+      "is",
+      "he",
+      "your",
+      "classmate",
+      "?"
+    ],
+    "tip": "所有格 your を使って「あなたの」を表します",
+    "explain": "相手の所属を表すには you の所有格 your を用いて「あなたのクラスメートですか」と尋ねます。",
+    "wrong": [
+      "you",
+      "yours",
+      "yourself"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r027",
+    "unit": "possessive-adj",
+    "jp": "グリーン先生は彼らの英語の先生です。",
+    "en": "Mr. Green is their English teacher.",
+    "chunks": [
+      "Mr.",
+      "Green",
+      "is",
+      "their",
+      "English",
+      "teacher",
+      "."
+    ],
+    "tip": "they の所有格は their です",
+    "explain": "所有を表すときは代名詞 they の所有格 their を使って「彼らの先生」と表現します。",
+    "wrong": [
+      "they",
+      "them",
+      "theirs"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r028",
+    "unit": "possessive-adj",
+    "jp": "彼の教室は大きいです。",
+    "en": "His classroom is big.",
+    "chunks": [
+      "His",
+      "classroom",
+      "is",
+      "big",
+      "."
+    ],
+    "tip": "文頭では He の所有格 His を使います",
+    "explain": "主語が「彼の教室」のように所有を表すときは he の所有格 His を使い、文頭なので大文字で始めます。",
+    "wrong": [
+      "He",
+      "Him",
+      "Hers"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r029",
+    "unit": "possessive-adj",
+    "jp": "彼女の父は厳しいです。",
+    "en": "Her father is tough.",
+    "chunks": [
+      "Her",
+      "father",
+      "is",
+      "tough",
+      "."
+    ],
+    "tip": "she の所有格は her です",
+    "explain": "所有を表すには代名詞 she の所有格 her を使って「彼女の父」を表します。",
+    "wrong": [
+      "She",
+      "Hers",
+      "His"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r030",
+    "unit": "object-pronoun",
+    "jp": "私たちは彼のことが好きです。",
+    "en": "We like him.",
+    "chunks": [
+      "We",
+      "like",
+      "him",
+      "."
+    ],
+    "tip": "動詞 like の目的語には he の目的格 him を置きます",
+    "explain": "一般動詞 like の後ろで人を目的語にする場合は代名詞 he の目的格 him を用いて「彼が好き」と表現します。",
+    "wrong": [
+      "his",
+      "he",
+      "her"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r031",
+    "unit": "possessive-noun",
+    "jp": "私はジムの隣人です。",
+    "en": "I am Jim's neighbor.",
+    "chunks": [
+      "I",
+      "am",
+      "Jim's",
+      "neighbor",
+      "."
+    ],
+    "tip": "名詞の所有格は 's をつけて表します",
+    "explain": "人名 Jim の所有を表すには語尾に 's を付けて Jim's とし、「ジムの隣人です」と言います。",
+    "wrong": [
+      "Jim",
+      "Jims",
+      "Jim."
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-001",
+    "unit": "be-going-to",
+    "jp": "私は来週京都を訪れるつもりです。",
+    "en": "I am going to visit Kyoto next week.",
+    "chunks": [
+      "I",
+      "am",
+      "going to",
+      "visit",
+      "Kyoto",
+      "next week",
+      "."
+    ],
+    "tip": "be going to + 動詞原形",
+    "explain": "be going to の形で「～するつもり」を表し、動詞 visit は原形のまま使います。",
+    "wrong": [
+      "will",
+      "do",
+      "does"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-002",
+    "unit": "will",
+    "jp": "彼は明日その本を読むでしょう。",
+    "en": "He will read the book tomorrow.",
+    "chunks": [
+      "he",
+      "will",
+      "read",
+      "the book",
+      "tomorrow",
+      "."
+    ],
+    "tip": "未来: will + 動詞原形",
+    "explain": "未来の出来事には will + 動詞原形 を使い、read は原形のままにします。",
+    "wrong": [
+      "is",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-003",
+    "unit": "be-going-to-q",
+    "jp": "あなたは今夜テレビを見るつもりですか。",
+    "en": "Are you going to watch TV tonight?",
+    "chunks": [
+      "are",
+      "you",
+      "going to",
+      "watch",
+      "TV",
+      "tonight",
+      "?"
+    ],
+    "tip": "疑問文: Are you going to + 動詞原形?",
+    "explain": "be going to の疑問文は Are/Is を前に出し、watch は原形で続けます。",
+    "wrong": [
+      "do",
+      "will",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-004",
+    "unit": "will-neg",
+    "jp": "私はそのゲームをしないでしょう。",
+    "en": "I will not play the game.",
+    "chunks": [
+      "I",
+      "will not",
+      "play",
+      "the game",
+      "."
+    ],
+    "tip": "否定文: will not + 動詞原形",
+    "explain": "will の否定は will not / won't + 動詞原形 の形で、play を原形のまま用います。",
+    "wrong": [
+      "do",
+      "am",
+      "does"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-005",
+    "unit": "be-going-to-neg",
+    "jp": "私は明日その映画を見ないつもりです。",
+    "en": "I am not going to watch the movie tomorrow.",
+    "chunks": [
+      "I",
+      "am not",
+      "going to",
+      "watch",
+      "the movie",
+      "tomorrow",
+      "."
+    ],
+    "tip": "否定文: am not going to + 動詞原形",
+    "explain": "be going to の否定は be 動詞のあとに not を入れ、watch は原形で続けます。",
+    "wrong": [
+      "will",
+      "do",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-006",
+    "unit": "will-q",
+    "jp": "彼は来週テニスをするでしょうか。",
+    "en": "Will he play tennis next week?",
+    "chunks": [
+      "will",
+      "he",
+      "play",
+      "tennis",
+      "next week",
+      "?"
+    ],
+    "tip": "疑問文: Will + 主語 + 動詞原形?",
+    "explain": "will の疑問文は Will を文頭に置き、play は原形のままにします。",
+    "wrong": [
+      "does",
+      "is",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u3-007",
+    "unit": "be-going-to-neg-q",
+    "jp": "あなたはその本を読まないつもりですか。",
+    "en": "Aren't you going to read the book?",
+    "chunks": [
+      "aren't",
+      "you",
+      "going to",
+      "read",
+      "the book",
+      "?"
+    ],
+    "tip": "否定疑問文: Aren't you going to ～?",
+    "explain": "be going to の否定疑問では Aren't you ～? の形をとり、read は原形で用います。",
+    "wrong": [
+      "will",
+      "do",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-001",
+    "unit": "there-is",
+    "jp": "机の上に1冊の本があります。",
+    "en": "There is a book on the desk.",
+    "chunks": [
+      "there is",
+      "a book",
+      "on the desk",
+      "."
+    ],
+    "tip": "存在文: There is + 単数名詞",
+    "explain": "単数名詞 a book を紹介する存在文なので there is を使い、場所 on the desk を後ろに置きます。",
+    "wrong": [
+      "are",
+      "has",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-002",
+    "unit": "there-are",
+    "jp": "この教室には20人の生徒がいます。",
+    "en": "There are twenty students in this classroom.",
+    "chunks": [
+      "there are",
+      "twenty students",
+      "in this classroom",
+      "."
+    ],
+    "tip": "存在文: There are + 複数名詞",
+    "explain": "複数名詞 twenty students に合わせて there are を使い、場所 in this classroom を続けます。",
+    "wrong": [
+      "is",
+      "has",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-003",
+    "unit": "svoo",
+    "jp": "私は彼に本を与えました。",
+    "en": "I gave him a book.",
+    "accept": [
+      "I gave a book to him."
+    ],
+    "chunks": [
+      "I",
+      "gave",
+      "him",
+      "a book",
+      "."
+    ],
+    "tip": "SVOO: give + 人 + 物",
+    "explain": "SVOO では give + 人 + 物 の語順を取り、過去形 gave で表します。",
+    "wrong": [
+      "give",
+      "gives",
+      "to"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-004",
+    "unit": "svoo",
+    "jp": "彼女は私にその写真を見せました。",
+    "en": "She showed me the picture.",
+    "chunks": [
+      "she",
+      "showed",
+      "me",
+      "the picture",
+      "."
+    ],
+    "tip": "SVOO: show + 人 + 物",
+    "explain": "show の過去形 showed を使い、人 me を先に置いてから物 the picture を続けます。",
+    "wrong": [
+      "show",
+      "shows",
+      "too"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-005",
+    "unit": "svoo",
+    "jp": "私は彼にその話を伝えました。",
+    "en": "I told him the story.",
+    "chunks": [
+      "I",
+      "told",
+      "him",
+      "the story",
+      "."
+    ],
+    "tip": "SVOO: tell + 人 + 物",
+    "explain": "tell の過去形 told を使い、目的語は人 him → 物 the story の順で並べます。",
+    "wrong": [
+      "tell",
+      "tells",
+      "to"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-006",
+    "unit": "svoo",
+    "jp": "彼は私に自転車を貸しました。",
+    "en": "He lent me his bicycle.",
+    "chunks": [
+      "he",
+      "lent",
+      "me",
+      "his bicycle",
+      "."
+    ],
+    "tip": "SVOO: lend + 人 + 物",
+    "explain": "「lend」の過去形は「lent」です。過去の出来事なので動詞も過去形にします。",
+    "wrong": [
+      "lend",
+      "lends",
+      "to"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-007",
+    "unit": "there-is-neg",
+    "jp": "机の上にペンはありません。",
+    "en": "There is not a pen on the desk.",
+    "chunks": [
+      "there is not",
+      "a pen",
+      "on the desk",
+      "."
+    ],
+    "tip": "存在文の否定: There is not + 単数名詞",
+    "wrong": [
+      "are",
+      "has",
+      "do"
+    ],
+    "explain": "否定の存在文では there is not + 名詞 で「～がない」を表します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-008",
+    "unit": "there-are-q",
+    "jp": "この部屋に椅子はいくつありますか。",
+    "en": "How many chairs are there in this room?",
+    "chunks": [
+      "how many chairs",
+      "are there",
+      "in this room",
+      "?"
+    ],
+    "tip": "疑問文: How many + 複数名詞 + are there ～?",
+    "wrong": [
+      "is",
+      "has",
+      "do"
+    ],
+    "explain": "個数を尋ねる疑問文は How many + 名詞 + are there...? の語順を取ります。",
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-009",
+    "unit": "svoo-neg",
+    "jp": "私は彼に手紙を渡しませんでした。",
+    "en": "I did not give him a letter.",
+    "chunks": [
+      "I",
+      "did not",
+      "give",
+      "him",
+      "a letter",
+      "."
+    ],
+    "tip": "SVOOの否定: did not + 動詞原形",
+    "wrong": [
+      "do",
+      "does",
+      "is"
+    ],
+    "explain": "過去の否定文では did not + 動詞原形 を用い、give を原形のまま残します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "u4-010",
+    "unit": "svoo-q",
+    "jp": "彼はあなたにその話をしましたか。",
+    "en": "Did he tell you the story?",
+    "chunks": [
+      "did",
+      "he",
+      "tell",
+      "you",
+      "the story",
+      "?"
+    ],
+    "tip": "SVOOの疑問文: Did + 主語 + 動詞原形 + 人 + 物?",
+    "wrong": [
+      "does",
+      "is",
+      "do"
+    ],
+    "explain": "過去の疑問文は Did + 主語 + 動詞原形 の形になるので、tell を原形で使います。",
+    "level": "Lv1"
+  }
+]

@@ -1,0 +1,544 @@
+[
+  {
+    "id": "cj-and-001",
+    "unit": "conjunction-and",
+    "jp": "私はリンゴとオレンジが好きです。",
+    "en": "I like apples and oranges.",
+    "chunks": [
+      "I",
+      "like",
+      "apples",
+      "and",
+      "oranges",
+      "."
+    ],
+    "tip": "and で「AとB」をつなぐ",
+    "wrong": [
+      "but",
+      "so",
+      "because"
+    ],
+    "explain": "同じ主語 I が好きなもの apples と oranges を and で並べ、「～と～が好きです」と表します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-and-002",
+    "unit": "conjunction-and",
+    "jp": "彼は牛乳とパンを買いました。",
+    "en": "He bought milk and bread.",
+    "chunks": [
+      "He",
+      "bought",
+      "milk",
+      "and",
+      "bread",
+      "."
+    ],
+    "tip": "名詞と名詞を and で並べる",
+    "wrong": [
+      "but",
+      "because",
+      "if"
+    ],
+    "explain": "買ったもの milk と bread を and でつなぎ、2つの名詞を並列しています。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-and-003",
+    "unit": "conjunction-and",
+    "jp": "彼らはペンとノートを持っています。",
+    "en": "They have a pen and a notebook.",
+    "chunks": [
+      "They",
+      "have",
+      "a",
+      "pen",
+      "and",
+      "a",
+      "notebook",
+      "."
+    ],
+    "tip": "持ち物も and でまとめられる",
+    "wrong": [
+      "but",
+      "so",
+      "although"
+    ],
+    "explain": "have の目的語 a pen と a notebook を and で結び、2つの持ち物を並べています。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-but-001",
+    "unit": "conjunction-but",
+    "jp": "私は外で遊びたかったが雨が降りました。",
+    "en": "I wanted to play outside, but it rained.",
+    "chunks": [
+      "I",
+      "wanted",
+      "to",
+      "play",
+      "outside",
+      ",",
+      "but",
+      "it",
+      "rained",
+      "."
+    ],
+    "tip": "but で前後の内容を対比する",
+    "wrong": [
+      "and",
+      "so",
+      "because"
+    ],
+    "explain": "希望 wanted to play outside と結果 it rained を but で対比し、「しかし」を表現します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-but-002",
+    "unit": "conjunction-but",
+    "jp": "彼は小さいですが強いです。",
+    "en": "He is small but strong.",
+    "chunks": [
+      "He",
+      "is",
+      "small",
+      "but",
+      "strong",
+      "."
+    ],
+    "tip": "but は性質の対比にも使える",
+    "wrong": [
+      "and",
+      "so",
+      "while"
+    ],
+    "explain": "同じ主語 He の2つの性質 small と strong を but でつなぎ対比を示します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-but-003",
+    "unit": "conjunction-but",
+    "jp": "彼女は速く走りましたがバスに乗り遅れました。",
+    "en": "She ran fast but missed the bus.",
+    "chunks": [
+      "She",
+      "ran",
+      "fast",
+      "but",
+      "missed",
+      "the",
+      "bus",
+      "."
+    ],
+    "tip": "but で努力と結果のギャップを示す",
+    "wrong": [
+      "and",
+      "because",
+      "if"
+    ],
+    "explain": "行動 ran fast と結果 missed the bus を but で逆接につなぎます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "cj-because-001",
+    "unit": "conjunction-because",
+    "jp": "私は病気だったので家にいました。",
+    "en": "I stayed home because I was sick.",
+    "chunks": [
+      "I",
+      "stayed",
+      "home",
+      "because",
+      "I",
+      "was",
+      "sick",
+      "."
+    ],
+    "tip": "because で理由を説明する",
+    "wrong": [
+      "so",
+      "but",
+      "although"
+    ],
+    "explain": "行動 stayed home とその理由 I was sick を because で結びます。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-because-002",
+    "unit": "conjunction-because",
+    "jp": "彼は賞をもらったのでうれしいです。",
+    "en": "He is happy because he won a prize.",
+    "chunks": [
+      "He",
+      "is",
+      "happy",
+      "because",
+      "he",
+      "won",
+      "a",
+      "prize",
+      "."
+    ],
+    "tip": "感情の理由も because で表せる",
+    "wrong": [
+      "so",
+      "but",
+      "if"
+    ],
+    "explain": "気持ち happy の理由となる出来事 he won a prize を because で導き、原因と結果の関係を示します。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-because-003",
+    "unit": "conjunction-because",
+    "jp": "私たちは寒かったので上着を着ました。",
+    "en": "We wore coats because it was cold.",
+    "chunks": [
+      "We",
+      "wore",
+      "coats",
+      "because",
+      "it",
+      "was",
+      "cold",
+      "."
+    ],
+    "tip": "because 節は文末に置くことが多い",
+    "wrong": [
+      "so",
+      "but",
+      "unless"
+    ],
+    "explain": "行動 wore coats と理由 it was cold を because で結び、因果関係を示します。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-so-001",
+    "unit": "conjunction-so",
+    "jp": "私はおなかがすいていたので昼ごはんを食べました。",
+    "en": "I was hungry, so I ate lunch.",
+    "chunks": [
+      "I",
+      "was",
+      "hungry",
+      ",",
+      "so",
+      "I",
+      "ate",
+      "lunch",
+      "."
+    ],
+    "tip": "so で原因から結果を導く",
+    "wrong": [
+      "because",
+      "but",
+      "and"
+    ],
+    "explain": "状態 was hungry が原因で、結果 ate lunch を so でつなぎます。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-so-002",
+    "unit": "conjunction-so",
+    "jp": "遅かったので私たちは家に帰りました。",
+    "en": "It was late, so we went home.",
+    "chunks": [
+      "It",
+      "was",
+      "late",
+      ",",
+      "so",
+      "we",
+      "went",
+      "home",
+      "."
+    ],
+    "tip": "so は「だから、結果として」を表す",
+    "wrong": [
+      "because",
+      "but",
+      "if"
+    ],
+    "explain": "原因 was late と結果 went home を so で結び、「だから～した」を表します。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-so-003",
+    "unit": "conjunction-so",
+    "jp": "彼女はよく勉強したのでテストに合格しました。",
+    "en": "She studied hard, so she passed the test.",
+    "chunks": [
+      "She",
+      "studied",
+      "hard",
+      ",",
+      "so",
+      "she",
+      "passed",
+      "the",
+      "test",
+      "."
+    ],
+    "tip": "努力と結果を so でつなげる",
+    "wrong": [
+      "because",
+      "but",
+      "although"
+    ],
+    "explain": "努力を表す主節 She studied hard と結果 she passed the test を so で結びます。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-when-001",
+    "unit": "conjunction-when",
+    "jp": "私は雨が降るとき本を読みます。",
+    "en": "I read books when it rains.",
+    "chunks": [
+      "I",
+      "read",
+      "books",
+      "when",
+      "it",
+      "rains",
+      "."
+    ],
+    "tip": "when で「～するとき」を表す",
+    "wrong": [
+      "if",
+      "because",
+      "so"
+    ],
+    "explain": "習慣を表す主節 I read books に、条件となる when it rains を続けます。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-when-002",
+    "unit": "conjunction-when",
+    "jp": "彼女は家に着いたとき私に電話します。",
+    "en": "She calls me when she gets home.",
+    "chunks": [
+      "She",
+      "calls",
+      "me",
+      "when",
+      "she",
+      "gets",
+      "home",
+      "."
+    ],
+    "tip": "主節の後ろに when 節を置く",
+    "wrong": [
+      "if",
+      "because",
+      "after"
+    ],
+    "explain": "主節 She calls me のタイミングを when she gets home で示します。",
+    "level": "Lv2"
+  },
+  {
+    "id": "cj-when-003",
+    "unit": "conjunction-when",
+    "jp": "私たちは食べるとき手を洗います。",
+    "en": "We wash our hands when we eat.",
+    "chunks": [
+      "We",
+      "wash",
+      "our",
+      "hands",
+      "when",
+      "we",
+      "eat",
+      "."
+    ],
+    "tip": "when 節は文末に置くと読みやすい",
+    "wrong": [
+      "if",
+      "because",
+      "while"
+    ],
+    "explain": "習慣 wash our hands とそのタイミング when we eat を when で結んでいます。",
+    "level": "Lv2"
+  },
+  {
+    "id": "lets-001",
+    "unit": "lets-suggestion",
+    "jp": "はるかにたずねましょう。",
+    "en": "Let's ask Haruka.",
+    "chunks": [
+      "let's",
+      "ask",
+      "Haruka",
+      "."
+    ],
+    "tip": "Let's + 動詞原形 で「〜しましょう」を表します",
+    "wrong": [
+      "do",
+      "are",
+      "asks"
+    ],
+    "explain": "提案や誘いを表すときは Let's + 動詞原形 を使い、固有名詞 Haruka を目的語に置きます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "place-001",
+    "unit": "place-prepositions",
+    "jp": "あなたの消しゴムは机の下にあります。",
+    "en": "Your eraser is under the desk.",
+    "chunks": [
+      "your",
+      "eraser",
+      "is",
+      "under",
+      "the",
+      "desk",
+      "."
+    ],
+    "tip": "under the desk で「机の下に」を表します",
+    "wrong": [
+      "are",
+      "on",
+      "behind"
+    ],
+    "explain": "主語 Your eraser に合わせて be 動詞は is を使い、under the desk で場所「机の下にある」と伝えます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "like-animals-001",
+    "unit": "like-questions",
+    "jp": "私はウサギが好きです。あなたはそれらが好きですか。",
+    "en": "I like rabbits. Do you like them?",
+    "chunks": [
+      "I",
+      "like",
+      "rabbits",
+      ".",
+      "do",
+      "you",
+      "like",
+      "them",
+      "?"
+    ],
+    "tip": "Do you like ～? で好みをたずね、them で直前の複数名詞を受けます",
+    "wrong": [
+      "does",
+      "likes",
+      "it"
+    ],
+    "explain": "自分の好みを述べる I like rabbits. に続けて、相手には Do you like them? と疑問文の語順（Do + 主語 + 動詞）を使い、them で rabbits を言い換えます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "whose-001",
+    "unit": "whose-questions",
+    "jp": "これは誰のかばんですか。",
+    "en": "Whose bag is this?",
+    "chunks": [
+      "whose",
+      "bag",
+      "is",
+      "this",
+      "?"
+    ],
+    "tip": "Whose + 名詞 で「誰の〜ですか」と持ち主を尋ねます",
+    "wrong": [
+      "who",
+      "what",
+      "where"
+    ],
+    "explain": "持ち主をたずねる疑問文は Whose + 名詞 から始め、Whose bag is this? で「これは誰のかばんですか」となります。",
+    "level": "Lv1"
+  },
+  {
+    "id": "who-001",
+    "unit": "who-questions",
+    "jp": "あなたの好きな歌手は誰ですか。",
+    "en": "Who is your favorite singer?",
+    "chunks": [
+      "who",
+      "is",
+      "your",
+      "favorite",
+      "singer",
+      "?"
+    ],
+    "tip": "Who is your favorite + 名詞? で「あなたの好きな〜は誰ですか」と尋ねます",
+    "wrong": [
+      "what",
+      "where",
+      "how"
+    ],
+    "explain": "人の好みを尋ねる疑問文は Who is your favorite + 名詞? の語順を用いて、favorite singer の前に your を置きます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "place-002",
+    "unit": "place-prepositions",
+    "jp": "彼らは案内図の前にいます。",
+    "en": "They are in front of the floor plan.",
+    "chunks": [
+      "they",
+      "are",
+      "in",
+      "front",
+      "of",
+      "the",
+      "floor",
+      "plan",
+      "."
+    ],
+    "tip": "in front of ～ で「〜の前に」を表します",
+    "wrong": [
+      "is",
+      "on",
+      "behind"
+    ],
+    "explain": "be 動詞 are で複数主語 They に合わせ、in front of the floor plan で「案内図の前にいる」と位置を伝えます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "dir-001",
+    "unit": "directions",
+    "jp": "レストランはこちらです。",
+    "en": "The restaurant is over here.",
+    "chunks": [
+      "the",
+      "restaurant",
+      "is",
+      "over",
+      "here",
+      "."
+    ],
+    "tip": "over here で「こちらです」「この場所です」と案内できます",
+    "wrong": [
+      "are",
+      "that",
+      "there"
+    ],
+    "explain": "場所を案内するときは The restaurant is over here. のように主語 + be動詞 + over here で位置を示します。",
+    "level": "Lv1"
+  },
+  {
+    "id": "want-001",
+    "unit": "want-to",
+    "jp": "あなたはその俳優に会いたいですか。",
+    "en": "Do you want to meet the actor?",
+    "chunks": [
+      "do",
+      "you",
+      "want",
+      "to",
+      "meet",
+      "the",
+      "actor",
+      "?"
+    ],
+    "tip": "Do you want to ～? で「〜したいですか」とたずねます",
+    "wrong": [
+      "are",
+      "does",
+      "wants"
+    ],
+    "explain": "希望を尋ねる疑問文は Do you want to + 動詞原形 ...? の形で、meet の前に to を置いて不定詞にします。",
+    "level": "Lv1"
+  }
+]

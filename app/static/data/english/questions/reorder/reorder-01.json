@@ -1,0 +1,549 @@
+[
+  {
+    "id": "r001",
+    "unit": "present-simple",
+    "jp": "彼は放課後にサッカーをします。",
+    "en": "He plays soccer after school.",
+    "chunks": [
+      "he",
+      "plays",
+      "soccer",
+      "after",
+      "school",
+      "."
+    ],
+    "tip": "三単現: He plays（sを忘れずに）",
+    "explain": "主語が He などの三人称単数なので、一般動詞 play に s をつけて plays とします。",
+    "wrong": [
+      "is",
+      "does",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r002",
+    "unit": "present-continuous-q",
+    "jp": "あなたは今宿題をしていますか。",
+    "en": "Are you doing your homework now?",
+    "chunks": [
+      "are",
+      "you",
+      "doing",
+      "your",
+      "homework",
+      "now",
+      "?"
+    ],
+    "tip": "進行形の疑問: Are you ～?",
+    "explain": "現在進行形の疑問文なので be 動詞 Are を前に出し、動詞は doing のように -ing 形にします。",
+    "wrong": [
+      "has",
+      "do",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r003",
+    "unit": "past-simple",
+    "jp": "私は昨日その博物館に行きました。",
+    "en": "I went to the museum yesterday.",
+    "chunks": [
+      "I",
+      "went",
+      "to",
+      "the",
+      "museum",
+      "yesterday",
+      "."
+    ],
+    "tip": "go の過去形は went",
+    "explain": "過去の出来事なので go ではなく過去形の went を使い、yesterday と時を示す語も合わせます。",
+    "wrong": [
+      "am",
+      "is",
+      "are"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r004",
+    "unit": "comparative",
+    "jp": "この本はあの本よりおもしろい。",
+    "en": "This book is more interesting than that one.",
+    "chunks": [
+      "this",
+      "book",
+      "is",
+      "more",
+      "interesting",
+      "than",
+      "that",
+      "one",
+      "."
+    ],
+    "tip": "比較級: more … than ～",
+    "explain": "比較級では more + 形容詞 + than ～ の語順を取り、than の後ろに比較対象を置きます。",
+    "wrong": [
+      "do",
+      "did",
+      "does"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r005",
+    "unit": "there-is",
+    "jp": "机の下に猫が一匹います。",
+    "en": "There is a cat under the desk.",
+    "chunks": [
+      "there",
+      "is",
+      "a",
+      "cat",
+      "under",
+      "the",
+      "desk",
+      "."
+    ],
+    "tip": "存在文: There is/are",
+    "explain": "存在を表す文では there is/are で始め、単数名詞 a cat に合わせて is を使います。",
+    "wrong": [
+      "does",
+      "is",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r006",
+    "unit": "present-3sg",
+    "jp": "彼女は毎朝朝ごはんを食べます。",
+    "en": "She has breakfast every morning.",
+    "chunks": [
+      "she",
+      "has",
+      "breakfast",
+      "every",
+      "morning",
+      "."
+    ],
+    "tip": "have → has（3単現）",
+    "explain": "主語が She の三人称単数なので、動詞 have は has に変化させて現在形を作ります。",
+    "wrong": [
+      "are",
+      "am",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r007",
+    "unit": "present-continuous",
+    "jp": "私は英語を勉強しているところです。",
+    "en": "I am studying English.",
+    "chunks": [
+      "I",
+      "am",
+      "studying",
+      "English",
+      "."
+    ],
+    "tip": "be + -ing で進行形",
+    "explain": "現在進行形は be 動詞 + 動詞の -ing 形で表し、主語 I に合わせて am studying とします。",
+    "wrong": [
+      "does",
+      "do",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r008",
+    "unit": "past-simple-q",
+    "jp": "あなたは昨日映画を見ましたか。",
+    "en": "Did you watch a movie yesterday?",
+    "chunks": [
+      "did",
+      "you",
+      "watch",
+      "a",
+      "movie",
+      "yesterday",
+      "?"
+    ],
+    "tip": "過去の疑問: Did + 主語 + 動詞原形",
+    "explain": "過去の疑問文は Did + 主語 + 動詞原形 の形になるので、watch は原形のまま使います。",
+    "wrong": [
+      "is",
+      "are",
+      "am"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r009",
+    "unit": "present-simple",
+    "jp": "私は毎日朝ごはんを食べます。",
+    "en": "I eat breakfast every day.",
+    "chunks": [
+      "I",
+      "eat",
+      "breakfast",
+      "every",
+      "day",
+      "."
+    ],
+    "tip": "一般動詞の現在形: 主語 + 動詞原形",
+    "explain": "主語が I のときは動詞を原形で用い、頻度を表す every day を文末に置きます。",
+    "wrong": [
+      "is",
+      "do",
+      "does"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r010",
+    "unit": "present-simple-q",
+    "jp": "あなたはサッカーが好きですか。",
+    "en": "Do you like soccer?",
+    "chunks": [
+      "do",
+      "you",
+      "like",
+      "soccer",
+      "?"
+    ],
+    "tip": "一般動詞の疑問文: Do + 主語 + 動詞原形",
+    "explain": "一般動詞の疑問文では Do/Does を前に置き、動詞 like は原形のままにします。",
+    "wrong": [
+      "am",
+      "is",
+      "are"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r011",
+    "unit": "be-verb",
+    "jp": "彼女は生徒です。",
+    "en": "She is a student.",
+    "chunks": [
+      "she",
+      "is",
+      "a",
+      "student",
+      "."
+    ],
+    "tip": "be動詞の肯定文: 主語 + be動詞 + 補語",
+    "explain": "be 動詞の文では主語 She に合わせて is を用い、補語の名詞 a student を続けます。",
+    "wrong": [
+      "do",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r012",
+    "unit": "be-verb-neg",
+    "jp": "私は先生ではありません。",
+    "en": "I am not a teacher.",
+    "chunks": [
+      "I",
+      "am",
+      "not",
+      "a",
+      "teacher",
+      "."
+    ],
+    "tip": "be動詞の否定文: 主語 + be動詞 + not + 補語",
+    "explain": "否定文は be 動詞の後ろに not を入れ、主語 I に合わせて am not を使います。",
+    "wrong": [
+      "does",
+      "do",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r013",
+    "unit": "be-verb-q",
+    "jp": "彼はアメリカ出身ですか。",
+    "en": "Is he from America?",
+    "chunks": [
+      "is",
+      "he",
+      "from",
+      "America",
+      "?"
+    ],
+    "tip": "be動詞の疑問文: Be動詞 + 主語 + 補語",
+    "explain": "be 動詞の疑問文は Is/Are を文頭に出し、Is he ～? の語順にします。",
+    "wrong": [
+      "do",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r014",
+    "unit": "present-cont-q",
+    "jp": "彼らはいまサッカーをしていますか。",
+    "en": "Are they playing soccer now?",
+    "chunks": [
+      "are",
+      "they",
+      "playing",
+      "soccer",
+      "now",
+      "?"
+    ],
+    "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing",
+    "explain": "複数主語 they なので be 動詞は Are を使い、play は進行形の playing にします。",
+    "wrong": [
+      "has",
+      "have",
+      "is"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r015",
+    "unit": "present-cont-neg",
+    "jp": "彼はテレビを見ていません。",
+    "en": "He is not watching TV.",
+    "chunks": [
+      "he",
+      "is",
+      "not",
+      "watching",
+      "TV",
+      "."
+    ],
+    "tip": "現在進行形の否定文: 主語 + be動詞 + not + 動詞ing",
+    "explain": "現在進行形の否定は be 動詞のあとに not を入れ、watch の -ing 形 watching を続けます。",
+    "wrong": [
+      "do",
+      "did",
+      "does"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r016",
+    "unit": "present-simple-q",
+    "jp": "あなたのお父さんは日曜日にテニスをしますか。",
+    "en": "Does your father play tennis on Sunday?",
+    "chunks": [
+      "does",
+      "your",
+      "father",
+      "play",
+      "tennis",
+      "on",
+      "Sunday",
+      "?"
+    ],
+    "tip": "三単現の疑問文: Does + 主語 + 動詞原形",
+    "explain": "主語が your father のような三人称単数なので疑問文では Does を使い、動詞 play は原形に戻します。",
+    "wrong": [
+      "am",
+      "is",
+      "are"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r017",
+    "unit": "present-simple-neg",
+    "jp": "私は図書館で勉強しません。",
+    "en": "I do not study in the library.",
+    "chunks": [
+      "I",
+      "do",
+      "not",
+      "study",
+      "in",
+      "the",
+      "library",
+      "."
+    ],
+    "tip": "一般動詞の否定文: do not + 動詞原形",
+    "explain": "一般動詞の否定文では do not / does not + 動詞原形 の形を取り、主語 I には do not を使います。",
+    "wrong": [
+      "is",
+      "are",
+      "am"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r018",
+    "unit": "be-verb-q",
+    "jp": "これらの本はあなたのですか。",
+    "en": "Are these books yours?",
+    "chunks": [
+      "are",
+      "these",
+      "books",
+      "yours",
+      "?"
+    ],
+    "tip": "be動詞の疑問文（複数）: Are + 複数主語",
+    "explain": "複数名詞 these books に合わせて be 動詞は Are を使い、Are these books yours? の語順にします。",
+    "wrong": [
+      "does",
+      "do",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r019",
+    "unit": "present-cont-q",
+    "jp": "あなたのお姉さんはいまピアノを弾いていますか。",
+    "en": "Is your sister playing the piano now?",
+    "chunks": [
+      "is",
+      "your",
+      "sister",
+      "playing",
+      "the",
+      "piano",
+      "now",
+      "?"
+    ],
+    "tip": "現在進行形の疑問文: Be動詞 + 主語 + 動詞ing",
+    "explain": "主語が your sister（単数）なので be 動詞は Is、動詞は進行形の playing を用います。",
+    "wrong": [
+      "do",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r020",
+    "unit": "there-are",
+    "jp": "机の上に3本のえんぴつがあります。",
+    "en": "There are three pencils on the desk.",
+    "chunks": [
+      "there",
+      "are",
+      "three",
+      "pencils",
+      "on",
+      "the",
+      "desk",
+      "."
+    ],
+    "tip": "存在文（複数）: There are + 複数名詞",
+    "explain": "複数名詞 three pencils に合わせて there are で始め、場所を表す前置詞句 on the desk を続けます。",
+    "wrong": [
+      "does",
+      "is",
+      "do"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r021",
+    "unit": "can-ability",
+    "jp": "私は上手にサッカーをすることができます。",
+    "en": "I can play soccer well.",
+    "chunks": [
+      "I",
+      "can",
+      "play",
+      "soccer",
+      "well",
+      "."
+    ],
+    "tip": "can + 動詞原形で「〜できる」を表す",
+    "explain": "能力を表すときは can + 動詞原形 を使い、play の後ろに副詞 well を置いて「上手に」を表現します。",
+    "wrong": [
+      "does",
+      "is",
+      "are"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r022",
+    "unit": "be-verb-q",
+    "jp": "あなたは美術部に興味を持っていますか。",
+    "en": "Are you interested in the art club?",
+    "chunks": [
+      "are",
+      "you",
+      "interested",
+      "in",
+      "the",
+      "art",
+      "club",
+      "?"
+    ],
+    "tip": "be動詞 + interested in ～? で「～に興味がありますか」を表す",
+    "explain": "興味があるかを尋ねる疑問文では be 動詞 Are を文頭に置き、形容詞 interested の後ろに前置詞 in と目的語 the art club を続けます。",
+    "wrong": [
+      "do",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r023",
+    "unit": "present-simple-q",
+    "jp": "夏休みの間、あなたは何をしますか。",
+    "en": "What do you do during the summer vacation?",
+    "chunks": [
+      "what",
+      "do",
+      "you",
+      "do",
+      "during",
+      "the",
+      "summer",
+      "vacation",
+      "?"
+    ],
+    "tip": "Wh疑問文: What + do + 主語 + 動詞原形 ...?",
+    "explain": "What で始まる一般動詞の疑問文では do を続け、主語 you の後に動詞の原形 do を置き、期間を表す during the summer vacation を文末に置きます。",
+    "wrong": [
+      "are",
+      "does",
+      "did"
+    ],
+    "level": "Lv1"
+  },
+  {
+    "id": "r024",
+    "unit": "like-ing",
+    "jp": "私は音楽を聴くことが好きです。",
+    "en": "I like listening to music.",
+    "accept": [
+      "I like to listen to music."
+    ],
+    "chunks": [
+      "I",
+      "like",
+      "listening",
+      "to",
+      "music",
+      "."
+    ],
+    "tip": "like + 動詞-ing で「〜することが好き」です",
+    "explain": "like の後ろに動詞のing形 listening を置いて「〜することが好き」を表し、to music で「音楽を」を続けます。",
+    "wrong": [
+      "likes",
+      "am",
+      "listens"
+    ],
+    "level": "Lv1"
+  }
+]

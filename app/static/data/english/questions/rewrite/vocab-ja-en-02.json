@@ -1,0 +1,31 @@
+[
+  {
+    "id": "w004",
+    "unit": "rewrite-do-basic",
+    "jp": "「They play soccer after school.」を疑問文に書き換えなさい。",
+    "en": "Do they play soccer after school?",
+    "answers": [
+      "Do they play soccer after school?"
+    ],
+    "source": "They play soccer after school.",
+    "task": "疑問文にする",
+    "tip": "一般動詞の疑問文は Do/Does + 主語 + 動詞の原形 を使います。",
+    "explain": "play の前に Do を置き、動詞は原形のままにして Do they play ...? の形を作ります。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w005",
+    "unit": "rewrite-be-basic",
+    "jp": "「We are happy.」を否定文に書き換えなさい。",
+    "en": "We are not happy.",
+    "answers": [
+      "We are not happy.",
+      "We're not happy."
+    ],
+    "source": "We are happy.",
+    "task": "否定文にする",
+    "tip": "be 動詞 are の後ろに not をつければ否定文になります。",
+    "explain": "複数主語 We に合わせて are not を使い、短縮形 We're not でも正解です。",
+    "level": "Lv1"
+  }
+]
