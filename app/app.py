@@ -364,6 +364,7 @@ def _add_question_summary(
     jp: Any,
     en: Any,
     unit: Any,
+    level: Any,
     qtype: str,
 ) -> None:
     if not qid:
@@ -374,6 +375,7 @@ def _add_question_summary(
         "jp": jp,
         "en": en,
         "unit": unit,
+        "level": _normalize_level(level),
         "type": qtype,
     }
 
@@ -391,6 +393,10 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
     """
 
     data = _load_questions_file(subject) or {}
+    runtime_dir = subject_runtime_dir(subject)
+    overrides = level_store.load_levels(runtime_dir)
+    if overrides:
+        data = _apply_level_overrides(dict(data), overrides)
     qmap: Dict[str, Dict[str, Any]] = {}
 
     for record in _iter_valid_entries(data.get("questions")):
@@ -400,6 +406,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
             jp=record.get("jp"),
             en=record.get("en"),
             unit=record.get("unit"),
+            level=record.get("level"),
             qtype="reorder",
         )
 
@@ -418,6 +425,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
             jp=record.get("jp"),
             en=record.get("en"),
             unit=record.get("unit"),
+            level=record.get("level"),
             qtype="vocab-choice",
         )
 
@@ -428,6 +436,7 @@ def load_questions_map(subject: str = DEFAULT_SUBJECT):
             jp=record.get("jp"),
             en=record.get("en"),
             unit=record.get("unit"),
+            level=record.get("level"),
             qtype="rewrite",
         )
 
@@ -1575,6 +1584,7 @@ def admin_summary():
                 "user": r.get("user", "guest"),
                 "id": qid,
                 "unit": (a.get("unit") or qm.get("unit") or ""),
+                "level": (a.get("level") or qm.get("level") or ""),
                 "jp": qm.get("jp"),
                 "en": qm.get("en"),
                 "type": _normalize_question_type(a.get("type") or qm.get("type")),
@@ -1716,6 +1726,7 @@ def admin_summary():
                 "unit": a.get("unit"),
                 "jp": a.get("jp"),
                 "en": a.get("en"),
+                "level": a.get("level"),
                 "type": a.get("type"),
                 "answered": 0,
                 "correct": 0,
@@ -1752,6 +1763,7 @@ def admin_summary():
             "unit": meta.get("unit"),
             "jp": meta.get("jp"),
             "en": meta.get("en"),
+            "level": meta.get("level"),
             "type": meta.get("type"),
             "answered": 0,
             "correct": 0,
@@ -1829,6 +1841,7 @@ def admin_summary():
                         "nextDueAt": state.get("nextDueAt"),
                         "jp": meta.get("jp"),
                         "en": meta.get("en"),
+                        "level": meta.get("level"),
                         "unit": meta.get("unit"),
                         "type": meta.get("type"),
                     }
