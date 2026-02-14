@@ -34,3 +34,13 @@
    ```
 
 pytest がテストを見つけられないと表示する場合は、上記のテスト名（特に末尾が複数形 `items` になっている点）を正しく入力しているか、実行ディレクトリがリポジトリのルートであるかを確認してください。利用可能なテスト一覧は `pytest --collect-only tests/test_stage_f_shortage.py` で確認できます。
+
+## direnv（.envrc）について
+
+このリポジトリでは `.envrc` を **Git 管理対象外** にしています（ローカル環境差分で `git pull` が失敗しないようにするため）。初回セットアップ時はテンプレートをコピーして使ってください。
+
+```bash
+cp .envrc.example .envrc
+direnv allow
+```
+
