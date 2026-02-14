@@ -33,7 +33,7 @@
       }
     ],
     "tip": "5W1H の \"what\" は物事の内容（何を）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v052",
@@ -69,7 +69,7 @@
       }
     ],
     "tip": "5W1H の \"who\" は行為者や人物（誰が）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v053",
@@ -105,7 +105,7 @@
       }
     ],
     "tip": "5W1H の \"when\" は時間（いつ）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v054",
@@ -141,7 +141,7 @@
       }
     ],
     "tip": "5W1H の \"where\" は場所（どこで）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v055",
@@ -177,7 +177,7 @@
       }
     ],
     "tip": "5W1H の \"why\" は理由（なぜ）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v056",
@@ -213,7 +213,7 @@
       }
     ],
     "tip": "5W1H の \"how\" は方法（どのように）を尋ねる疑問詞。",
-    "level": "Lv1"
+    "level": "Lv10"
   },
   {
     "id": "v057",
@@ -249,7 +249,7 @@
       }
     ],
     "tip": "所有者をたずねる疑問詞。例: \"Whose book is this?\"（これは誰の本ですか？）。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v058",
@@ -285,7 +285,7 @@
       }
     ],
     "tip": "選択肢の中から一つを選ぶ疑問詞。例: \"Which color do you like?\"（どの色が好き？）。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v059",
@@ -321,7 +321,7 @@
       }
     ],
     "tip": "対象の種類やタイプをたずねる表現。例: \"What kind of music do you like?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v060",
@@ -357,7 +357,7 @@
       }
     ],
     "tip": "個数や人数など数をたずねる表現。例: \"How many pens do you have?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v061",
@@ -393,7 +393,7 @@
       }
     ],
     "tip": "量や値段をたずねる表現。例: \"How much water do you need?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v062",
@@ -429,7 +429,7 @@
       }
     ],
     "tip": "年齢をたずねる表現。例: \"How old are you?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v063",
@@ -465,7 +465,7 @@
       }
     ],
     "tip": "時間や長さをたずねる表現。例: \"How long is this movie?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v064",
@@ -501,7 +501,7 @@
       }
     ],
     "tip": "距離をたずねる表現。例: \"How far is it from here to Tokyo?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   },
   {
     "id": "v065",
@@ -537,6 +537,6 @@
       }
     ],
     "tip": "物事の頻度をたずねる表現。例: \"How often do you study English?\"。",
-    "level": "Lv2"
+    "level": "Lv10"
   }
 ]

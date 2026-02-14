@@ -222,9 +222,9 @@ def _normalize_level(value: Any) -> str:
         return order_builder.DEFAULT_LEVEL
     if text in order_builder.LEVEL_ORDER:
         return text
-    m = re.search(r"([1-3])", text)
+    m = re.search(r"(\d+)", text)
     if m:
-        candidate = f"Lv{m.group(1)}"
+        candidate = f"Lv{int(m.group(1))}"
         if candidate in order_builder.LEVEL_ORDER:
             return candidate
     return order_builder.DEFAULT_LEVEL
