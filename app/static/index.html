@@ -167,7 +167,7 @@
     const SUBJECT = 'english';
     const QUESTIONS_URL = `/data/${SUBJECT}/questions.json`; // Flaskで配信
     const DEFAULT_ENDPOINT = "/api/results";
-    const LEVEL_ORDER = ['Lv1','Lv2','Lv3'];
+    const LEVEL_ORDER = Array.from({ length: 10 }, (_, i) => `Lv${i + 1}`);
     const DEFAULT_LEVEL = LEVEL_ORDER[0];
 
     // 設定の記憶用キー
@@ -287,9 +287,9 @@
     const normalizeLevel = (value)=>{
       const str = (value==null ? '' : String(value)).trim();
       if(LEVEL_ORDER.includes(str)) return str;
-      const match = str.match(/([1-3])/);
+      const match = str.match(/(\d+)/);
       if(match){
-        const candidate = `Lv${match[1]}`;
+        const candidate = `Lv${Number.parseInt(match[1], 10)}`;
         if(LEVEL_ORDER.includes(candidate)) return candidate;
       }
       return DEFAULT_LEVEL;

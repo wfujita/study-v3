@@ -13,8 +13,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 STAGE_PRIORITY: Tuple[str, ...] = ("A", "B", "C", "D", "E")
-LEVEL_ORDER: Tuple[str, ...] = ("Lv1", "Lv2", "Lv3")
+LEVEL_ORDER: Tuple[str, ...] = tuple(f"Lv{i}" for i in range(1, 11))
 DEFAULT_LEVEL: str = LEVEL_ORDER[0]
+LEVEL_UNLOCK_MASTERY_THRESHOLD: float = 0.8
 
 
 def _to_non_negative_int(value: Any) -> int:
@@ -32,6 +33,23 @@ def normalize_unit(value: Any) -> str:
         return str(value).strip()
     except Exception:
         return ""
+
+
+def normalize_level(value: Any) -> str:
+    if value is None:
+        return DEFAULT_LEVEL
+    try:
+        text = str(value).strip()
+    except Exception:
+        return DEFAULT_LEVEL
+    if text in LEVEL_ORDER:
+        return text
+    match = "".join(ch for ch in text if ch.isdigit())
+    if match:
+        candidate = f"Lv{int(match)}"
+        if candidate in LEVEL_ORDER:
+            return candidate
+    return DEFAULT_LEVEL
 
 
 def question_key(question: Mapping[str, Any]) -> str:
@@ -134,6 +152,32 @@ def _resolve_stat(
     return {"stage": default_stage, "streak": 0, "nextDueAt": None}
 
 
+def _is_mastered_stage(stage: Any) -> bool:
+    normalized = (str(stage).strip().upper() if stage is not None else "")
+    return normalized in {"E", "D", "C", "B", "A"}
+
+
+def _determine_unlocked_level_idx(
+    entries: Sequence[Tuple[int, Mapping[str, Any], Dict[str, Any]]],
+) -> int:
+    unlocked_idx = 0
+    for idx, level in enumerate(LEVEL_ORDER[:-1]):
+        level_entries = [
+            (q, stat)
+            for _, q, stat in entries
+            if normalize_level(q.get("level")) == level
+        ]
+        if not level_entries:
+            break
+        mastered = sum(1 for _, stat in level_entries if _is_mastered_stage(stat.get("stage")))
+        mastery_rate = mastered / len(level_entries)
+        if mastery_rate >= LEVEL_UNLOCK_MASTERY_THRESHOLD:
+            unlocked_idx = idx + 1
+        else:
+            break
+    return unlocked_idx
+
+
 def _filter_deck(
     deck: Sequence[Mapping[str, Any]],
     *,
@@ -184,7 +228,15 @@ def build_order(
         stat = _resolve_stat(stats, q, default_stage=default_stage)
         entries.append((idx, q, stat))
 
-    # 4. 昇格優先（期限到来かつA/F以外）とそれ以外に振り分ける。
+    # 4. 低レベルから段階的に解放する（Lv1→Lv2→Lv3）。
+    unlocked_level_idx = _determine_unlocked_level_idx(entries)
+    entries = [
+        (idx, q, stat)
+        for idx, q, stat in entries
+        if LEVEL_ORDER.index(normalize_level(q.get("level"))) <= unlocked_level_idx
+    ]
+
+    # 5. 昇格優先（期限到来かつA/F以外）とそれ以外に振り分ける。
     promotable: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
     remaining: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
 
@@ -196,7 +248,7 @@ def build_order(
         else:
             remaining.append((idx, q, stat))
 
-    # 5. 昇格候補はステージ順位→次回出題時刻→元の並び順で優先。
+    # 6. 昇格候補はステージ順位→次回出題時刻→元の並び順で優先。
     promotable.sort(
         key=lambda item: (
             _stage_rank(item[2].get("stage")),
@@ -208,7 +260,7 @@ def build_order(
     order: List[OrderEntry] = []
     chosen = set()
 
-    # 6. 昇格候補から枠が埋まるまで採用し、ステージ名をbucketに残す。
+    # 7. 昇格候補から枠が埋まるまで採用し、ステージ名をbucketに残す。
     for idx, q, stat in promotable:
         if len(order) >= desired:
             break
@@ -225,7 +277,7 @@ def build_order(
         )
         chosen.add(idx)
 
-    # 7. まだ足りない分は残りを元の並び順で補充。
+    # 8. まだ足りない分は残りを元の並び順で補充。
     if len(order) < desired and remaining:
         remaining.sort(key=lambda item: item[0])
         for idx, q, stat in remaining:
