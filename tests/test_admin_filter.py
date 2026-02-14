@@ -38,7 +38,9 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
     assert res.status_code == 200
     data = res.get_json()
     assert all(q["type"] == "reorder" for q in data["questionStats"])
+    assert all((q.get("level") or "").startswith("Lv") for q in data["questionStats"])
     assert all(r["unit"] == "present-simple" for r in data["recentAnswers"])
+    assert all((r.get("level") or "").startswith("Lv") for r in data["recentAnswers"])
     assert all("stage" in r for r in data["recentAnswers"])
     assert [u["unit"] for u in data["byUnit"]] == ["present-simple"]
 
@@ -46,7 +48,9 @@ def test_admin_summary_show_filters(tmp_path, monkeypatch):
     assert res2.status_code == 200
     data2 = res2.get_json()
     assert all(q["type"] == "vocab-choice" for q in data2["questionStats"])
+    assert all((q.get("level") or "").startswith("Lv") for q in data2["questionStats"])
     assert all(r["unit"] == "疑問詞" for r in data2["recentAnswers"])
+    assert all((r.get("level") or "").startswith("Lv") for r in data2["recentAnswers"])
     assert all("stage" in r for r in data2["recentAnswers"])
     assert [u["unit"] for u in data2["byUnit"]] == ["疑問詞"]
 

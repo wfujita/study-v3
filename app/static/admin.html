@@ -181,14 +181,14 @@
     <section class="card">
       <h3 style="margin:0 0 8px">最近の解答（最大100件）</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">ランク</th><th class="center">ステージ</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">レベル</th><th class="center">ランク</th><th class="center">ステージ</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
     <section class="card">
       <h3 style="margin:0 0 8px">よく間違える問題（TOP10）</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th>単元</th><th class="center">ステージ</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-top"><thead><tr><th style="width:60px">回数</th><th>ID</th><th>日本語</th><th>英語</th><th class="center">レベル</th><th>単元</th><th class="center">ステージ</th><th class="center">誤答/解答</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -201,19 +201,19 @@
       <div class="card" id="sec-vocab-choice">
         <h3 style="margin:0 0 8px">単語（英語→日本語 選択式）</h3>
         <div style="max-height:340px; overflow:auto">
-          <table id="tbl-words-vocab-choice"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+          <table id="tbl-words-vocab-choice"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">レベル</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
       <div class="card" id="sec-reorder">
         <h3 style="margin:0 0 8px">並べ替え問題</h3>
         <div style="max-height:340px; overflow:auto">
-          <table id="tbl-words-reorder"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+          <table id="tbl-words-reorder"><thead><tr><th>ID</th><th>日本語</th><th>英語</th><th class="center">レベル</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
       <div class="card" id="sec-rewrite">
         <h3 style="margin:0 0 8px">書き換え問題</h3>
         <div style="max-height:340px; overflow:auto">
-          <table id="tbl-words-rewrite"><thead><tr><th>ID</th><th>指示</th><th>英語</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
+          <table id="tbl-words-rewrite"><thead><tr><th>ID</th><th>指示</th><th>英語</th><th class="center">レベル</th><th class="center">正答</th><th class="center">誤答</th><th class="center">ランク</th><th class="center">次回</th><th class="center">連続正解</th><th class="center">正答率</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
     </section>
@@ -388,6 +388,7 @@
                         <td>${q.id||''}</td>
                         <td>${q.jp||''}</td>
                         <td>${q.en||''}</td>
+                        <td class="center">${q.level||''}</td>
                         <td>${q.unit||''}</td>
                         <td class="center">${stageCell}</td>
                         <td class="center ng">${fmt(q.wrong)} / ${fmt(q.answered)}</td>
@@ -404,10 +405,12 @@
         const at = r.at || r.endedAt;
         const dateText = at? new Date(at).toLocaleString(): '―';
         const rankText = (r && typeof r.rank === 'string') ? r.rank : (r && r.rank ? String(r.rank) : '');
+        const levelText = (r && typeof r.level === 'string') ? r.level : (r && r.level ? String(r.level) : '');
         const stageText = (r && typeof r.stage === 'string') ? r.stage : (r && r.stage ? String(r.stage) : '');
         const stageBadge = stageText ? `<span class="badge">${stageText}</span>` : '<span class="muted">--</span>';
         tr.innerHTML = `<td>${dateText}</td>`+
                        `<td>${r.id||''}</td>`+
+                       `<td class="center">${levelText||''}</td>`+
                        `<td class="center">${rankText||''}</td>`+
                        `<td class="center">${stageBadge}</td>`+
                        `<td class="center ${ok?'ok':'ng'}">${mark}</td>`+
@@ -435,6 +438,7 @@
         tr.innerHTML = `<td>${q.id||''}</td>
                         <td>${q.jp||''}</td>
                         <td>${q.en||''}</td>
+                        <td class="center">${q.level||''}</td>
                         <td class="center ok">${fmt(q.correct)}</td>
                         <td class="center ng">${fmt(q.wrong)}</td>
                         <td class="center">${stageCell}</td>
