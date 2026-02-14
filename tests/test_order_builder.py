@@ -200,12 +200,54 @@ def test_shortage_then_fill_with_remaining_questions():
 
 def test_level_unlock_keeps_higher_levels_locked_until_mastered():
     deck = [
-        {"id": "l1-a", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "a", "jp": "a"},
-        {"id": "l1-b", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "b", "jp": "b"},
-        {"id": "l1-c", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "c", "jp": "c"},
-        {"id": "l1-d", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "d", "jp": "d"},
-        {"id": "l1-e", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "e", "jp": "e"},
-        {"id": "l2-a", "type": "vocab-choice", "level": "Lv2", "unit": "U1", "en": "f", "jp": "f"},
+        {
+            "id": "l1-a",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "a",
+            "jp": "a",
+        },
+        {
+            "id": "l1-b",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "b",
+            "jp": "b",
+        },
+        {
+            "id": "l1-c",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "c",
+            "jp": "c",
+        },
+        {
+            "id": "l1-d",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "d",
+            "jp": "d",
+        },
+        {
+            "id": "l1-e",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "e",
+            "jp": "e",
+        },
+        {
+            "id": "l2-a",
+            "type": "vocab-choice",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "f",
+            "jp": "f",
+        },
     ]
     stats = _build_stats(
         {
@@ -234,12 +276,54 @@ def test_level_unlock_keeps_higher_levels_locked_until_mastered():
 
 def test_level_unlock_releases_next_level_after_mastery_threshold():
     deck = [
-        {"id": "l1-a", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "a", "jp": "a"},
-        {"id": "l1-b", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "b", "jp": "b"},
-        {"id": "l1-c", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "c", "jp": "c"},
-        {"id": "l1-d", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "d", "jp": "d"},
-        {"id": "l1-e", "type": "vocab-choice", "level": "Lv1", "unit": "U1", "en": "e", "jp": "e"},
-        {"id": "l2-a", "type": "vocab-choice", "level": "Lv2", "unit": "U1", "en": "f", "jp": "f"},
+        {
+            "id": "l1-a",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "a",
+            "jp": "a",
+        },
+        {
+            "id": "l1-b",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "b",
+            "jp": "b",
+        },
+        {
+            "id": "l1-c",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "c",
+            "jp": "c",
+        },
+        {
+            "id": "l1-d",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "d",
+            "jp": "d",
+        },
+        {
+            "id": "l1-e",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "e",
+            "jp": "e",
+        },
+        {
+            "id": "l2-a",
+            "type": "vocab-choice",
+            "level": "Lv2",
+            "unit": "U1",
+            "en": "f",
+            "jp": "f",
+        },
     ]
     stats = _build_stats(
         {

@@ -153,7 +153,7 @@ def _resolve_stat(
 
 
 def _is_mastered_stage(stage: Any) -> bool:
-    normalized = (str(stage).strip().upper() if stage is not None else "")
+    normalized = str(stage).strip().upper() if stage is not None else ""
     return normalized in {"E", "D", "C", "B", "A"}
 
 
@@ -169,7 +169,9 @@ def _determine_unlocked_level_idx(
         ]
         if not level_entries:
             break
-        mastered = sum(1 for _, stat in level_entries if _is_mastered_stage(stat.get("stage")))
+        mastered = sum(
+            1 for _, stat in level_entries if _is_mastered_stage(stat.get("stage"))
+        )
         mastery_rate = mastered / len(level_entries)
         if mastery_rate >= LEVEL_UNLOCK_MASTERY_THRESHOLD:
             unlocked_idx = idx + 1
