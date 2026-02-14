@@ -44,3 +44,32 @@ cp .envrc.example .envrc
 direnv allow
 ```
 
+## `git pull` で "Need to specify how to reconcile divergent branches" と出る場合
+
+ローカルブランチとリモートブランチが分岐している状態で `git pull` すると、pull 戦略が未設定な環境では次のエラーが出ます。
+
+```
+fatal: Need to specify how to reconcile divergent branches.
+```
+
+このリポジトリでは、履歴を直線に保ちやすい **rebase** を推奨します。以下のいずれかを実行してください。
+
+```bash
+# このリポジトリだけ設定
+git config pull.rebase true
+
+# 以後の pull で利用
+git pull
+```
+
+グローバルに設定したい場合は `--global` を付けます。
+
+```bash
+git config --global pull.rebase true
+```
+
+一時的に今回だけ指定するなら、次でも同じです。
+
+```bash
+git pull --rebase
+```
