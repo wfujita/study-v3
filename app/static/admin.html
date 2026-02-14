@@ -495,7 +495,7 @@
               scroll.innerHTML = '<div class="empty">該当なし</div>';
             }else{
               const table = document.createElement('table');
-              table.innerHTML = '<thead><tr><th>ID</th><th>日本語</th><th>英語</th><th>次回</th><th>単元</th><th>種別</th></tr></thead>';
+              table.innerHTML = '<thead><tr><th>ID</th><th>日本語</th><th>英語</th><th>Lv</th><th>次回</th><th>単元</th><th>種別</th></tr></thead>';
               const body = document.createElement('tbody');
               questions.forEach(q=>{
                 const tr = document.createElement('tr');
@@ -504,6 +504,7 @@
                   ['ID', q.id||''],
                   ['日本語', q.jp||''],
                   ['英語', q.en||''],
+                  ['Lv', q.level||''],
                   ['次回', dueText],
                   ['単元', q.unit||''],
                   ['種別', q.type||'']
