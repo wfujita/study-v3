@@ -1,0 +1,394 @@
+[
+  {
+    "id": "w201",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「スポーツ」を英語で書きなさい。",
+    "en": "sport",
+    "answers": [
+      "sport"
+    ],
+    "source": "スポーツ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「スポーツ」は英語で sport です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w202",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「サッカー」を英語で書きなさい。",
+    "en": "soccer",
+    "answers": [
+      "soccer"
+    ],
+    "source": "サッカー",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「サッカー」は英語で soccer です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w203",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「バスケットボール」を英語で書きなさい。",
+    "en": "basketball",
+    "answers": [
+      "basketball"
+    ],
+    "source": "バスケットボール",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「バスケットボール」は英語で basketball です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w204",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「お気に入りの／大好きな」を英語で書きなさい。",
+    "en": "favorite",
+    "answers": [
+      "favorite"
+    ],
+    "source": "お気に入りの／大好きな",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「お気に入りの／大好きな」は英語で favorite です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w205",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「音楽」を英語で書きなさい。",
+    "en": "music",
+    "answers": [
+      "music"
+    ],
+    "source": "音楽",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「音楽」は英語で music です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w206",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「歴史」を英語で書きなさい。",
+    "en": "history",
+    "answers": [
+      "history"
+    ],
+    "source": "歴史",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「歴史」は英語で history です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w207",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「数学」を英語で書きなさい。",
+    "en": "math",
+    "answers": [
+      "math"
+    ],
+    "source": "数学",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「数学」は英語で math です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w208",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「絵／写真」を英語で書きなさい。",
+    "en": "picture",
+    "answers": [
+      "picture"
+    ],
+    "source": "絵／写真",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「絵／写真」は英語で picture です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w209",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「ピアノ」を英語で書きなさい。",
+    "en": "piano",
+    "answers": [
+      "piano"
+    ],
+    "source": "ピアノ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ピアノ」は英語で piano です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w210",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「作る」を英語で書きなさい。",
+    "en": "make",
+    "answers": [
+      "make"
+    ],
+    "source": "作る",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「作る」は英語で make です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w211",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「ほほえみ／ほほえむ」を英語で書きなさい。",
+    "en": "smile",
+    "answers": [
+      "smile"
+    ],
+    "source": "ほほえみ／ほほえむ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ほほえみ／ほほえむ」は英語で smile です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w212",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「気持ち」を英語で書きなさい。",
+    "en": "feeling",
+    "answers": [
+      "feeling"
+    ],
+    "source": "気持ち",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「気持ち」は英語で feeling です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w213",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「幸せな／うれしい」を英語で書きなさい。",
+    "en": "happy",
+    "answers": [
+      "happy"
+    ],
+    "source": "幸せな／うれしい",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「幸せな／うれしい」は英語で happy です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w214",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「みんな」を英語で書きなさい。",
+    "en": "everyone",
+    "answers": [
+      "everyone"
+    ],
+    "source": "みんな",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「みんな」は英語で everyone です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w215",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「誕生日」を英語で書きなさい。",
+    "en": "birthday",
+    "answers": [
+      "birthday"
+    ],
+    "source": "誕生日",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「誕生日」は英語で birthday です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w216",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「月（つき）」を英語で書きなさい。",
+    "en": "month",
+    "answers": [
+      "month"
+    ],
+    "source": "月（つき）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「月（つき）」は英語で month です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w217",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「1月」を英語で書きなさい。",
+    "en": "january",
+    "answers": [
+      "january"
+    ],
+    "source": "1月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「1月」は英語で january です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w218",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「2月」を英語で書きなさい。",
+    "en": "february",
+    "answers": [
+      "february"
+    ],
+    "source": "2月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「2月」は英語で february です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w219",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「3月」を英語で書きなさい。",
+    "en": "march",
+    "answers": [
+      "march"
+    ],
+    "source": "3月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「3月」は英語で march です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w220",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「4月」を英語で書きなさい。",
+    "en": "april",
+    "answers": [
+      "april"
+    ],
+    "source": "4月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「4月」は英語で april です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w221",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「5月」を英語で書きなさい。",
+    "en": "may",
+    "answers": [
+      "may"
+    ],
+    "source": "5月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「5月」は英語で may です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w222",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「6月」を英語で書きなさい。",
+    "en": "june",
+    "answers": [
+      "june"
+    ],
+    "source": "6月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「6月」は英語で june です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w223",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「7月」を英語で書きなさい。",
+    "en": "july",
+    "answers": [
+      "july"
+    ],
+    "source": "7月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「7月」は英語で july です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w224",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「8月」を英語で書きなさい。",
+    "en": "august",
+    "answers": [
+      "august"
+    ],
+    "source": "8月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「8月」は英語で august です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w225",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「9月」を英語で書きなさい。",
+    "en": "september",
+    "answers": [
+      "september"
+    ],
+    "source": "9月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「9月」は英語で september です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w226",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「10月」を英語で書きなさい。",
+    "en": "october",
+    "answers": [
+      "october"
+    ],
+    "source": "10月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「10月」は英語で october です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w227",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「11月」を英語で書きなさい。",
+    "en": "november",
+    "answers": [
+      "november"
+    ],
+    "source": "11月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「11月」は英語で november です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w228",
+    "unit": "vocab-ja-en-lv1-月",
+    "jp": "「12月」を英語で書きなさい。",
+    "en": "december",
+    "answers": [
+      "december"
+    ],
+    "source": "12月",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「12月」は英語で december です。",
+    "level": "Lv1"
+  }
+]
