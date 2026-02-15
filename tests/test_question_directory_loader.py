@@ -18,8 +18,8 @@ def test_directory_based_questions_are_loaded():
     assert isinstance(payload.get("rewrite"), list)
 
     assert len(payload["questions"]) == 71
-    assert len(payload["vocabChoice"]) == 29
-    assert len(payload["rewrite"]) == 5
+    assert len(payload["vocabChoice"]) == 57
+    assert len(payload["rewrite"]) == 33
 
 
 def test_directory_layout_exists():
