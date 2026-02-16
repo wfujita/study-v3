@@ -106,6 +106,30 @@ def should_prioritize_stage_promotion(stage: Any, next_due: Any, now: datetime) 
         return False
 
 
+def is_stage_due_for_review(stage: Any, next_due: Any, now: datetime) -> bool:
+    """Return True when the question can be shown in the current set.
+
+    Stage F is always eligible. Stages B-E are deferred until nextDueAt when it
+    exists. Stage A remains eligible because it has no next stage.
+    """
+    try:
+        stage_key = str(stage).strip().upper()
+    except Exception:
+        stage_key = ""
+
+    if stage_key in ("", "F", "A"):
+        return True
+
+    due = _parse_iso_date(next_due)
+    if due is None:
+        return True
+
+    try:
+        return due <= now
+    except Exception:
+        return True
+
+
 @dataclass
 class OrderEntry:
     idx: int
@@ -243,6 +267,10 @@ def build_order(
     remaining: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
 
     for idx, q, stat in entries:
+        if not is_stage_due_for_review(
+            stat.get("stage"), stat.get("nextDueAt"), now_dt
+        ):
+            continue
         if should_prioritize_stage_promotion(
             stat.get("stage"), stat.get("nextDueAt"), now_dt
         ):

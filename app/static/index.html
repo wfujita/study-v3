@@ -674,6 +674,19 @@
       return !!shouldPrioritizeStagePromotion(normalizedStage, nextDueValue, effectiveNow);
     }
 
+    function isStageDueForReview(stage, nextDue, now){
+      const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
+      if(!normalizedStage || normalizedStage === 'F' || normalizedStage === 'A'){
+        return true;
+      }
+      const effectiveNow = Number.isFinite(now) ? now : Date.now();
+      const nextDueValue = nextDue instanceof Date ? nextDue : null;
+      if(!(nextDueValue instanceof Date)){
+        return true;
+      }
+      return nextDueValue.getTime() <= effectiveNow;
+    }
+
     async function fetchStatsForEntries(entries, user){
       const trimmedUser = (user || '').trim();
       const ids = entries
@@ -827,6 +840,9 @@
         const streak = Math.max(0, rawStreak);
         const nextDue = stat ? parseIsoDate(stat.nextDueAt) : null;
         const payload = { idx: i, stage: normalizedStage, streak, nextDue, levelIdx };
+        if(!isStageDueForReview(normalizedStage, nextDue, now)){
+          continue;
+        }
         if(willStageUpOnSuccess(normalizedStage, nextDue, now)){
           promotable.push(payload);
         }else if(Number.isFinite(levelIdx) && levelIdx > maxLevelIdx){
