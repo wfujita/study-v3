@@ -267,7 +267,9 @@ def build_order(
     remaining: List[Tuple[int, Mapping[str, Any], Dict[str, Any]]] = []
 
     for idx, q, stat in entries:
-        if not is_stage_due_for_review(stat.get("stage"), stat.get("nextDueAt"), now_dt):
+        if not is_stage_due_for_review(
+            stat.get("stage"), stat.get("nextDueAt"), now_dt
+        ):
             continue
         if should_prioritize_stage_promotion(
             stat.get("stage"), stat.get("nextDueAt"), now_dt
