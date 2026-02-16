@@ -198,6 +198,50 @@ def test_shortage_then_fill_with_remaining_questions():
     assert streaks == [2, 0]
 
 
+def test_future_due_stage_is_not_selected_before_wait_period():
+    deck = [
+        {
+            "id": "fresh-f",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "fresh",
+            "jp": "fresh",
+        },
+        {
+            "id": "locked-e",
+            "type": "vocab-choice",
+            "level": "Lv1",
+            "unit": "U1",
+            "en": "locked",
+            "jp": "locked",
+        },
+    ]
+    stats = _build_stats(
+        {
+            "fresh-f": {"stage": "F", "streak": 0, "nextDueAt": None},
+            "locked-e": {
+                "stage": "E",
+                "streak": 3,
+                "nextDueAt": "2099-01-01T00:00:00.000Z",
+            },
+        }
+    )
+
+    result = order_builder.build_order(
+        deck,
+        stats,
+        total_per_set=2,
+        mode="normal",
+        unit_filter="",
+        default_stage="F",
+        now=dt.datetime(2000, 1, 2, tzinfo=dt.timezone.utc),
+    )
+
+    ids_with_buckets = [(entry.id, entry.bucket) for entry in result.order]
+    assert ids_with_buckets == [("fresh-f", None)]
+
+
 def test_level_unlock_keeps_higher_levels_locked_until_mastered():
     deck = [
         {
