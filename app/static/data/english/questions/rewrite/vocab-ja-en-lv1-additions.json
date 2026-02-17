@@ -390,5 +390,411 @@
     "tip": "つづりと小文字を確認して入力しましょう。",
     "explain": "「12月」は英語で december です。",
     "level": "Lv1"
+  },
+  {
+    "id": "w229",
+    "unit": "vocab-ja-en-lv1-日付・順序",
+    "jp": "「日付」を英語で書きなさい。",
+    "en": "date",
+    "answers": [
+      "date"
+    ],
+    "source": "日付",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「日付」は英語で date です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w230",
+    "unit": "vocab-ja-en-lv1-日付・順序",
+    "jp": "「最初の／1番目の」を英語で書きなさい。",
+    "en": "first",
+    "answers": [
+      "first"
+    ],
+    "source": "最初の／1番目の",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「最初の／1番目の」は英語で first です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w231",
+    "unit": "vocab-ja-en-lv1-日付・順序",
+    "jp": "「2番目の」を英語で書きなさい。",
+    "en": "second",
+    "answers": [
+      "second"
+    ],
+    "source": "2番目の",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「2番目の」は英語で second です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w232",
+    "unit": "vocab-ja-en-lv1-日付・順序",
+    "jp": "「3番目の」を英語で書きなさい。",
+    "en": "third",
+    "answers": [
+      "third"
+    ],
+    "source": "3番目の",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「3番目の」は英語で third です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w233",
+    "unit": "vocab-ja-en-lv1-色",
+    "jp": "「色」を英語で書きなさい。",
+    "en": "color",
+    "answers": [
+      "color"
+    ],
+    "source": "色",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「色」は英語で color です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w234",
+    "unit": "vocab-ja-en-lv1-色",
+    "jp": "「白（色）」を英語で書きなさい。",
+    "en": "white",
+    "answers": [
+      "white"
+    ],
+    "source": "白（色）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「白（色）」は英語で white です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w235",
+    "unit": "vocab-ja-en-lv1-色",
+    "jp": "「青（色）」を英語で書きなさい。",
+    "en": "blue",
+    "answers": [
+      "blue"
+    ],
+    "source": "青（色）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「青（色）」は英語で blue です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w236",
+    "unit": "vocab-ja-en-lv1-色",
+    "jp": "「黒（色）」を英語で書きなさい。",
+    "en": "black",
+    "answers": [
+      "black"
+    ],
+    "source": "黒（色）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「黒（色）」は英語で black です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w237",
+    "unit": "vocab-ja-en-lv1-季節",
+    "jp": "「夏」を英語で書きなさい。",
+    "en": "summer",
+    "answers": [
+      "summer"
+    ],
+    "source": "夏",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「夏」は英語で summer です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w238",
+    "unit": "vocab-ja-en-lv1-季節",
+    "jp": "「春」を英語で書きなさい。",
+    "en": "spring",
+    "answers": [
+      "spring"
+    ],
+    "source": "春",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「春」は英語で spring です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w239",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「楽しむ」を英語で書きなさい。",
+    "en": "enjoy",
+    "answers": [
+      "enjoy"
+    ],
+    "source": "楽しむ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「楽しむ」は英語で enjoy です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w240",
+    "unit": "vocab-ja-en-lv1-自然・場所",
+    "jp": "「山」を英語で書きなさい。",
+    "en": "mountain",
+    "answers": [
+      "mountain"
+    ],
+    "source": "山",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「山」は英語で mountain です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w241",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「踊る／ダンスをする」を英語で書きなさい。",
+    "en": "dance",
+    "answers": [
+      "dance"
+    ],
+    "source": "踊る／ダンスをする",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「踊る／ダンスをする」は英語で dance です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w242",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「ギター」を英語で書きなさい。",
+    "en": "guitar",
+    "answers": [
+      "guitar"
+    ],
+    "source": "ギター",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ギター」は英語で guitar です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w243",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「勉強する」を英語で書きなさい。",
+    "en": "study",
+    "answers": [
+      "study"
+    ],
+    "source": "勉強する",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「勉強する」は英語で study です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w244",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「英語」を英語で書きなさい。",
+    "en": "english",
+    "answers": [
+      "english"
+    ],
+    "source": "英語",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「英語」は英語で english です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w245",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「たくさんの」を英語で書きなさい。",
+    "en": "many",
+    "answers": [
+      "many"
+    ],
+    "source": "たくさんの",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「たくさんの」は英語で many です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w246",
+    "unit": "vocab-ja-en-lv1-人・関係",
+    "jp": "「友だち」を英語で書きなさい。",
+    "en": "friend",
+    "answers": [
+      "friend"
+    ],
+    "source": "友だち",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「友だち」は英語で friend です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w247",
+    "unit": "vocab-ja-en-lv1-食べ物",
+    "jp": "「果物」を英語で書きなさい。",
+    "en": "fruit",
+    "answers": [
+      "fruit"
+    ],
+    "source": "果物",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「果物」は英語で fruit です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w248",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「始める」を英語で書きなさい。",
+    "en": "start",
+    "answers": [
+      "start"
+    ],
+    "source": "始める",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「始める」は英語で start です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w249",
+    "unit": "vocab-ja-en-lv1-数",
+    "jp": "「8（8つの）」を英語で書きなさい。",
+    "en": "eight",
+    "answers": [
+      "eight"
+    ],
+    "source": "8（8つの）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「8（8つの）」は英語で eight です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w250",
+    "unit": "vocab-ja-en-lv1-数",
+    "jp": "「11（11の）」を英語で書きなさい。",
+    "en": "eleven",
+    "answers": [
+      "eleven"
+    ],
+    "source": "11（11の）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「11（11の）」は英語で eleven です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w251",
+    "unit": "vocab-ja-en-lv1-数",
+    "jp": "「12（12の）」を英語で書きなさい。",
+    "en": "twelve",
+    "answers": [
+      "twelve"
+    ],
+    "source": "12（12の）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「12（12の）」は英語で twelve です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w252",
+    "unit": "vocab-ja-en-lv1-数",
+    "jp": "「100（100の）」を英語で書きなさい。",
+    "en": "hundred",
+    "answers": [
+      "hundred"
+    ],
+    "source": "100（100の）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「100（100の）」は英語で hundred です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w253",
+    "unit": "vocab-ja-en-lv1-自然・生き物",
+    "jp": "「動物」を英語で書きなさい。",
+    "en": "animal",
+    "answers": [
+      "animal"
+    ],
+    "source": "動物",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「動物」は英語で animal です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w254",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「いっしょに」を英語で書きなさい。",
+    "en": "together",
+    "answers": [
+      "together"
+    ],
+    "source": "いっしょに",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「いっしょに」は英語で together です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w255",
+    "unit": "vocab-ja-en-lv1-食べ物",
+    "jp": "「りんご」を英語で書きなさい。",
+    "en": "apple",
+    "answers": [
+      "apple"
+    ],
+    "source": "りんご",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「りんご」は英語で apple です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w256",
+    "unit": "vocab-ja-en-lv1-自然・生き物",
+    "jp": "「魚」を英語で書きなさい。",
+    "en": "fish",
+    "answers": [
+      "fish"
+    ],
+    "source": "魚",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「魚」は英語で fish です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w257",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「えんぴつ」を英語で書きなさい。",
+    "en": "pencil",
+    "answers": [
+      "pencil"
+    ],
+    "source": "えんぴつ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「えんぴつ」は英語で pencil です。",
+    "level": "Lv1"
   }
 ]
