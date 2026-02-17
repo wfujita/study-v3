@@ -84,7 +84,7 @@ def test_stage_promotion_label_includes_f_to_e_and_b_to_a():
     process.stdout.write(JSON.stringify(results));
     """
     output = run_node(node_code)
-    assert json.loads(output) == [None, 'F⇒E', None, 'B⇒A', None]
+    assert json.loads(output) == [None, "F⇒E", None, "B⇒A", None]
 
 
 def test_index_displays_stage_promotion_label():
