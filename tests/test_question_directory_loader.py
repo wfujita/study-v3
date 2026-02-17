@@ -19,7 +19,7 @@ def test_directory_based_questions_are_loaded():
 
     assert len(payload["questions"]) == 71
     assert len(payload["vocabChoice"]) == 57
-    assert len(payload["rewrite"]) == 33
+    assert len(payload["rewrite"]) == 62
 
 
 def test_directory_layout_exists():
