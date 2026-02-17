@@ -65,9 +65,42 @@
     return dueDate.getTime() <= nowMs;
   }
 
+  function nextStage(stage){
+    const stageKey = normalizeStageKey(stage);
+    if(!stageKey){
+      return null;
+    }
+    const sequence = ['F', 'E', 'D', 'C', 'B', 'A'];
+    const idx = sequence.indexOf(stageKey);
+    if(idx === -1 || idx >= sequence.length - 1){
+      return null;
+    }
+    return sequence[idx + 1];
+  }
+
+  function getStagePromotionLabel(stage, streak, nextDue, nowValue){
+    const stageKey = normalizeStageKey(stage);
+    const target = nextStage(stageKey);
+    if(!stageKey || !target){
+      return null;
+    }
+    if(stageKey === 'F'){
+      const streakValue = Number.isFinite(streak) ? Number(streak) : 0;
+      if(streakValue >= 2){
+        return `${stageKey}⇒${target}`;
+      }
+      return null;
+    }
+    if(shouldPrioritizeStagePromotion(stageKey, nextDue, nowValue)){
+      return `${stageKey}⇒${target}`;
+    }
+    return null;
+  }
+
   const api = {
     determineStagePriorityQuota,
     shouldPrioritizeStagePromotion,
+    getStagePromotionLabel,
   };
 
   if(typeof global === 'object' && global){

@@ -63,3 +63,33 @@ def test_stage_promotion_helper_respects_due_dates():
     """
     output = run_node(node_code)
     assert json.loads(output) == [False, False, True, True, False, False]
+
+
+def test_stage_promotion_label_includes_f_to_e_and_b_to_a():
+    script = (
+        Path(__file__).resolve().parent.parent / "app" / "static" / "stage_priority.js"
+    )
+    assert script.exists(), "stage_priority.js should exist"
+    node_code = """
+    const mod = require('./app/static/stage_priority.js');
+    const fn = mod.getStagePromotionLabel;
+    const now = Date.UTC(2024, 0, 10, 12, 0, 0);
+    const results = [
+      fn('F', 1, null, now),
+      fn('F', 2, null, now),
+      fn('B', 4, '2099-01-01T00:00:00Z', now),
+      fn('B', 4, '2024-01-01T00:00:00Z', now),
+      fn('A', 9, '2024-01-01T00:00:00Z', now),
+    ];
+    process.stdout.write(JSON.stringify(results));
+    """
+    output = run_node(node_code)
+    assert json.loads(output) == [None, 'F⇒E', None, 'B⇒A', None]
+
+
+def test_index_displays_stage_promotion_label():
+    html = (
+        Path(__file__).resolve().parent.parent / "app" / "static" / "index.html"
+    ).read_text(encoding="utf-8")
+    assert "昇段チャンス" in html
+    assert "getStagePromotionLabel(stage, data.streak, nextDue, Date.now())" in html

@@ -654,6 +654,27 @@
           return nextDue.getTime() <= effectiveNow;
         };
 
+    const getStagePromotionLabel = typeof stagePriorityApi.getStagePromotionLabel === 'function'
+      ? stagePriorityApi.getStagePromotionLabel
+      : (stage, streak, nextDue, nowValue) => {
+          const normalizedStage = normalizeStage(stage);
+          const sequence = ['F', 'E', 'D', 'C', 'B', 'A'];
+          const idx = sequence.indexOf(normalizedStage);
+          if(idx < 0 || idx >= sequence.length - 1){
+            return null;
+          }
+          const targetStage = sequence[idx + 1];
+          if(normalizedStage === 'F'){
+            const streakValue = Number.isFinite(streak) ? Number(streak) : 0;
+            return streakValue >= 2 ? `${normalizedStage}⇒${targetStage}` : null;
+          }
+          const dueValue = nextDue instanceof Date ? nextDue : null;
+          if(willStageUpOnSuccess(normalizedStage, dueValue, nowValue)){
+            return `${normalizedStage}⇒${targetStage}`;
+          }
+          return null;
+        };
+
     function parseIsoDate(value){
       if(!value) return null;
       const date = new Date(value);
@@ -1067,9 +1088,16 @@
             return;
           }
           const ans=data.answered||0; const ok=data.correct||0;
+          const stage = data.stage ? normalizeStage(data.stage) : null;
+          const nextDue = parseIsoDate(data.nextDueAt);
+          const promotionLabel = stage
+            ? getStagePromotionLabel(stage, data.streak, nextDue, Date.now())
+            : null;
           elStreak.textContent = `連続正解: ${data.streak||0}`;
           elAcc.textContent = ans? `正解率: ${Math.round((ok/ans)*100)}% (${ok}/${ans})` : '正解率: --';
-          elStage.textContent = data.stage ? `ステージ: ${data.stage}` : 'ステージ: --';
+          elStage.textContent = stage
+            ? `ステージ: ${stage}${promotionLabel ? `（昇段チャンス ${promotionLabel}）` : ''}`
+            : 'ステージ: --';
         })
         .catch(()=>{
           elStreak.textContent='連続正解: --';
