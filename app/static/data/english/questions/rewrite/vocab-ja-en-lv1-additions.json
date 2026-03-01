@@ -796,5 +796,257 @@
     "tip": "つづりと小文字を確認して入力しましょう。",
     "explain": "「えんぴつ」は英語で pencil です。",
     "level": "Lv1"
+  },
+  {
+    "id": "w258",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「地図」を英語で書きなさい。",
+    "en": "map",
+    "answers": [
+      "map"
+    ],
+    "source": "地図",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「地図」は英語で map です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w259",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「道／方法」を英語で書きなさい。",
+    "en": "way",
+    "answers": [
+      "way"
+    ],
+    "source": "道／方法",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「道／方法」は英語で way です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w260",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「ペン」を英語で書きなさい。",
+    "en": "pen",
+    "answers": [
+      "pen"
+    ],
+    "source": "ペン",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ペン」は英語で pen です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w261",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「切る／切り傷」を英語で書きなさい。",
+    "en": "cut",
+    "answers": [
+      "cut"
+    ],
+    "source": "切る／切り傷",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「切る／切り傷」は英語で cut です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w262",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「かわいい」を英語で書きなさい。",
+    "en": "cute",
+    "answers": [
+      "cute"
+    ],
+    "source": "かわいい",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「かわいい」は英語で cute です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w263",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「歌う」を英語で書きなさい。",
+    "en": "sing",
+    "answers": [
+      "sing"
+    ],
+    "source": "歌う",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「歌う」は英語で sing です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w264",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「電話（名）／電話する（動）」を英語で書きなさい。",
+    "en": "phone",
+    "answers": [
+      "phone"
+    ],
+    "source": "電話（名）／電話する（動）",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「電話（名）／電話する（動）」は英語で phone です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w265",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「ここに」を英語で書きなさい。",
+    "en": "here",
+    "answers": [
+      "here"
+    ],
+    "source": "ここに",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ここに」は英語で here です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w266",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「全部の／みんな」を英語で書きなさい。",
+    "en": "all",
+    "answers": [
+      "all"
+    ],
+    "source": "全部の／みんな",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「全部の／みんな」は英語で all です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w267",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「〜について／だいたい」を英語で書きなさい。",
+    "en": "about",
+    "answers": [
+      "about"
+    ],
+    "source": "〜について／だいたい",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「〜について／だいたい」は英語で about です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w268",
+    "unit": "vocab-ja-en-lv1-あいさつ",
+    "jp": "「こんにちは」を英語で書きなさい。",
+    "en": "hello",
+    "answers": [
+      "hello"
+    ],
+    "source": "こんにちは",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「こんにちは」は英語で hello です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w269",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「これ／この」を英語で書きなさい。",
+    "en": "this",
+    "answers": [
+      "this"
+    ],
+    "source": "これ／この",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「これ／この」は英語で this です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w270",
+    "unit": "vocab-ja-en-lv1-時・カレンダー",
+    "jp": "「年」を英語で書きなさい。",
+    "en": "year",
+    "answers": [
+      "year"
+    ],
+    "source": "年",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「年」は英語で year です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w271",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「古い／（年齢が）〜歳の」を英語で書きなさい。",
+    "en": "old",
+    "answers": [
+      "old"
+    ],
+    "source": "古い／（年齢が）〜歳の",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「古い／（年齢が）〜歳の」は英語で old です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w272",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「住む／生きる」を英語で書きなさい。",
+    "en": "live",
+    "answers": [
+      "live"
+    ],
+    "source": "住む／生きる",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「住む／生きる」は英語で live です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w273",
+    "unit": "vocab-ja-en-lv1-時・カレンダー",
+    "jp": "「季節」を英語で書きなさい。",
+    "en": "season",
+    "answers": [
+      "season"
+    ],
+    "source": "季節",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「季節」は英語で season です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w274",
+    "unit": "vocab-ja-en-lv1-時・カレンダー",
+    "jp": "「秋（米）／落ちる」を英語で書きなさい。",
+    "en": "fall",
+    "answers": [
+      "fall"
+    ],
+    "source": "秋（米）／落ちる",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「秋（米）／落ちる」は英語で fall です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w275",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「もの／こと」を英語で書きなさい。",
+    "en": "thing",
+    "answers": [
+      "thing"
+    ],
+    "source": "もの／こと",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「もの／こと」は英語で thing です。",
+    "level": "Lv1"
   }
 ]
