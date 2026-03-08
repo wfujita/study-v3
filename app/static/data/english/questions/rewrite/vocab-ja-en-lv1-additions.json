@@ -1048,5 +1048,245 @@
     "tip": "つづりと小文字を確認して入力しましょう。",
     "explain": "「もの／こと」は英語で thing です。",
     "level": "Lv1"
+  },
+  {
+    "id": "w276",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「生徒／学生」を英語で書きなさい。",
+    "en": "student",
+    "answers": [
+      "student"
+    ],
+    "source": "生徒／学生",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「生徒／学生」は英語で student です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w277",
+    "unit": "vocab-ja-en-lv1-場所・方向",
+    "jp": "「そこに／そこへ」を英語で書きなさい。",
+    "en": "there",
+    "answers": [
+      "there"
+    ],
+    "source": "そこに／そこへ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「そこに／そこへ」は英語で there です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w278",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「会う」を英語で書きなさい。",
+    "en": "meet",
+    "answers": [
+      "meet"
+    ],
+    "source": "会う",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「会う」は英語で meet です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w279",
+    "unit": "vocab-ja-en-lv1-コミュニケーション",
+    "jp": "「呼ぶ／電話する」を英語で書きなさい。",
+    "en": "call",
+    "answers": [
+      "call"
+    ],
+    "source": "呼ぶ／電話する",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「呼ぶ／電話する」は英語で call です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w280",
+    "unit": "vocab-ja-en-lv1-人物・肩書",
+    "jp": "「〜さん（女性の敬称）」を英語で書きなさい。",
+    "en": "Ms.",
+    "answers": [
+      "Ms.",
+      "ms."
+    ],
+    "source": "〜さん（女性の敬称）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「〜さん（女性の敬称）」は英語で Ms. です。文頭以外でも Ms. と大文字が一般的です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w281",
+    "unit": "vocab-ja-en-lv1-国・地域",
+    "jp": "「日本」を英語で書きなさい。",
+    "en": "Japan",
+    "answers": [
+      "Japan",
+      "japan"
+    ],
+    "source": "日本",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「日本」は英語で Japan です。国名は先頭を大文字で書きます。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w282",
+    "unit": "vocab-ja-en-lv1-前置詞",
+    "jp": "「〜から」を英語で書きなさい。",
+    "en": "from",
+    "answers": [
+      "from"
+    ],
+    "source": "〜から",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「〜から」は英語で from です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w283",
+    "unit": "vocab-ja-en-lv1-日常動作",
+    "jp": "「見る／（〜に）見える」を英語で書きなさい。",
+    "en": "look",
+    "answers": [
+      "look"
+    ],
+    "source": "見る／（〜に）見える",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「見る／（〜に）見える」は英語で look です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w284",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「美しい／きれいな」を英語で書きなさい。",
+    "en": "beautiful",
+    "answers": [
+      "beautiful"
+    ],
+    "source": "美しい／きれいな",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「美しい／きれいな」は英語で beautiful です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w285",
+    "unit": "vocab-ja-en-lv1-疑問詞",
+    "jp": "「なぜ」を英語で書きなさい。",
+    "en": "why",
+    "answers": [
+      "why"
+    ],
+    "source": "なぜ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「なぜ」は英語で why です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w286",
+    "unit": "vocab-ja-en-lv1-程度",
+    "jp": "「とても」を英語で書きなさい。",
+    "en": "very",
+    "answers": [
+      "very"
+    ],
+    "source": "とても",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「とても」は英語で very です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w287",
+    "unit": "vocab-ja-en-lv1-時・カレンダー",
+    "jp": "「冬」を英語で書きなさい。",
+    "en": "winter",
+    "answers": [
+      "winter"
+    ],
+    "source": "冬",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「冬」は英語で winter です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w288",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「授業／クラス」を英語で書きなさい。",
+    "en": "class",
+    "answers": [
+      "class"
+    ],
+    "source": "授業／クラス",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「授業／クラス」は英語で class です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w289",
+    "unit": "vocab-ja-en-lv1-スポーツ・趣味",
+    "jp": "「泳ぐ」を英語で書きなさい。",
+    "en": "swim",
+    "answers": [
+      "swim"
+    ],
+    "source": "泳ぐ",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「泳ぐ」は英語で swim です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w290",
+    "unit": "vocab-ja-en-lv1-音楽",
+    "jp": "「ドラム／太鼓」を英語で書きなさい。",
+    "en": "drum",
+    "answers": [
+      "drum"
+    ],
+    "source": "ドラム／太鼓",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「ドラム／太鼓」は英語で drum です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w291",
+    "unit": "vocab-ja-en-lv1-接続詞",
+    "jp": "「しかし／でも」を英語で書きなさい。",
+    "en": "but",
+    "answers": [
+      "but"
+    ],
+    "source": "しかし／でも",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「しかし／でも」は英語で but です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w292",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「かっこいい／涼しい」を英語で書きなさい。",
+    "en": "cool",
+    "answers": [
+      "cool"
+    ],
+    "source": "かっこいい／涼しい",
+    "task": "和⇒英",
+    "tip": "つづりと小文字を確認して入力しましょう。",
+    "explain": "「かっこいい／涼しい」は英語で cool です。",
+    "level": "Lv1"
   }
 ]
