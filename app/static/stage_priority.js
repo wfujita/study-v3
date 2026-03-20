@@ -55,8 +55,7 @@
     if(!stageKey || stageKey === 'A' || stageKey === 'F'){
       return false;
     }
-    // 最終ランク（A）や未学習（F）は昇格判定から除外し、
-    // 出題対象から外れないようにする。
+    // 最終ランク（A）や未学習（F）は昇格判定から除外する。
     const nowMs = Number.isFinite(nowValue) ? Number(nowValue) : Date.now();
     const dueDate = toValidDate(nextDue);
     if(!dueDate){

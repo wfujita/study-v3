@@ -95,8 +95,7 @@ def should_prioritize_stage_promotion(stage: Any, next_due: Any, now: datetime) 
         stage_key = ""
     if stage_key in ("", "A", "F"):
         return False
-    # A/Fは昇格チェックから外し、最終ランク（Aランク）も通常の出題枠に残す。
-    # これにより、Aランクの問題も出力対象から除外されずに提示できる。
+    # A/Fは昇格チェックから外す。A は上位ステージ追加まで通常出題もしない。
     due = _parse_iso_date(next_due)
     if due is None:
         return False
@@ -110,15 +109,17 @@ def is_stage_due_for_review(stage: Any, next_due: Any, now: datetime) -> bool:
     """Return True when the question can be shown in the current set.
 
     Stage F is always eligible. Stages B-E are deferred until nextDueAt when it
-    exists. Stage A remains eligible because it has no next stage.
+    exists. Stage A is held back until a higher stage is introduced.
     """
     try:
         stage_key = str(stage).strip().upper()
     except Exception:
         stage_key = ""
 
-    if stage_key in ("", "F", "A"):
+    if stage_key in ("", "F"):
         return True
+    if stage_key == "A":
+        return False
 
     due = _parse_iso_date(next_due)
     if due is None:

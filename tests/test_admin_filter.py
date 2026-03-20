@@ -115,3 +115,50 @@ def test_admin_summary_sessions_include_type(tmp_path, monkeypatch):
     assert types_by_set.get(2) == "reorder"
 
     sys.modules.pop("app.app", None)
+
+
+def test_admin_summary_includes_attempts_older_than_30_days(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    import importlib
+    import sys
+    from datetime import timedelta
+
+    sys.modules.pop("app.app", None)
+    mod = importlib.import_module("app.app")
+    client = mod.app.test_client()
+
+    now = datetime.now(timezone.utc)
+    old = now - timedelta(days=45)
+    rec = {
+        "user": "alice",
+        "mode": "normal",
+        "endedAt": old.isoformat().replace("+00:00", "Z"),
+        "answered": [
+            {
+                "id": "w201",
+                "type": "rewrite",
+                "correct": True,
+                "at": old.isoformat().replace("+00:00", "Z"),
+            }
+        ],
+    }
+
+    subject_dir = tmp_path / "english"
+    subject_dir.mkdir(parents=True, exist_ok=True)
+    with open(subject_dir / "results.ndjson", "w", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
+
+    res = client.get(
+        "/api/admin/summary",
+        query_string={"user": "alice", "show": "rewrite"},
+    )
+    assert res.status_code == 200
+    data = res.get_json()
+    assert [item["id"] for item in data["recentAnswers"]] == ["w201"]
+    stats_by_id = {item["id"]: item for item in data["questionStats"]}
+    assert stats_by_id["w201"]["answered"] == 1
+    assert stats_by_id["w201"]["correct"] == 1
+    assert data["totals"]["answered"] == 1
+    assert data["totals"]["correct"] == 1
+
+    sys.modules.pop("app.app", None)
