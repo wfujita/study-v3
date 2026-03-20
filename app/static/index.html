@@ -645,8 +645,7 @@
           if(!STAGE_PRIORITY.includes(normalizedStage) || normalizedStage === 'A'){
             return false;
           }
-          // Aランクは昇格対象から外し、通常の出題枠に残すことで
-          // 出力対象から漏れないようにしている。
+          // Aランクは昇格対象から外し、上位ステージ追加まで通常出題もしない。
           if(!(nextDue instanceof Date)){
             return false;
           }
@@ -697,8 +696,11 @@
 
     function isStageDueForReview(stage, nextDue, now){
       const normalizedStage = typeof stage === 'string' ? stage.trim().toUpperCase() : '';
-      if(!normalizedStage || normalizedStage === 'F' || normalizedStage === 'A'){
+      if(!normalizedStage || normalizedStage === 'F'){
         return true;
+      }
+      if(normalizedStage === 'A'){
+        return false;
       }
       const effectiveNow = Number.isFinite(now) ? now : Date.now();
       const nextDueValue = nextDue instanceof Date ? nextDue : null;

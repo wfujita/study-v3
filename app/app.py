@@ -1508,7 +1508,6 @@ def admin_summary():
             dt = dt.replace(tzinfo=timezone.utc)
         return dt
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     answered_all = []
     sessions = []
     attempts_by_q = {}
@@ -1572,7 +1571,7 @@ def admin_summary():
                 )
             except Exception:
                 at_dt = None
-            if not at_dt or at_dt < cutoff:
+            if not at_dt:
                 continue
             qid_raw = a.get("id")
             if qid_raw not in (None, ""):
@@ -1648,7 +1647,7 @@ def admin_summary():
                 )
 
         review_done = False
-        if session_dt and session_dt >= cutoff and ans:
+        if session_dt and ans:
             if (r.get("mode") or "normal") != "review":
                 key = (r.get("user", "guest"), r.get("setIndex"))
                 for rev_dt in review_sessions.get(key, []):
