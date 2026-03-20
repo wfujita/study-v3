@@ -136,6 +136,7 @@ class OrderEntry:
     idx: int
     bucket: Optional[str]
     streak: int
+    stage: Optional[str]
     id: Optional[str]
     key: str
 
@@ -302,6 +303,7 @@ def build_order(
                 idx=idx,
                 bucket=f"Stage {stat.get('stage')}",
                 streak=_to_non_negative_int(stat.get("streak")),
+                stage=str(stat.get("stage")).strip().upper() if stat.get("stage") not in (None, "") else None,
                 id=str(q.get("id")) if q.get("id") not in (None, "") else None,
                 key=question_key(q),
             )
@@ -321,6 +323,7 @@ def build_order(
                     idx=idx,
                     bucket=None,
                     streak=_to_non_negative_int(stat.get("streak")),
+                    stage=str(stat.get("stage")).strip().upper() if stat.get("stage") not in (None, "") else None,
                     id=str(q.get("id")) if q.get("id") not in (None, "") else None,
                     key=question_key(q),
                 )

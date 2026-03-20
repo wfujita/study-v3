@@ -1141,10 +1141,14 @@
       return `math-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
     }
 
-    function toAnswerPayload(question, userValues, fieldSpecs, isCorrect){
+    function toAnswerPayload(question, userValues, fieldSpecs, isCorrect, meta){
+      const answerStage = meta && typeof meta.stage === 'string' && meta.stage
+        ? normalizeStage(meta.stage)
+        : null;
       const payload = {
         id: question && question.id ? String(question.id) : null,
         correct: !!isCorrect,
+        answerStage,
         prompt: question && (question.prompt || question.question) ? String(question.prompt || question.question) : '',
       };
       payload.difficulty = normalizeDifficulty(question && question.difficulty);
@@ -1184,7 +1188,7 @@
         correct: isCorrect ? 1 : 0,
         wrong: isCorrect ? 0 : 1,
         endedAt: new Date().toISOString(),
-        answered: [toAnswerPayload(question, userValues, fieldSpecs, isCorrect)]
+        answered: [toAnswerPayload(question, userValues, fieldSpecs, isCorrect, state.stageMeta[state.index])]
       };
       record.answered[0].difficulty = questionDifficulty;
       setSaveStatus('採点結果を送信しています…', 'muted');

@@ -895,7 +895,7 @@
       for(const entry of promotable){
         if(order.length >= desired) break;
         if(chosen.has(entry.idx)) continue;
-        order.push({ idx: entry.idx, bucket: `Stage ${entry.stage}`, streak: entry.streak });
+        order.push({ idx: entry.idx, bucket: `Stage ${entry.stage}`, streak: entry.streak, stage: entry.stage });
         chosen.add(entry.idx);
       }
 
@@ -916,7 +916,7 @@
           for(const entry of list){
             if(order.length >= desired) break;
             if(chosen.has(entry.idx)) continue;
-            order.push({ idx: entry.idx, bucket: bucketLabel, streak: entry.streak });
+            order.push({ idx: entry.idx, bucket: bucketLabel, streak: entry.streak, stage: entry.stage });
             chosen.add(entry.idx);
           }
           if(order.length >= desired) break;
@@ -928,7 +928,7 @@
         for(const entry of remainingFallback){
           if(order.length >= desired) break;
           if(chosen.has(entry.idx)) continue;
-          order.push({ idx: entry.idx, bucket: null, streak: entry.streak });
+          order.push({ idx: entry.idx, bucket: null, streak: entry.streak, stage: entry.stage });
           chosen.add(entry.idx);
         }
       }
@@ -975,7 +975,7 @@
         const streakRaw = Number(entry.streak);
         const streak = Number.isFinite(streakRaw) ? Math.max(0, Math.floor(streakRaw)) : 0;
         const bucket = entry.bucket || null;
-        return { idx, bucket, streak };
+        return { idx, bucket, streak, stage: typeof entry.stage === 'string' && entry.stage ? normalizeStage(entry.stage) : null };
       }).filter(Boolean);
     }
 
@@ -1032,6 +1032,7 @@
           bucket: bucketValue,
           streak: 0,
           id: hasId ? String(question.id) : null,
+          stage: null,
         };
       });
       const hasUser = !!trimmedUser;
@@ -1046,12 +1047,13 @@
             if(Number.isFinite(raw)){
               entry.streak = Math.max(0, raw);
             }
+            entry.stage = stat.stage ? normalizeStage(stat.stage) : null;
           });
         }catch(err){
           console.warn('問題の連続正解データ取得に失敗しました', err);
         }
       }
-      return baseEntries.map(({idx, bucket, streak})=>({ idx, bucket, streak }));
+      return baseEntries.map(({idx, bucket, streak, stage})=>({ idx, bucket, streak, stage: stage || null }));
     }
 
     // === 成績インデックス（ローカル） ===
@@ -1503,12 +1505,17 @@
         correct = normalizedAnswersLower.includes(normalizedAnsLower);
       }
 
+      const currentEntry = state.order[state.qIndex] || {};
+      const answerStage = currentEntry && typeof currentEntry.stage === 'string' && currentEntry.stage
+        ? normalizeStage(currentEntry.stage)
+        : null;
       const record = {
         type: state.qType,
         id: q.id||null,
         unit: q.unit||null,
         userAnswer: ans,
         correct,
+        answerStage,
         setIndex: state.setIndex, qIndex: state.qIndex, mode: (state.mode||'normal'),
         at: nowISO()
       };
@@ -1573,8 +1580,8 @@
           : `❗このセットのまちがいで復習（0問）`;
       }
 
-      const wireAnswered = state.answered.map(({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at}));
-      const wireReviewed = state.reviewed.map(({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,setIndex,qIndex,mode,at}));
+      const wireAnswered = state.answered.map(({type,id,unit,userAnswer,correct,answerStage,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,answerStage,setIndex,qIndex,mode,at}));
+      const wireReviewed = state.reviewed.map(({type,id,unit,userAnswer,correct,answerStage,setIndex,qIndex,mode,at})=>({type,id,unit,userAnswer,correct,answerStage,setIndex,qIndex,mode,at}));
       const wireCorrect  = wireAnswered.filter(x=>x.correct);
       const wireMissed   = wireAnswered.filter(x=>!x.correct);
       const wireReviewMissed = wireReviewed.filter(x=>!x.correct);

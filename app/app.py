@@ -1097,6 +1097,7 @@ def build_order_api():
                 "idx": entry.idx,
                 "bucket": entry.bucket,
                 "streak": entry.streak,
+                "stage": entry.stage,
                 "id": entry.id,
                 "key": entry.key,
             }
@@ -1579,6 +1580,13 @@ def admin_summary():
             else:
                 qid = "(no-id)"
             qm = qmap.get(qid, {})
+            answer_stage = a.get("answerStage") or a.get("stage")
+            if isinstance(answer_stage, str):
+                answer_stage = answer_stage.strip().upper() or None
+            elif answer_stage not in (None, ""):
+                answer_stage = str(answer_stage)
+            else:
+                answer_stage = None
             item = {
                 "user": r.get("user", "guest"),
                 "id": qid,
@@ -1589,6 +1597,7 @@ def admin_summary():
                 "type": _normalize_question_type(a.get("type") or qm.get("type")),
                 "correct": bool(a.get("correct")),
                 "userAnswer": a.get("userAnswer"),
+                "answerStage": answer_stage,
                 "at": at_str,
             }
             stage_state = None
@@ -1605,6 +1614,8 @@ def admin_summary():
             else:
                 item["stage"] = None
                 item["nextDueAt"] = None
+            if item["answerStage"] is None and item["stage"]:
+                item["answerStage"] = item["stage"]
             rank_value = attempt_rank_map.get(id(a))
             if rank_value is not None:
                 item["rank"] = rank_value
