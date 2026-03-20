@@ -181,7 +181,7 @@
     <section class="card">
       <h3 style="margin:0 0 8px">最近の解答（最大100件）</h3>
       <div style="max-height:340px; overflow:auto">
-        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">レベル</th><th class="center">ランク</th><th class="center">ステージ</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-recent"><thead><tr><th>日時</th><th>ID</th><th class="center">レベル</th><th class="center">ランク</th><th class="center">解答時点のステージ</th><th class="center">結果</th><th>ユーザ解答</th><th>正解（英語）</th><th>正解（日本語）</th><th>単元</th><th>ユーザ</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
@@ -406,7 +406,8 @@
         const dateText = at? new Date(at).toLocaleString(): '―';
         const rankText = (r && typeof r.rank === 'string') ? r.rank : (r && r.rank ? String(r.rank) : '');
         const levelText = (r && typeof r.level === 'string') ? r.level : (r && r.level ? String(r.level) : '');
-        const stageText = (r && typeof r.stage === 'string') ? r.stage : (r && r.stage ? String(r.stage) : '');
+        const answerStageText = (r && typeof r.answerStage === 'string') ? r.answerStage : (r && r.answerStage ? String(r.answerStage) : '');
+        const stageText = answerStageText || ((r && typeof r.stage === 'string') ? r.stage : (r && r.stage ? String(r.stage) : ''));
         const stageBadge = stageText ? `<span class="badge">${stageText}</span>` : '<span class="muted">--</span>';
         tr.innerHTML = `<td>${dateText}</td>`+
                        `<td>${r.id||''}</td>`+
