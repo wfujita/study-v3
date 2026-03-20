@@ -1239,7 +1239,7 @@ def admin_users():
     subject = normalize_subject(request.args.get("subject"))
     res = iter_results(subject)
     users = {}
-    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=60)
     for r in res:
         mode = r.get("mode") or "normal"
         session_at = r.get("endedAt") or r.get("receivedAt")
