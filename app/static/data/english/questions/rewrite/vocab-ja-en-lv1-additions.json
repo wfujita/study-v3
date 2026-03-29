@@ -1288,5 +1288,346 @@
     "tip": "つづりと小文字を確認して入力しましょう。",
     "explain": "「かっこいい／涼しい」は英語で cool です。",
     "level": "Lv1"
+  },
+  {
+    "id": "w293",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「学校」を英語で書きなさい。",
+    "en": "school",
+    "answers": [
+      "school"
+    ],
+    "source": "学校",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「学校」は英語で school です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w294",
+    "unit": "vocab-ja-en-lv1-前置詞・副詞",
+    "jp": "「〜の後で／〜の後」を英語で書きなさい。",
+    "en": "after",
+    "answers": [
+      "after"
+    ],
+    "source": "〜の後で／〜の後",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「〜の後で／〜の後」は英語で after です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w295",
+    "unit": "vocab-ja-en-lv1-音楽",
+    "jp": "「吹奏楽部（ブラスバンド）」を英語で書きなさい。",
+    "en": "brass band",
+    "answers": [
+      "brass band"
+    ],
+    "source": "吹奏楽部（ブラスバンド）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「吹奏楽部（ブラスバンド）」は英語で brass band です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w296",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「新しい」を英語で書きなさい。",
+    "en": "new",
+    "answers": [
+      "new"
+    ],
+    "source": "新しい",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「新しい」は英語で new です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w297",
+    "unit": "vocab-ja-en-lv1-応答",
+    "jp": "「はい」を英語で書きなさい。",
+    "en": "yes",
+    "answers": [
+      "yes"
+    ],
+    "source": "はい",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「はい」は英語で yes です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w298",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「来る」を英語で書きなさい。",
+    "en": "come",
+    "answers": [
+      "come"
+    ],
+    "source": "来る",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「来る」は英語で come です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w299",
+    "unit": "vocab-ja-en-lv1-人物・呼称",
+    "jp": "「〜さん（男性の敬称）」を英語で書きなさい。",
+    "en": "Mr.",
+    "answers": [
+      "Mr.",
+      "Mr"
+    ],
+    "source": "〜さん（男性の敬称）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「〜さん（男性の敬称）」は英語で Mr. です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w300",
+    "unit": "vocab-ja-en-lv1-表現",
+    "jp": "「ここに〜があります／これが〜です（= here is）」を英語で書きなさい。",
+    "en": "here's",
+    "answers": [
+      "here's",
+      "here is"
+    ],
+    "source": "ここに〜があります／これが〜です（= here is）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「ここに〜があります／これが〜です（= here is）」は英語で here's です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w301",
+    "unit": "vocab-ja-en-lv1-応答",
+    "jp": "「いいえ」を英語で書きなさい。",
+    "en": "no",
+    "answers": [
+      "no"
+    ],
+    "source": "いいえ",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「いいえ」は英語で no です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w302",
+    "unit": "vocab-ja-en-lv1-感情・表現",
+    "jp": "「興味がある」を英語で書きなさい。",
+    "en": "interested",
+    "answers": [
+      "interested"
+    ],
+    "source": "興味がある",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「興味がある」は英語で interested です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w303",
+    "unit": "vocab-ja-en-lv1-前置詞・副詞",
+    "jp": "「〜の」を英語で書きなさい。",
+    "en": "of",
+    "answers": [
+      "of"
+    ],
+    "source": "〜の",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「〜の」は英語で of です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w304",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「アニメ」を英語で書きなさい。",
+    "en": "anime",
+    "answers": [
+      "anime"
+    ],
+    "source": "アニメ",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「アニメ」は英語で anime です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w305",
+    "unit": "vocab-ja-en-lv1-冠詞",
+    "jp": "「1つの（母音で始まる語の前の a）」を英語で書きなさい。",
+    "en": "an",
+    "answers": [
+      "an"
+    ],
+    "source": "1つの（母音で始まる語の前の a）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「1つの（母音で始まる語の前の a）」は英語で an です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w306",
+    "unit": "vocab-ja-en-lv1-音楽",
+    "jp": "「楽器」を英語で書きなさい。",
+    "en": "instrument",
+    "answers": [
+      "instrument"
+    ],
+    "source": "楽器",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「楽器」は英語で instrument です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w307",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「小さい／少し（の）」を英語で書きなさい。",
+    "en": "little",
+    "answers": [
+      "little"
+    ],
+    "source": "小さい／少し（の）",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「小さい／少し（の）」は英語で little です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w308",
+    "unit": "vocab-ja-en-lv1-副詞",
+    "jp": "「ふだんは／たいてい」を英語で書きなさい。",
+    "en": "usually",
+    "answers": [
+      "usually"
+    ],
+    "source": "ふだんは／たいてい",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「ふだんは／たいてい」は英語で usually です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w309",
+    "unit": "vocab-ja-en-lv1-学校生活",
+    "jp": "「練習する／練習」を英語で書きなさい。",
+    "en": "practice",
+    "answers": [
+      "practice"
+    ],
+    "source": "練習する／練習",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「練習する／練習」は英語で practice です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w310",
+    "unit": "vocab-ja-en-lv1-前置詞・副詞",
+    "jp": "「〜に（曜日・日付）／〜の上に」を英語で書きなさい。",
+    "en": "on",
+    "answers": [
+      "on"
+    ],
+    "source": "〜に（曜日・日付）／〜の上に",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「〜に（曜日・日付）／〜の上に」は英語で on です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w311",
+    "unit": "vocab-ja-en-lv1-曜日",
+    "jp": "「月曜日」を英語で書きなさい。",
+    "en": "Monday",
+    "answers": [
+      "Monday",
+      "monday"
+    ],
+    "source": "月曜日",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「月曜日」は英語で Monday です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w312",
+    "unit": "vocab-ja-en-lv1-曜日",
+    "jp": "「水曜日」を英語で書きなさい。",
+    "en": "Wednesday",
+    "answers": [
+      "Wednesday",
+      "wednesday"
+    ],
+    "source": "水曜日",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「水曜日」は英語で Wednesday です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w313",
+    "unit": "vocab-ja-en-lv1-曜日",
+    "jp": "「金曜日」を英語で書きなさい。",
+    "en": "Friday",
+    "answers": [
+      "Friday",
+      "friday"
+    ],
+    "source": "金曜日",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「金曜日」は英語で Friday です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w314",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「聞く」を英語で書きなさい。",
+    "en": "listen",
+    "answers": [
+      "listen"
+    ],
+    "source": "聞く",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「聞く」は英語で listen です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w315",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「ラジオ」を英語で書きなさい。",
+    "en": "radio",
+    "answers": [
+      "radio"
+    ],
+    "source": "ラジオ",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「ラジオ」は英語で radio です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w316",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「読む」を英語で書きなさい。",
+    "en": "read",
+    "answers": [
+      "read"
+    ],
+    "source": "読む",
+    "task": "和⇒英",
+    "tip": "つづりと大文字・小文字を確認して入力しましょう。",
+    "explain": "「読む」は英語で read です。",
+    "level": "Lv1"
   }
 ]
