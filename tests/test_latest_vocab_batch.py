@@ -59,5 +59,7 @@ def test_requested_batch_exists_as_en_ja_choice_questions():
     for en, jp in REQUESTED_BATCH.items():
         item = questions[en]
         assert item["jp"] == jp
-        correct_choices = [choice["text"] for choice in item["choices"] if choice.get("correct")]
+        correct_choices = [
+            choice["text"] for choice in item["choices"] if choice.get("correct")
+        ]
         assert correct_choices == [jp]
