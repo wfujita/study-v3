@@ -339,5 +339,341 @@
     "tip": "つづりと大文字・小文字を確認して入力しましょう。",
     "explain": "「読む」は英語で read です。",
     "level": "Lv1"
+  },
+  {
+    "id": "w317",
+    "unit": "vocab-ja-en-lv1-副詞",
+    "jp": "「いつも」を英語で書きなさい。",
+    "en": "always",
+    "answers": [
+      "always"
+    ],
+    "source": "いつも",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「いつも」は英語で always です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w318",
+    "unit": "vocab-ja-en-lv1-副詞",
+    "jp": "「しばしば／よく」を英語で書きなさい。",
+    "en": "often",
+    "answers": [
+      "often"
+    ],
+    "source": "しばしば／よく",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「しばしば／よく」は英語で often です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w319",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「雑誌」を英語で書きなさい。",
+    "en": "magazine",
+    "answers": [
+      "magazine"
+    ],
+    "source": "雑誌",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「雑誌」は英語で magazine です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w320",
+    "unit": "vocab-ja-en-lv1-副詞",
+    "jp": "「ときどき」を英語で書きなさい。",
+    "en": "sometimes",
+    "answers": [
+      "sometimes"
+    ],
+    "source": "ときどき",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「ときどき」は英語で sometimes です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w321",
+    "unit": "vocab-ja-en-lv1-副詞",
+    "jp": "「決して〜ない／一度も〜ない」を英語で書きなさい。",
+    "en": "never",
+    "answers": [
+      "never"
+    ],
+    "source": "決して〜ない／一度も〜ない",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「決して〜ない／一度も〜ない」は英語で never です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w322",
+    "unit": "vocab-ja-en-lv1-状態・性質",
+    "jp": "「ひまな／自由な」を英語で書きなさい。",
+    "en": "free",
+    "answers": [
+      "free"
+    ],
+    "source": "ひまな／自由な",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「ひまな／自由な」は英語で free です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w323",
+    "unit": "vocab-ja-en-lv1-時・カレンダー",
+    "jp": "「夜」を英語で書きなさい。",
+    "en": "night",
+    "answers": [
+      "night"
+    ],
+    "source": "夜",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「夜」は英語で night です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w324",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「ドラマ／劇」を英語で書きなさい。",
+    "en": "drama",
+    "answers": [
+      "drama"
+    ],
+    "source": "ドラマ／劇",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「ドラマ／劇」は英語で drama です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w325",
+    "unit": "vocab-ja-en-lv1-応答",
+    "jp": "「おお／ああ」を英語で書きなさい。",
+    "en": "oh",
+    "answers": [
+      "oh"
+    ],
+    "source": "おお／ああ",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「おお／ああ」は英語で oh です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w326",
+    "unit": "vocab-ja-en-lv1-表現",
+    "jp": "「早口言葉」を英語で書きなさい。",
+    "en": "tongue twister",
+    "answers": [
+      "tongue twister"
+    ],
+    "source": "早口言葉",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「早口言葉」は英語で tongue twister です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w327",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「言う」を英語で書きなさい。",
+    "en": "say",
+    "answers": [
+      "say"
+    ],
+    "source": "言う",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「言う」は英語で say です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w328",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「繰り返す／復唱する」を英語で書きなさい。",
+    "en": "repeat",
+    "answers": [
+      "repeat"
+    ],
+    "source": "繰り返す／復唱する",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「繰り返す／復唱する」は英語で repeat です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w329",
+    "unit": "vocab-ja-en-lv1-疑問詞",
+    "jp": "「何が〜ですか／〜は何ですか（= what is）」を英語で書きなさい。",
+    "en": "what's",
+    "answers": [
+      "what's"
+    ],
+    "source": "何が〜ですか／〜は何ですか（= what is）",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「何が〜ですか／〜は何ですか（= what is）」は英語で what's です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w330",
+    "unit": "vocab-ja-en-lv1-表現",
+    "jp": "「それは〜です（= it is）」を英語で書きなさい。",
+    "en": "it's",
+    "answers": [
+      "it's"
+    ],
+    "source": "それは〜です（= it is）",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「それは〜です（= it is）」は英語で it's です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w331",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「書く」を英語で書きなさい。",
+    "en": "write",
+    "answers": [
+      "write"
+    ],
+    "source": "書く",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「書く」は英語で write です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w332",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「乗る」を英語で書きなさい。",
+    "en": "ride",
+    "answers": [
+      "ride"
+    ],
+    "source": "乗る",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「乗る」は英語で ride です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w333",
+    "unit": "vocab-ja-en-lv1-日常語",
+    "jp": "「一輪車」を英語で書きなさい。",
+    "en": "unicycle",
+    "answers": [
+      "unicycle"
+    ],
+    "source": "一輪車",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「一輪車」は英語で unicycle です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w334",
+    "unit": "vocab-ja-en-lv1-基本動詞",
+    "jp": "「運ぶ」を英語で書きなさい。",
+    "en": "carry",
+    "answers": [
+      "carry"
+    ],
+    "source": "運ぶ",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「運ぶ」は英語で carry です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w335",
+    "unit": "vocab-ja-en-lv1-食べ物",
+    "jp": "「ご飯／米」を英語で書きなさい。",
+    "en": "rice",
+    "answers": [
+      "rice"
+    ],
+    "source": "ご飯／米",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「ご飯／米」は英語で rice です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w336",
+    "unit": "vocab-ja-en-lv1-食べ物",
+    "jp": "「カレーライス」を英語で書きなさい。",
+    "en": "curry and rice",
+    "answers": [
+      "curry and rice"
+    ],
+    "source": "カレーライス",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「カレーライス」は英語で curry and rice です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w337",
+    "unit": "vocab-ja-en-lv1-前置詞",
+    "jp": "「〜といっしょに／〜を持って」を英語で書きなさい。",
+    "en": "with",
+    "answers": [
+      "with"
+    ],
+    "source": "〜といっしょに／〜を持って",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「〜といっしょに／〜を持って」は英語で with です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w338",
+    "unit": "vocab-ja-en-lv1-人物・呼称",
+    "jp": "「父／お父さん」を英語で書きなさい。",
+    "en": "father",
+    "answers": [
+      "father"
+    ],
+    "source": "父／お父さん",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「父／お父さん」は英語で father です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w339",
+    "unit": "vocab-ja-en-lv1-表現",
+    "jp": "「あれは／それは〜です（= that is）」を英語で書きなさい。",
+    "en": "that's",
+    "answers": [
+      "that's"
+    ],
+    "source": "あれは／それは〜です（= that is）",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「あれは／それは〜です（= that is）」は英語で that's です。",
+    "level": "Lv1"
+  },
+  {
+    "id": "w340",
+    "unit": "vocab-ja-en-lv1-スポーツ・趣味",
+    "jp": "「チーム」を英語で書きなさい。",
+    "en": "team",
+    "answers": [
+      "team"
+    ],
+    "source": "チーム",
+    "task": "和⇒英",
+    "tip": "つづりを確認して入力しましょう。",
+    "explain": "「チーム」は英語で team です。",
+    "level": "Lv1"
   }
 ]
