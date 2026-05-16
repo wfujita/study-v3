@@ -1522,30 +1522,42 @@
 
       if(correct){
         state.correct++; $('#stat-correct').textContent = state.correct;
-        const detail = buildFeedbackDetail(q, false);
-        $('#explain').innerHTML = `✅ 正解！ <span class="muted">${ans}</span>${detail}`;
       } else {
         state.wrong++; $('#stat-wrong').textContent = state.wrong;
-        const detail = buildFeedbackDetail(q, true);
-        const answersMarkup = formatCorrectAnswers(answerList);
-        $('#explain').innerHTML = state.qType==='reorder'
-          ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
-          : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
       }
 
       (state.mode==='review'? state.reviewed : state.answered).push(record);
       noteAttempt(q, correct, record.at, state.mode);
       updateQuestionStat(q, state.order[state.qIndex].bucket);
       state.graded = true;
+
+      if(correct){
+        advanceQuestion();
+        return true;
+      }
+
+      const detail = buildFeedbackDetail(q, true);
+      const answersMarkup = formatCorrectAnswers(answerList);
+      $('#explain').innerHTML = state.qType==='reorder'
+        ? `❌ 不正解。 正解: ${answersMarkup}${detail}`
+        : `❌ 不正解。 正解: ${answersMarkup}${detail}`;
       $('#btn-next').disabled = false;
       updateNextState();
+      return false;
     }
 
-    function nextQuestion(){
-      if(!state.graded) checkAnswer();
+    function advanceQuestion(){
       state.qIndex++;
       if(state.qIndex >= state.order.length){ finishSet(); }
       else { renderQuestion(); }
+    }
+
+    function nextQuestion(){
+      if(!state.graded){
+        const advanced = checkAnswer();
+        if(advanced || !state.graded) return;
+      }
+      advanceQuestion();
     }
 
     function finishSet(){

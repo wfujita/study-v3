@@ -1070,26 +1070,23 @@
       }
       const isCorrect = answers.some(candidate => matchesAnswer(candidate, userValues, fieldSpecs));
       state.graded = true;
-      const btnNext = $('#btn-next');
-      if(btnNext) btnNext.disabled = false;
       const explain = buildExplain(q);
       state.attempt += 1;
       sendMathResult(q, isCorrect, userValues, fieldSpecs);
       if(isCorrect){
-        $('#feedback').className = 'ok';
-        $('#feedback').innerHTML = `✅ 正解です！${explain}`;
-      } else {
-        $('#feedback').className = 'ng';
-        const retryMessage = '❌ 不正解。もう一度チャレンジしてみましょう。';
-        $('#feedback').innerHTML = explain ? `${retryMessage}${explain}` : retryMessage;
+        advanceQuestion();
+        return true;
       }
+
+      const btnNext = $('#btn-next');
+      if(btnNext) btnNext.disabled = false;
+      $('#feedback').className = 'ng';
+      const retryMessage = '❌ 不正解。もう一度チャレンジしてみましょう。';
+      $('#feedback').innerHTML = explain ? `${retryMessage}${explain}` : retryMessage;
+      return false;
     }
 
-    function nextQuestion(){
-      if(!state.graded){
-        checkAnswer();
-        if(!state.graded) return;
-      }
+    function advanceQuestion(){
       const totalQuestions = state.questions.length;
       if(!totalQuestions){
         showSetupView();
@@ -1107,6 +1104,14 @@
       }
       state.index += 1;
       renderQuestion();
+    }
+
+    function nextQuestion(){
+      if(!state.graded){
+        const advanced = checkAnswer();
+        if(advanced || !state.graded) return;
+      }
+      advanceQuestion();
     }
 
     if(startButton){
